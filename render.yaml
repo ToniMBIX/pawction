@@ -70,3 +70,13 @@ services:
 databases:
 - name: pawction-db
   plan: free
+
+  "require": {
+  "php": "^8.1",
+  "laravel/framework": "^10.0",
+  "laravel/sanctum": "^3.3",
+  "barryvdh/laravel-dompdf": "^2.0",
+  "endroid/qr-code": "^5.0",
+  "stripe/stripe-php": "^12.0"
+}
+
