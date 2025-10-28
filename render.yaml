@@ -1,0 +1,114 @@
+services:
+  - type: web
+    name: pawction-backend
+    env: docker
+    rootDir: backend
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: SESSION_DOMAIN
+        value: onrender.com
+      - key: SANCTUM_STATEFUL_DOMAINS
+        sync: false
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: pawction-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: pawction-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: pawction-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: pawction-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pawction-db
+          property: password
+      - key: STRIPE_KEY
+        sync: false
+      - key: STRIPE_SECRET
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+    databases:
+      - name: pawction-db
+    buildCommand: |
+      composer install --no-dev --prefer-dist --optimize-autoloader
+      php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider" --force || true
+      php artisan vendor:publish --tag="sanctum-migrations" --force || true
+    preDeployCommand: |
+      php artisan migrate --force
+      php artisan db:seed --class=Database\\Seeders\\AdminUserSeeder --force
+      php artisan queue:table || true && php artisan migrate --force
+    autoDeploy: true
+
+  - type: worker
+    name: pawction-queue
+    env: docker
+    rootDir: backend
+    plan: free
+    buildCommand: |
+      composer install --no-dev --prefer-dist --optimize-autoloader
+    startCommand: php artisan queue:work --verbose --tries=3 --timeout=90
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        fromService:
+          name: pawction-backend
+          type: web
+          envVarKey: APP_KEY
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: pawction-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: pawction-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: pawction-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: pawction-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pawction-db
+          property: password
+
+  - type: static
+    name: pawction-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://pawction-backend.onrender.com/api
+      - key: VITE_STRIPE_KEY
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
