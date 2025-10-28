@@ -39,6 +39,12 @@ if (strpos($c, "App\\\\Providers\\\\AdminServiceProvider::class") === false) {
 }
 ' || true
 
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan cache:clear || true
+php artisan config:cache || true
+php artisan route:cache || true
+
 # Optimize caches
 php artisan config:cache || true
 php artisan route:cache || true
