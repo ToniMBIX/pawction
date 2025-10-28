@@ -47,8 +47,6 @@ services:
     sync: false
   - key: STRIPE_WEBHOOK_SECRET
     sync: false
-  databases:
-  - name: pawction-db
   buildCommand: 'composer install --no-dev --prefer-dist --optimize-autoloader
 
     php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider" --force
