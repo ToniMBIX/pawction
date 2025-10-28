@@ -5,6 +5,11 @@ set -e
 mkdir -p /app/storage/framework/{cache,sessions,views} /app/storage/app/{qr,pdfs}
 php -r "file_exists('.env') || copy('.env.example', '.env');" || true
 
+echo "[DIAG] ls app/Console:" && ls -la app/Console || true
+php -r "echo \"[DIAG] has App\\\\Console\\\\Kernel: \".(file_exists('app/Console/Kernel.php')?'yes':'no').\"\\n\";"
+php -r "require 'vendor/autoload.php'; echo \"[DIAG] class_exists App\\\\Console\\\\Kernel: \".(class_exists('App\\\\Console\\\\Kernel')?'yes':'no').\"\\n\";"
+php -r "echo \"[DIAG] bootstrap/app.php first line: \".trim(explode(\"\\n\", file_get_contents('bootstrap/app.php'))[0]).\"\\n\";"
+
 # Clave y limpieza
 php artisan key:generate --force || true
 php artisan config:clear || true
