@@ -11,9 +11,9 @@ WORKDIR /app
 # 1) Crear Laravel base
 RUN composer create-project laravel/laravel:^10.0 .
 
-# 2) Fusionar tu backend sin borrar el core
-COPY . /overlay
-RUN rsync -a /overlay/ /app/ && rm -rf /overlay
+# 2) Copiar tu backend sin eliminar los archivos core de Laravel
+COPY . /app
+
 
 # 3) Instalar dependencias sin scripts durante el build
 RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts || true
