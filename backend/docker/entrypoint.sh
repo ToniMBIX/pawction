@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
-# Preparar almacenamiento y .env
+# Preparar storage y .env
 mkdir -p /app/storage/framework/{cache,sessions,views} /app/storage/app/{qr,pdfs}
 php -r "file_exists('.env') || copy('.env.example', '.env');" || true
 
-# Clave y limpieza de cachés
+# Clave y limpieza
 php artisan key:generate --force || true
 php artisan config:clear || true
 php artisan route:clear || true
 php artisan cache:clear || true
+
+# Descubrir paquetes AHORA (ya con .env)
 php artisan package:discover --ansi || true
 
 # Publicaciones y migraciones
@@ -19,7 +21,7 @@ php artisan queue:table || true
 php artisan migrate --force || true
 php artisan db:seed --class=Database\\Seeders\\AdminUserSeeder --force || true
 
-# Re-cachear para prod
+# Re-cache para prod
 php artisan config:cache || true
 php artisan route:cache || true
 
