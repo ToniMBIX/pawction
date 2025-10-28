@@ -1,21 +1,20 @@
-<?php
-
 return [
-
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
-
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL','http://localhost:5173')],
+    // Vacío aquí…
+    'allowed_origins' => [],
 
-    'allowed_origins_patterns' => [],
+    // …y usa patrones. Opción estricta (sólo tu frontend de Render + local):
+    'allowed_origins_patterns' => [
+        '#^https://pawction-frontend\.onrender\.com$#',
+        '#^http://localhost:5173$#',
+    ],
 
     'allowed_headers' => ['*'],
-
     'exposed_headers' => [],
-
     'max_age' => 0,
 
+    // Puedes dejarlo en true (aunque uses Bearer tokens, no molesta)
     'supports_credentials' => true,
-
 ];
