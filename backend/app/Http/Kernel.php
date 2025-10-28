@@ -3,11 +3,15 @@
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Http\Middleware\HandleCors; // <—
+
 
 class Kernel extends HttpKernel
 {
     protected $middleware = [
         \Fruitcake\Cors\HandleCors::class,
+        HandleCors::class, // <— CORS global
+
     ];
 
     protected $middlewareGroups = [
@@ -20,6 +24,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
         'api' => [
+            HandleCors::class, // <— CORS ANTES que todo
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Fruitcake\Cors\HandleCors::class,
             'throttle:api',
