@@ -19,7 +19,8 @@ RUN composer create-project laravel/laravel:^10.0 .
 COPY . /app
 
 # Install PHP packages we need
-RUN composer require laravel/sanctum barryvdh/laravel-dompdf:^2.0 endroid/qr-code:^5.0 stripe/stripe-php:^12.0 --no-dev --prefer-dist --optimize-autoloader
+RUN composer require laravel/sanctum barryvdh/laravel-dompdf:^2.0 endroid/qr-code:^5.0 stripe/stripe-php:^12.0 --prefer-dist -o --no-interaction
+RUN composer install --no-dev -o --no-interaction
 
 # Entrypoint
 COPY docker/entrypoint.sh /entrypoint.sh
