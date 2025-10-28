@@ -25,7 +25,8 @@ RUN composer dump-autoload -o --no-scripts || true
 
 # 4) Verificación y recreación del Kernel si no existe
 RUN if [ ! -f app/Console/Kernel.php ]; then \
-  mkdir -p app/Console && cat > app/Console/Kernel.php <<'PHP'; \
+  mkdir -p app/Console && \
+  cat > app/Console/Kernel.php <<'PHP'
 <?php
 namespace App\Console;
 
@@ -47,6 +48,7 @@ class Kernel extends ConsoleKernel
 }
 PHP
 fi
+
 
 # Entrypoint
 COPY docker/entrypoint.sh /entrypoint.sh
