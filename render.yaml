@@ -1,24 +1,20 @@
 services:
-- type: web
-  name: pawction-backend
-  env: docker
-  rootDir: backend
-  plan: free
-  envVars:
-  - key: APP_ENV
-    value: production
-  - key: APP_KEY
-    generateValue: true
-  - key: APP_URL
-    sync: false
-  - key: FRONTEND_URL
-    sync: false
-  - key: SESSION_DOMAIN
-    value: onrender.com
-  - key: SANCTUM_STATEFUL_DOMAINS
-    sync: false
-  - key: QUEUE_CONNECTION
-    value: sync
+  - type: web
+    name: pawction-backend
+    env: docker
+    rootDir: backend
+    plan: free
+    envVars:
+      - key: APP_URL
+        value: https://pawction-backend.onrender.com
+      - key: FRONTEND_URL
+        value: https://pawction-frontend.onrender.com
+      - key: SESSION_DOMAIN
+        value: onrender.com
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: pawction-frontend.onrender.com
+      - key: QUEUE_CONNECTION
+        value: sync
   - key: DB_CONNECTION
     value: pgsql
   - key: DB_HOST
