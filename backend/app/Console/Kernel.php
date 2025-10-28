@@ -9,7 +9,7 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule): void
     {
-        // Define scheduled tasks here
+        // Scheduled tasks (opcional)
     }
 
     protected function commands(): void
