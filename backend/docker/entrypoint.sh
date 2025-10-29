@@ -17,6 +17,12 @@ php artisan cache:clear
 php artisan view:clear
 php artisan package:discover --ansi
 
+php artisan migrate --force
+
+php artisan config:cache
+php artisan route:cache
+
+
 # 3) (Diagnóstico seguro) — booteamos el kernel ANTES de usar config()
 php -r "
 require 'vendor/autoload.php';
