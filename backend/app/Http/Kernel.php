@@ -23,7 +23,8 @@ class Kernel extends HttpKernel
         ],
         'api' => [
         \Illuminate\Http\Middleware\HandleCors::class,
-        'throttle:api',
+        'throttle:api',        
+        'force.json',                 // <— AÑADE ESTO
         \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -40,5 +41,6 @@ class Kernel extends HttpKernel
         'signed'          => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle'        => \Illuminate\Routing\Middleware\ThrottleRequests::class, // ← NECESARIO
         'verified'        => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'force.json' => \App\Http\Middleware\ForceJsonResponse::class,
     ];
 }
