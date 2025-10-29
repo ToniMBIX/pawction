@@ -8,6 +8,9 @@ use App\Services\QrService;
 class AuctionController extends Controller {
     public function index(Request $request){
         $q = Auction::with('product.animal')->where('status','active')->orderBy('end_at')->paginate(12);
+        if (Schema::hasTable('auction_images')) {
+            $q->with('images');
+        }
         return response()->json($q);
     }
     public function show(Auction $auction){
