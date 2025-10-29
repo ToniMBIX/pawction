@@ -6,22 +6,31 @@ use Illuminate\Http\Request;
 use App\Services\QrService;
 
 class AuctionController extends Controller {
-    public function index()
+    public function index(Request $request)
     {
-          try {
+        try {
+            // Selecciona sólo lo que usa el front; evita relaciones frágiles
             $q = Auction::query()
-                ->when(Schema::hasColumn('auctions', 'status'), fn($qq) => $qq->where('status', 'active'))
-                ->orderByDesc('id');
+                ->select(['id','title','current_price','image_url','created_at'])
+                ->latest();
 
-            if (Schema::hasTable('auction_images')) {
-                $q->with('images');
-            }
+            $auctions = $q->paginate(12);
 
-            return response()->json($q->get(), 200);
+            // Estructura compatible con tu front: { data: [...] }
+            return response()->json($auctions, 200);
+
         } catch (\Throwable $e) {
-            // Log interno y respuesta clara
-            \Log::error('AUCTIONS_INDEX', ['e' => $e->getMessage()]);
-            return response()->json(['message' => 'Cannot list auctions'], 500);
+            Log::error('AUCTIONS_INDEX_FAIL', [
+                'm' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ]);
+
+            // No caemos en 500: devolvemos lista vacía
+            return response()->json([
+                'data' => [],
+                'message' => 'Auctions unavailable'
+            ], 200);
         }
     }
     public function show(Auction $auction){
@@ -32,4 +41,19 @@ class AuctionController extends Controller {
         $path = $qr->generateForAuction($auction);
         return response()->file($path);
     }
+    public function logout(Request $request)
+{
+    try {
+        $token = $request->user()?->currentAccessToken();
+        if ($token) {
+            $token->delete();
+        }
+        return response()->json(['ok' => true], 200);
+    } catch (\Throwable $e) {
+        \Log::error('LOGOUT_FAIL', ['m' => $e->getMessage()]);
+        // No rompas la UI por un logout sin token
+        return response()->json(['ok' => true], 200);
+    }
+}
+
 }

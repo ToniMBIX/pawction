@@ -6,6 +6,7 @@ use App\Models\{Animal,Product,Auction};
 
 class DatabaseSeeder extends Seeder {
     public function run(){
+        $this->call(\Database\Seeders\AuctionSeeder::class);
         $this->call(\Database\Seeders\AdminUserSeeder::class);
         $animal = Animal::create([
             'name'=>'Luna','species'=>'Perro','age'=>3,
