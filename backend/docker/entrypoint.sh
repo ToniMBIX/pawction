@@ -39,7 +39,10 @@ catch (Throwable \$e) { echo \"[DB] connect ERROR: \".\$e->getMessage().\"\\n\";
 # 4) Vendors opcionales
 php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider" --force || true
 php artisan vendor:publish --tag="sanctum-migrations" --force || true
-php artisan queue:table || true
+# Solo crear tabla de jobs si no existe migración previa
+if ! php artisan migrate:status | grep -q 'jobs'; then
+  echo "Jobs table not found, skipping queue:table (already exists)"
+fi
 
 # 5) Migraciones (si falla, detenemos – verás el motivo en logs)
 echo "==> Running migrations..."
