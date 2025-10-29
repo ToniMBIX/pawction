@@ -9,7 +9,7 @@ class Kernel extends HttpKernel
 {
     // Middleware global
     protected $middleware = [
-        HandleCors::class,
+        \Illuminate\Http\Middleware\HandleCors::class,
         \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
@@ -22,7 +22,7 @@ class Kernel extends HttpKernel
             // (tu stack web por defecto)
         ],
         'api' => [
-            HandleCors::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
             'throttle:api', // ← usa el alias 'throttle'
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             // NO pongas EnsureFrontendRequestsAreStateful aquí si usas tokens Bearer

@@ -28,6 +28,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout/{auction}', [PaymentController::class, 'checkout']);
 });
 
-Route::options('/{any}', function () {
-    return response()->noContent(204);
-})->where('any', '.*');
+Route::options('/{any}', fn() => response()->noContent())->where('any','.*');

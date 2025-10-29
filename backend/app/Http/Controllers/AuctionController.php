@@ -8,15 +8,21 @@ use App\Services\QrService;
 class AuctionController extends Controller {
     public function index()
     {
-        $q = Auction::query()
-            ->where('status','active')
-            ->orderByDesc('id');
+          try {
+            $q = Auction::query()
+                ->when(Schema::hasColumn('auctions', 'status'), fn($qq) => $qq->where('status', 'active'))
+                ->orderByDesc('id');
 
-        if (Schema::hasTable('auction_images')) {
-            $q->with('images');
+            if (Schema::hasTable('auction_images')) {
+                $q->with('images');
+            }
+
+            return response()->json($q->get(), 200);
+        } catch (\Throwable $e) {
+            // Log interno y respuesta clara
+            \Log::error('AUCTIONS_INDEX', ['e' => $e->getMessage()]);
+            return response()->json(['message' => 'Cannot list auctions'], 500);
         }
-
-        return response()->json($q->get(), 200);
     }
     public function show(Auction $auction){
         $auction->load('product.animal','bids.user');
