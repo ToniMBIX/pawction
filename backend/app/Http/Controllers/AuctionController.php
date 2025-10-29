@@ -6,12 +6,17 @@ use Illuminate\Http\Request;
 use App\Services\QrService;
 
 class AuctionController extends Controller {
-    public function index(Request $request){
-        $q = Auction::with('product.animal')->where('status','active')->orderBy('end_at')->paginate(12);
+    public function index()
+    {
+        $q = Auction::query()
+            ->where('status','active')
+            ->orderByDesc('id');
+
         if (Schema::hasTable('auction_images')) {
             $q->with('images');
         }
-        return response()->json($q);
+
+        return response()->json($q->get(), 200);
     }
     public function show(Auction $auction){
         $auction->load('product.animal','bids.user');

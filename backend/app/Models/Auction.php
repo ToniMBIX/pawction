@@ -2,15 +2,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Auction extends Model {
-    use HasFactory;
-
+class Auction extends Model
+{
     protected $fillable = [
-        'title','description','starting_price','current_price','end_at',
-        'product_id','status','winner_user_id'
+        'title','description','starting_price','current_price','starts_at','ends_at','status','user_id'
     ];
     protected $casts = [
         'starts_at'=>'datetime',
@@ -19,7 +15,7 @@ class Auction extends Model {
         'current_price'=>'decimal:2',
     ];
 
-    public function product(){ return $this->belongsTo(Product::class); }
-    public function bids(){ return $this->hasMany(Bid::class)->latest(); }
-    public function winner(){ return $this->belongsTo(User::class,'winner_user_id'); }
+    public function user(){ return $this->belongsTo(User::class); }
+    public function bids(){ return $this->hasMany(Bid::class); }
+    public function images(){ return $this->hasMany(AuctionImage::class); }
 }
