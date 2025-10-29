@@ -1,8 +1,11 @@
+<?php
+
 return [
 
-    'default' => env('DB_CONNECTION', 'pgsql'),  // <-- AQUI: pgsql por defecto
+    'default' => env('DB_CONNECTION', 'pgsql'),
 
     'connections' => [
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
@@ -15,10 +18,36 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'), // OK
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
             'options' => extension_loaded('pdo_pgsql') ? [] : [],
         ],
-        // (si tienes mysql, déjalo, pero pgsql será la default)
+
     ],
-    // ...
+
+    'migrations' => 'migrations',
+
+    'redis' => [
+
+        'client' => env('REDIS_CLIENT', 'phpredis'),
+
+        'default' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+        ],
+
+        'cache' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_CACHE_DB', '1'),
+        ],
+
+    ],
+
 ];

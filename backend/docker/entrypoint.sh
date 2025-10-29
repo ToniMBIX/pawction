@@ -1,8 +1,31 @@
 #!/usr/bin/env bash
 set -e
 
-mkdir -p /app/storage/framework/{cache,sessions,views} /app/storage/app/{qr,pdfs}
-php -r "file_exists('.env') || copy('.env.example', '.env');"
+# Crear .env si no existe
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
+
+# Generar clave de app (ahora sí debe existir .env)
+php artisan key:generate --force
+
+# Limpiar y recachear config/rutas/vistas
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan package:discover --ansi
+
+# Migraciones (si falla, que se vea y se detenga)
+echo "==> Running migrations..."
+php artisan migrate --force
+
+# (resto de tu script)
+php artisan config:cache
+php artisan route:cache
+
+echo "Starting web server on :${PORT:-10000} ..."
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
 
 # Clave + limpieza de cachés
 php artisan key:generate --force
