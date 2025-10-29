@@ -8,6 +8,8 @@ use App\Http\Controllers\{AuctionController,BidController,FavoriteController,Pay
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
+Route::get('/ping', fn() => response()->json(['ok' => true], 200));
+
 Route::get('/auctions', [AuctionController::class, 'index']);
 Route::get('/auctions/{auction}', [AuctionController::class, 'show']);
 Route::get('/auctions/{auction}/qr', [AuctionController::class, 'qr']);

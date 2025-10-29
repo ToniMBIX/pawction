@@ -8,5 +8,5 @@ return [
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => false, // IMPORTANTÍSIMO si quitas credenciales en el front
+    'supports_credentials' => false, // usamos Bearer, no cookies
 ];
