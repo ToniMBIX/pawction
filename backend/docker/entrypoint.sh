@@ -1,34 +1,32 @@
 #!/usr/bin/env bash
 set -e
 
-# Preparar storage y .env
 mkdir -p /app/storage/framework/{cache,sessions,views} /app/storage/app/{qr,pdfs}
-php -r "file_exists('.env') || copy('.env.example', '.env');" || true
+php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-echo "[DIAG] ls app/Console:" && ls -la app/Console || true
-php -r "echo \"[DIAG] has App\\\\Console\\\\Kernel: \".(file_exists('app/Console/Kernel.php')?'yes':'no').\"\\n\";"
-php -r "require 'vendor/autoload.php'; echo \"[DIAG] class_exists App\\\\Console\\\\Kernel: \".(class_exists('App\\\\Console\\\\Kernel')?'yes':'no').\"\\n\";"
-php -r "echo \"[DIAG] bootstrap/app.php first line: \".trim(explode(\"\\n\", file_get_contents('bootstrap/app.php'))[0]).\"\\n\";"
+# Clave + limpieza de cachés
+php artisan key:generate --force
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan package:discover --ansi
 
-# Clave y limpieza
-php artisan key:generate --force || true
-php artisan config:clear || true
-php artisan route:clear || true
-php artisan cache:clear || true
-
-# Descubrir paquetes AHORA (ya con .env)
-php artisan package:discover --ansi || true
-
-# Publicaciones y migraciones
+# Publicar vendors (si tus providers lo necesitan)
 php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider" --force || true
 php artisan vendor:publish --tag="sanctum-migrations" --force || true
 php artisan queue:table || true
-php artisan migrate --force || true
+
+# ⚠️ AHORA migramos y si falla, detenemos el arranque
+echo "==> Running migrations..."
+php artisan migrate --force
+
+# Seeds necesarios (admin, etc.)
 php artisan db:seed --class=Database\\Seeders\\AdminUserSeeder --force || true
 
-# Re-cache para prod
-php artisan config:cache || true
-php artisan route:cache || true
+# Cache de prod
+php artisan config:cache
+php artisan route:cache
 
 echo "Starting web server on :${PORT:-10000} ..."
 exec php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
