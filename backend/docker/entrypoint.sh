@@ -1,55 +1,54 @@
 #!/usr/bin/env bash
 set -e
 
-# Crear .env si no existe
+# 0) .env siempre presente + APP_KEY vacío si faltara
 if [ ! -f .env ]; then
   cp .env.example .env
 fi
+grep -q "^APP_KEY=" .env || echo "APP_KEY=" >> .env
 
-# Generar clave de app (ahora sí debe existir .env)
+# 1) Generar clave (necesita .env con APP_KEY=)
 php artisan key:generate --force
 
-# Limpiar y recachear config/rutas/vistas
+# 2) Limpieza de cachés/config
 php artisan config:clear
 php artisan route:clear
 php artisan cache:clear
 php artisan view:clear
 php artisan package:discover --ansi
 
-# Migraciones (si falla, que se vea y se detenga)
-echo "==> Running migrations..."
-php -r "require 'vendor/autoload.php'; \$app=require 'bootstrap/app.php'; \$kernel=\$app->make(Illuminate\\Contracts\\Console\\Kernel::class); echo \"[DB] default='\".config('database.default').\"'\\n\";"; 
-php -r "require 'vendor/autoload.php'; use Illuminate\\Support\\Facades\\DB; \$app=require 'bootstrap/app.php'; \$kernel=\$app->make(Illuminate\\Contracts\\Console\\Kernel::class); try{DB::connection()->getPdo(); echo \"[DB] connected OK\\n\";}catch(Throwable \$e){echo \"[DB] connect ERROR: \".\$e->getMessage().\"\\n\"; exit(1);} ";
-php artisan migrate --force
+# 3) (Diagnóstico seguro) — booteamos el kernel ANTES de usar config()
+php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class);
+\$kernel->bootstrap();
+echo \"[DB] default='\".\$app['config']->get('database.default').\"'\\n\";
+" 
 
-# (resto de tu script)
-php artisan config:cache
-php artisan route:cache
+php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$kernel = \$app->make(Illuminate\Contracts\Console\Kernel::class);
+\$kernel->bootstrap();
+use Illuminate\Support\Facades\DB;
+try { DB::connection()->getPdo(); echo \"[DB] connected OK\\n\"; }
+catch (Throwable \$e) { echo \"[DB] connect ERROR: \".\$e->getMessage().\"\\n\"; exit(1); }
+"
 
-echo "Starting web server on :${PORT:-10000} ..."
-exec php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
-
-# Clave + limpieza de cachés
-php artisan key:generate --force
-php artisan config:clear
-php artisan route:clear
-php artisan cache:clear
-php artisan view:clear
-php artisan package:discover --ansi
-
-# Publicar vendors (si tus providers lo necesitan)
+# 4) Vendors opcionales
 php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider" --force || true
 php artisan vendor:publish --tag="sanctum-migrations" --force || true
 php artisan queue:table || true
 
-# ⚠️ AHORA migramos y si falla, detenemos el arranque
+# 5) Migraciones (si falla, detenemos – verás el motivo en logs)
 echo "==> Running migrations..."
 php artisan migrate --force
 
-# Seeds necesarios (admin, etc.)
+# 6) Seeds opcionales
 php artisan db:seed --class=Database\\Seeders\\AdminUserSeeder --force || true
 
-# Cache de prod
+# 7) Cache de prod
 php artisan config:cache
 php artisan route:cache
 
