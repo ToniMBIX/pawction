@@ -22,10 +22,9 @@ class Kernel extends HttpKernel
             // (tu stack web por defecto)
         ],
         'api' => [
-            \Illuminate\Http\Middleware\HandleCors::class,
-            'throttle:api', // ← usa el alias 'throttle'
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            // NO pongas EnsureFrontendRequestsAreStateful aquí si usas tokens Bearer
+        \Illuminate\Http\Middleware\HandleCors::class,
+        'throttle:api',
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
