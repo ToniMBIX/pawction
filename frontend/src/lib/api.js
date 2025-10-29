@@ -5,7 +5,7 @@ export async function api(path, opts={}){
   const headers = { 'Content-Type':'application/json', ...(opts.headers||{}) }
   const token = Auth.token()
   if(token) headers['Authorization'] = 'Bearer ' + token
-  const res = await fetch(API + path, { headers, credentials: 'include', ...opts })
+  const res = await fetch(API + path, { headers, ...opts })
   if(!res.ok){
     let txt = await res.text()
     try { const j = JSON.parse(txt); txt = j.message || JSON.stringify(j) } catch {}
