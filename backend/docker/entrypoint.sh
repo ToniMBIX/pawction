@@ -18,6 +18,8 @@ php artisan package:discover --ansi
 
 # Migraciones (si falla, que se vea y se detenga)
 echo "==> Running migrations..."
+php -r "require 'vendor/autoload.php'; \$app=require 'bootstrap/app.php'; \$kernel=\$app->make(Illuminate\\Contracts\\Console\\Kernel::class); echo \"[DB] default='\".config('database.default').\"'\\n\";"; 
+php -r "require 'vendor/autoload.php'; use Illuminate\\Support\\Facades\\DB; \$app=require 'bootstrap/app.php'; \$kernel=\$app->make(Illuminate\\Contracts\\Console\\Kernel::class); try{DB::connection()->getPdo(); echo \"[DB] connected OK\\n\";}catch(Throwable \$e){echo \"[DB] connect ERROR: \".\$e->getMessage().\"\\n\"; exit(1);} ";
 php artisan migrate --force
 
 # (resto de tu script)

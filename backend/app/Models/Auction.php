@@ -13,7 +13,10 @@ class Auction extends Model {
         'product_id','status','winner_user_id'
     ];
     protected $casts = [
-        'end_at' => 'datetime'
+        'starts_at'=>'datetime',
+        'ends_at'=>'datetime',
+        'starting_price'=>'decimal:2',
+        'current_price'=>'decimal:2',
     ];
 
     public function product(){ return $this->belongsTo(Product::class); }
