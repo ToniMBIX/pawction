@@ -8,9 +8,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1) Animal base
         $animal = Animal::firstOrCreate(
-            ['name' => 'Luna'], // clave "única" de conveniencia
+            ['name' => 'Luna'],
             [
                 'species'     => 'Perro',
                 'age'         => 3,
@@ -20,13 +19,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 2) Producto que enlaza al animal
-        $product = Product::firstOrCreate(
+        Product::firstOrCreate(
             ['name' => 'Pack taza + llavero'],
             ['animal_id' => $animal->id]
         );
 
-        // 3) Seeders que dependen de que ya exista al menos 1 Product
         $this->call([
             AuctionSeeder::class,
             \Database\Seeders\AdminUserSeeder::class,
