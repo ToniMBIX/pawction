@@ -6,7 +6,7 @@ use App\Models\Auction;
 
 class AuctionController extends Controller
 {
-        public function index()
+    public function index()
     {
         return response()->json(
             \App\Models\Auction::with(['product.animal'])
@@ -14,6 +14,7 @@ class AuctionController extends Controller
                 ->paginate(12)
         );
     }
+
 
     public function show(\App\Models\Auction $auction)
     {
