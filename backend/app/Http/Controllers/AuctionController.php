@@ -8,30 +8,34 @@ use App\Services\QrService;
 class AuctionController extends Controller {
     public function index(Request $request)
     {
-        try {
-            // Selecciona sólo lo que usa el front; evita relaciones frágiles
-            $q = Auction::query()
-                ->select(['id','title','current_price','image_url','created_at'])
-                ->latest();
+        $q = Auction::query()
+    ->with(['product.animal:id,photo_url']) // para fallback
+    ->select(['id','product_id','title','current_price','image_url','created_at'])
+    ->latest();
 
-            $auctions = $q->paginate(12);
+$perPage = (int)($request->get('per_page', 12));
+$page    = $q->paginate($perPage);
 
-            // Estructura compatible con tu front: { data: [...] }
-            return response()->json($auctions, 200);
+$items = $page->getCollection()->map(function ($a) {
+    return [
+        'id'            => $a->id,
+        'title'         => $a->title,
+        'current_price' => $a->current_price,
+        'image_url'     => $a->image_url ?: ($a->product->animal->photo_url ?? null),
+        'created_at'    => $a->created_at,
+    ];
+});
 
-        } catch (\Throwable $e) {
-            Log::error('AUCTIONS_INDEX_FAIL', [
-                'm' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-            ]);
+return response()->json([
+    'data' => $items,
+    'meta' => [
+        'total'        => $page->total(),
+        'current_page' => $page->currentPage(),
+        'per_page'     => $page->perPage(),
+        'last_page'    => $page->lastPage(),
+    ]
+]);
 
-            // No caemos en 500: devolvemos lista vacía
-            return response()->json([
-                'data' => [],
-                'message' => 'Auctions unavailable'
-            ], 200);
-        }
     }
     public function show(Auction $auction){
         $auction->load('product.animal','bids.user');

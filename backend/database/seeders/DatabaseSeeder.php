@@ -14,14 +14,6 @@ class DatabaseSeeder extends Seeder {
             'info_url'=>'https://example.org/luna'
         ]);
         $product = Product::create(['name'=>'Pack taza + llavero','animal_id'=>$animal->id]);
-        Auction::create([
-            'product_id'=>$product->id,
-            'title'=>'Pack Luna edición solidaria',
-            'description'=>'Con código QR del animal adoptado',
-            'starting_price'=>10.00,
-            'current_price'=>10.00,
-            'end_at'=>now()->addDay(),
-            'status'=>'active'
-        ]);
+        $this->call(AuctionSeeder::class);
     }
 }
