@@ -3,34 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Auction;
+use Illuminate\Http\Request;
 
 class AuctionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(
-            \App\Models\Auction::with(['product.animal'])
-                ->orderByDesc('created_at')
-                ->paginate(12)
-        );
+        $q = Auction::with(['product.animal'])
+            ->where('status', 'active')
+            ->orderByDesc('id');
+
+        return $q->paginate(12);
     }
 
-
-    public function show(\App\Models\Auction $auction)
+    public function show(Auction $auction)
     {
         $auction->load(['product.animal']);
-        return response()->json($auction);
+        return $auction;
     }
-
 
     public function qr(Auction $auction)
     {
         return response()->json([
-            'id'      => $auction->id,
-            'title'   => $auction->title,
-            'status'  => $auction->status,
-            'animal'  => optional($auction->product->animal)->only(['name','species','photo_url','info_url']),
-            'price'   => $auction->current_price,
+            'auction_id' => $auction->id,
+            'title'      => $auction->title,
+            'status'     => $auction->status,
+            'animal'     => optional($auction->product->animal)->only(['name','species','info_url']),
         ]);
     }
 }

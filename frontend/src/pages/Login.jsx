@@ -7,13 +7,18 @@ export default function Login(){
   const nav = useNavigate()
   const [form, setForm] = React.useState({ email:'', password:'' })
   const [loading, setLoading] = React.useState(false)
+
   const onSubmit = async (e) => {
     e.preventDefault(); setLoading(true)
     try {
-      const r = await AuthAPI.login(form)
-      Auth.setToken(r.token); nav('/')
+      const r  = await AuthAPI.login(form)  // { token }
+      Auth.setToken(r.token)
+      const me = await AuthAPI.me()         // { id, name, email, is_admin, ... }
+      Auth.setUser(me)
+      nav('/')
     } catch(e){ alert(e.message) } finally { setLoading(false) }
   }
+
   return (
     <form onSubmit={onSubmit} className="card max-w-md mx-auto">
       <h2 className="text-xl font-bold mb-3">Iniciar sesión</h2>

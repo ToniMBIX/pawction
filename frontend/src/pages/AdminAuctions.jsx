@@ -49,7 +49,9 @@ export default function AdminAuctions(){
   }
 
   // Gate muy simple: no muestres si no hay token
-  if (!Auth.token()) return <div className="text-center">Debes iniciar sesión como admin.</div>
+if (!Auth.token() || !Auth.isAdmin()) {
+  return <div className="text-center">Debes iniciar sesión como admin.</div>
+}
 
   return (
     <div className="space-y-6">

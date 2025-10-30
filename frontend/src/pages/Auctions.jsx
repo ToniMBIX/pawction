@@ -17,24 +17,17 @@ export default function Auctions(){
   return (
     <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
       {items.map(a => {
-        // usamos SIEMPRE la foto del animal si existe, que sabemos que viene
         const img =
-  a?.image_url?.startsWith('http')
-    ? a.image_url
-    : a?.product?.animal?.photo_url?.startsWith('http')
-      ? a.product.animal.photo_url
-      : 'https://picsum.photos/seed/paw-placeholder/600/400'
-
-        const precio = Number(a?.current_price || 0)
-        const etiquetaPrecio = precio > 0 ? `${precio} €` : 'Precio inicial: 20 €'
-
+          a?.image_url ||
+          a?.product?.animal?.photo_url ||
+          a?.photo_url ||
+          '/placeholder.jpg'
         return (
           <Link to={`/auctions/${a.id}`} key={a.id} className="card">
             <img src={img} alt="" className="w-full h-40 object-cover rounded-xl" />
             <div className="mt-3">
               <h3 className="font-bold">{a.title}</h3>
-              <p className="text-sm opacity-70 line-clamp-2">{a.description}</p>
-              <div className="mt-2 text-sm">Actual: <b>{etiquetaPrecio}</b></div>
+              <div className="mt-2 text-sm">Actual: <b>{a.current_price} €</b></div>
             </div>
           </Link>
         )

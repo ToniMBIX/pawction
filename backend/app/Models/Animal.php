@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Animal extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['name','species','age','description','photo_url','info_url'];
 
-    public function products()
+    public function product()
     {
-        return $this->hasMany(Product::class);
-        // si prefieres 1 a 1: return $this->hasOne(Product::class);
+        return $this->hasOne(Product::class);
     }
 }
