@@ -65,7 +65,7 @@ Route::get('/__seed', function () {
                 'title'          => $i['title'],
                 'description'    => 'Pack taza + llavero con QR del estado de adopción.',
                 'starting_price' => 20.00,   // empieza en 20 €
-                'current_price'  => 0.00,    // el reloj arranca con la 1ª puja
+                'current_price'  => 20.00,    // el reloj arranca con la 1ª puja
                 'end_at'         => now()->addDays(7),
                 'status'         => 'active',
                 'payed'          => false,

@@ -36,7 +36,7 @@ class AuctionSeeder extends Seeder
                 'title'          => $i['title'],
                 'description'    => 'Subasta solidaria del pack (taza + llavero). La cuenta atrás empieza al alcanzar 20€.',
                 'starting_price' => 20.00,
-                'current_price'  => 0,               // hasta la primera puja
+                'current_price'  => 20.00,               // hasta la primera puja
                 'end_at'         => Carbon::now()->addDays(7),
                 'status'         => 'active',
                 'payed'          => false,

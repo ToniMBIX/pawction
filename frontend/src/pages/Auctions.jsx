@@ -8,7 +8,6 @@ export default function Auctions(){
   React.useEffect(()=>{
     AuctionsAPI.list()
       .then(r => {
-        // Si viene de paginate => r.data; si es array => r
         const list = Array.isArray(r) ? r : (r.data || [])
         setItems(list)
       })
@@ -18,17 +17,22 @@ export default function Auctions(){
   return (
     <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
       {items.map(a => {
+        // usamos SIEMPRE la foto del animal si existe, que sabemos que viene
         const img =
           a?.product?.animal?.photo_url ||
           a?.image_url ||
-          a?.photo_url ||
-          '/placeholder.jpg'
+          'https://picsum.photos/seed/paw-placeholder/600/400'  // evita /placeholder.jpg local
+
+        const precio = Number(a?.current_price || 0)
+        const etiquetaPrecio = precio > 0 ? `${precio} €` : 'Precio inicial: 20 €'
+
         return (
           <Link to={`/auctions/${a.id}`} key={a.id} className="card">
             <img src={img} alt="" className="w-full h-40 object-cover rounded-xl" />
             <div className="mt-3">
               <h3 className="font-bold">{a.title}</h3>
-              <div className="mt-2 text-sm">Actual: <b>{a.current_price} €</b></div>
+              <p className="text-sm opacity-70 line-clamp-2">{a.description}</p>
+              <div className="mt-2 text-sm">Actual: <b>{etiquetaPrecio}</b></div>
             </div>
           </Link>
         )
