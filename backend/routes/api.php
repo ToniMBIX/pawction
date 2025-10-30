@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{AuctionController,BidController,FavoriteController,PaymentController,WebhookController,UserController,AuthController};
 use App\Support\BootstrapSeeder;
+use App\Models\{Auction, Product, Animal};
+
 
 // Public
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -36,4 +38,15 @@ Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
 Route::get('/__seed', function (\Illuminate\Http\Request $req) {
     abort_unless($req->query('token') === config('app.seed_token'), 403);
     return response()->json(BootstrapSeeder::run());
+});
+
+Route::get('/__diag', function () {
+    return response()->json([
+        'counts' => [
+            'animals'  => Animal::count(),
+            'products' => Product::count(),
+            'auctions' => Auction::count(),
+        ],
+        'first_auction' => Auction::with('product')->first(),
+    ]);
 });
