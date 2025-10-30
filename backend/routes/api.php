@@ -31,3 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
+Route::get('/__seed', function (\Illuminate\Http\Request $req) {
+    abort_unless($req->query('token') === config('app.seed_token'), 403);
+    return response()->json(BootstrapSeeder::run());
+});

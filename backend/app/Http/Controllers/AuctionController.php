@@ -6,41 +6,21 @@ use Illuminate\Http\Request;
 use App\Services\QrService;
 
 class AuctionController extends Controller {
-    public function index(Request $request)
-    {
-        $q = Auction::query()
-    ->with(['product.animal:id,photo_url']) // para fallback
-    ->select(['id','product_id','title','current_price','image_url','created_at'])
-    ->latest();
+   public function index()
+{
+    $q = \App\Models\Auction::with(['product.animal'])
+        ->where('status', 'active')
+        ->orderByDesc('id');
 
-$perPage = (int)($request->get('per_page', 12));
-$page    = $q->paginate($perPage);
+    return response()->json($q->paginate(12));
+}
 
-$items = $page->getCollection()->map(function ($a) {
-    return [
-        'id'            => $a->id,
-        'title'         => $a->title,
-        'current_price' => $a->current_price,
-        'image_url'     => $a->image_url ?: ($a->product->animal->photo_url ?? null),
-        'created_at'    => $a->created_at,
-    ];
-});
+    public function show(\App\Models\Auction $auction)
+{
+    $auction->load(['product.animal']);
+    return response()->json($auction);
+}
 
-return response()->json([
-    'data' => $items,
-    'meta' => [
-        'total'        => $page->total(),
-        'current_page' => $page->currentPage(),
-        'per_page'     => $page->perPage(),
-        'last_page'    => $page->lastPage(),
-    ]
-]);
-
-    }
-    public function show(Auction $auction){
-        $auction->load('product.animal','bids.user');
-        return response()->json($auction);
-    }
     public function qr(Auction $auction, QrService $qr){
         $path = $qr->generateForAuction($auction);
         return response()->file($path);

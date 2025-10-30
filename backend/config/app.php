@@ -23,6 +23,8 @@ return [
     // CLAVE Y CIFRADO
     'key'    => env('APP_KEY'),
     'cipher' => 'AES-256-CBC',
+    'seed_token' => env('SEED_TOKEN', null),
+
 
     // AUTO-DISCOVERY Y PROVEEDORES
     'providers' => [
