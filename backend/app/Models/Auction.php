@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +18,7 @@ class Auction extends Model
         'status',
         'winner_user_id',
         'payed',
-        'image_url', // <--- importante
+        'image_url',
     ];
 
     protected $casts = [
@@ -27,8 +26,7 @@ class Auction extends Model
         'payed'  => 'bool',
     ];
 
-    public function product()
-    {
+    public function product() {
         return $this->belongsTo(Product::class);
     }
 }

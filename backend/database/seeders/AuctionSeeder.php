@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Auction;
-use App\Models\Product;
-use App\Models\Animal;
+use App\Models\{Auction, Product, Animal};
 
 class AuctionSeeder extends Seeder
 {
@@ -13,7 +11,6 @@ class AuctionSeeder extends Seeder
     {
         if (Auction::count() > 0) return;
 
-        // Crea un producto/animal genérico para asociar
         $animal = Animal::first() ?? Animal::create([
             'name' => 'Luna',
             'photo_url' => 'https://picsum.photos/seed/paw-animal/800/600',
@@ -36,8 +33,8 @@ class AuctionSeeder extends Seeder
                 'product_id'     => $product->id,
                 'title'          => $i['title'],
                 'description'    => 'Pack benéfico con QR del estado del animal adoptado.',
-                'starting_price' => 20.00,
-                'current_price'  => 0.00,
+                'starting_price' => 20.00, // regla de negocio: empieza en 20€
+                'current_price'  => 0.00,  // aún sin pujas -> la cuenta atrás no arranca
                 'end_at'         => now()->addDays(7),
                 'status'         => 'active',
                 'image_url'      => $i['image_url'],
