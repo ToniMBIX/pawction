@@ -63,3 +63,29 @@ export const FavoritesAPI = {
 export const PaymentAPI = {
   checkout: (id) => api(`/checkout/${id}`, { method: 'POST' })
 }
+// --- Admin ---
+export const AdminAPI = {
+  // GET /api/admin/auctions
+  list: () => api('/admin/auctions'),
+
+  // POST /api/admin/auctions
+  // payload: { title, description?, image_url?, starting_price? }
+  create: (payload) =>
+    api('/admin/auctions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // DELETE /api/admin/auctions/:id
+  remove: (id) =>
+    api(`/admin/auctions/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // (Opcional) PUT /api/admin/auctions/:id
+  update: (id, payload) =>
+    api(`/admin/auctions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+}

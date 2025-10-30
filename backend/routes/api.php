@@ -6,6 +6,8 @@ use App\Http\Controllers\{
     PaymentController, WebhookController, UserController, AuthController
 };
 use App\Models\{Animal, Product, Auction};
+use App\Http\Controllers\Admin\AuctionAdminController;
+
 
 // ---------- Públicas ----------
 Route::post('/auth/register', [AuthController::class, 'register']);

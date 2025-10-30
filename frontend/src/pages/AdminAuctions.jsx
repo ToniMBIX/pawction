@@ -1,5 +1,5 @@
 import React from 'react'
-import { AdminAPI } from '../lib/api'
+import { AdminAPI } from '../lib/api.js'
 import { Auth } from '../lib/auth'
 
 export default function AdminAuctions(){
