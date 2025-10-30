@@ -39,12 +39,16 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::options('/{any}', fn() => response()->noContent())->where('any', '.*');
 
 // ==== ADMIN (requiere is_admin = true) ====
-Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
-    Route::get('/auctions', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'index']);
-    Route::post('/auctions', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'store']);
-    Route::put('/auctions/{auction}', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'update']);
-    Route::delete('/auctions/{auction}', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'destroy']);
-});
+
+Route::middleware(['auth:sanctum', 'admin'])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/auctions', [AuctionAdminController::class, 'index']);
+        Route::post('/auctions', [AuctionAdminController::class, 'store']);
+        Route::put('/auctions/{auction}', [AuctionAdminController::class, 'update']);
+        Route::delete('/auctions/{auction}', [AuctionAdminController::class, 'destroy']);
+    });
+
 
 // ---------- Semilla temporal sin consola ----------
 Route::get('/__seed', function () {
