@@ -1,40 +1,49 @@
 import React from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { AuctionsAPI, FavoritesAPI } from '../lib/api.js'
-import Countdown from '../components/Countdown.jsx'
-import BidBox from '../components/BidBox.jsx'
+import { useParams } from 'react-router-dom'
+import { AuctionsAPI, FavoritesAPI, AuthAPI } from '../lib/api.js'
+import { Auth } from '../lib/auth.js'
 
 export default function AuctionDetail(){
   const { id } = useParams()
-  const [a, setA] = React.useState(null)
-  const nav = useNavigate()
+  const [auction, setAuction] = React.useState(null)
+  const [userFavs, setUserFavs] = React.useState([])
 
-  React.useEffect(()=>{ AuctionsAPI.get(id).then(setA).catch(()=>{}) },[id])
+  React.useEffect(()=>{
+    AuctionsAPI.get(id).then(setAuction)
+    if (Auth.token()) AuthAPI.me().then(u => setUserFavs(u.favorites?.map(f => f.auction_id) || []))
+  }, [id])
 
-  if(!a) return <div>Cargando...</div>
+  const toggleFav = async () => {
+    if (!Auth.token()) {
+      alert('Debes iniciar sesión para usar favoritos')
+      return
+    }
+    try {
+      const r = await FavoritesAPI.toggle(id)
+      setUserFavs(r.favorites)
+    } catch (e) {
+      alert('Error al actualizar favorito')
+    }
+  }
+
+  if (!auction) return <p>Cargando...</p>
+
+  const isFav = userFavs.includes(auction.id)
+
+  const img =
+    auction?.product?.animal?.photo_url ||
+    auction?.image_url ||
+    'https://picsum.photos/seed/paw-placeholder/600/400'
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 card">
-        <img src={a.product?.animal?.photo_url} alt="" className="w-full h-80 object-cover rounded-xl" />
-        <h1 className="text-2xl font-bold mt-3">{a.title}</h1>
-        <p className="opacity-80 mt-2">{a.description}</p>
-        <div className="mt-3 text-sm flex gap-4">
-          <div>Precio actual: <b>{a.current_price} €</b></div>
-          <div>Termina en: <Countdown endAt={a.end_at} /></div>
-        </div>
-        <div className="mt-4">
-          <a className="underline text-sm" href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auctions/${a.id}/qr`} target="_blank">Ver QR</a>
-        </div>
-      </div>
-      <div className="flex flex-col gap-4">
-        {a.status==='active' ? <BidBox auction={a} onBid={setA}/> : (
-          <div className="card">Subasta finalizada.</div>
-        )}
-        <button className="btn" onClick={()=>FavoritesAPI.toggle(a.id).then(()=>alert('Actualizado favoritos'))}>
-          Añadir / quitar favorito
+    <div className="card max-w-2xl mx-auto">
+      <img src={img} alt={auction.title} className="w-full h-64 object-cover rounded-xl" />
+      <h1 className="text-2xl font-bold mt-4">{auction.title}</h1>
+      <p className="mt-2 text-sm opacity-80">{auction.description}</p>
+      <div className="flex items-center gap-3 mt-4">
+        <button onClick={toggleFav} className="btn">
+          {isFav ? '★ Quitar de favoritos' : '☆ Agregar a favoritos'}
         </button>
-        {a.status==='finished' && <button className="btn" onClick={()=>nav(`/checkout/${a.id}`)}>Ir a pagar</button>}
       </div>
     </div>
   )

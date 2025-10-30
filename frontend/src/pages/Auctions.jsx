@@ -19,9 +19,11 @@ export default function Auctions(){
       {items.map(a => {
         // usamos SIEMPRE la foto del animal si existe, que sabemos que viene
         const img =
-          a?.product?.animal?.photo_url ||
-          a?.image_url ||
-          'https://picsum.photos/seed/paw-placeholder/600/400'  // evita /placeholder.jpg local
+  a?.image_url?.startsWith('http')
+    ? a.image_url
+    : a?.product?.animal?.photo_url?.startsWith('http')
+      ? a.product.animal.photo_url
+      : 'https://picsum.photos/seed/paw-placeholder/600/400'
 
         const precio = Number(a?.current_price || 0)
         const etiquetaPrecio = precio > 0 ? `${precio} €` : 'Precio inicial: 20 €'

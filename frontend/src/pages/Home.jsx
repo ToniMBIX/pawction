@@ -19,10 +19,11 @@ export default function Home() {
     <div className="grid md:grid-cols-3 gap-4">
       {items.map(a => {
         const img =
-          a?.product?.animal?.photo_url ||
-          a?.image_url ||
-          a?.photo_url ||
-          '/placeholder.jpg'
+  a?.image_url?.startsWith('http')
+    ? a.image_url
+    : a?.product?.animal?.photo_url?.startsWith('http')
+      ? a.product.animal.photo_url
+      : 'https://picsum.photos/seed/paw-placeholder/600/400'
 
         const endAt = a?.end_at ? new Date(a.end_at) : null
         const endAtText = endAt ? endAt.toLocaleString() : '—'
