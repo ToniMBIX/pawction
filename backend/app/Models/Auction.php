@@ -8,9 +8,8 @@ class Auction extends Model
 {
     protected $fillable = [
         'product_id','title','description',
-        'starting_price','current_price',
-        'end_at','status','winner_user_id',
-        'payed','image_url',
+        'starting_price','current_price','end_at',
+        'status','winner_user_id','payed','image_url',
     ];
 
     protected $casts = [
@@ -18,5 +17,8 @@ class Auction extends Model
         'payed'  => 'boolean',
     ];
 
-    public function product(){ return $this->belongsTo(Product::class); }
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

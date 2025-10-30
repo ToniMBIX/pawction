@@ -6,21 +6,21 @@ use App\Models\Auction;
 
 class AuctionController extends Controller
 {
-    public function index()
+        public function index()
     {
-        $q = Auction::query()
-            ->with(['product.animal'])
-            ->orderByDesc('created_at');
-
-        // NO filtres por current_price > 0 (el reloj arranca con la 1ª puja)
-        return response()->json($q->paginate(12));
+        return response()->json(
+            \App\Models\Auction::with(['product.animal'])
+                ->orderByDesc('created_at')
+                ->paginate(12)
+        );
     }
 
-    public function show(Auction $auction)
+    public function show(\App\Models\Auction $auction)
     {
         $auction->load(['product.animal']);
         return response()->json($auction);
     }
+
 
     public function qr(Auction $auction)
     {
