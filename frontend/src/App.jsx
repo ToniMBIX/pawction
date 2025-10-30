@@ -8,6 +8,7 @@ import Profile from './pages/Profile.jsx'
 import Checkout from './pages/Checkout.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import AdminAuctions from './pages/AdminAuctions.jsx' // 👈 NUEVA IMPORTACIÓN
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
 
@@ -23,7 +24,17 @@ function UserMenu(){
       {isLogged ? (
         <>
           <Link to="/profile">Perfil</Link>
-          <button className="text-sm underline" onClick={async()=>{ try{ await AuthAPI.logout() }catch{} Auth.clear(); nav('/'); }}>Salir</button>
+          {/* 👇 Enlace visible sólo para admin (opcional) */}
+          {Auth.user()?.is_admin && <Link to="/admin/auctions">Admin</Link>}
+          <button
+            className="text-sm underline"
+            onClick={async()=>{
+              try{ await AuthAPI.logout() }catch{}
+              Auth.clear(); nav('/');
+            }}
+          >
+            Salir
+          </button>
         </>
       ) : (
         <>
@@ -49,6 +60,7 @@ export default function App(){
           <UserMenu />
         </div>
       </header>
+
       <main className="container py-6">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -59,8 +71,12 @@ export default function App(){
           <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* 👇 NUEVA RUTA PARA ADMIN */}
+          <Route path="/admin/auctions" element={<AdminAuctions />} />
         </Routes>
       </main>
+
       <footer className="border-t">
         <div className="container py-6 text-sm opacity-70">
           © {new Date().getFullYear()} Pawction — 50/50 Pawction / Greenpeace

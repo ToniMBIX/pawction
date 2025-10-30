@@ -42,5 +42,10 @@ class Kernel extends HttpKernel
         'throttle'        => \Illuminate\Routing\Middleware\ThrottleRequests::class, // ← NECESARIO
         'verified'        => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'force.json' => \App\Http\Middleware\ForceJsonResponse::class,
+        
     ];
+
+    protected $routeMiddleware = [
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
+    ]
 }

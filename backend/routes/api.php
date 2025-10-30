@@ -36,6 +36,14 @@ Route::middleware('auth:sanctum')->group(function () {
 // Preflight genérico
 Route::options('/{any}', fn() => response()->noContent())->where('any', '.*');
 
+// ==== ADMIN (requiere is_admin = true) ====
+Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
+    Route::get('/auctions', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'index']);
+    Route::post('/auctions', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'store']);
+    Route::put('/auctions/{auction}', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'update']);
+    Route::delete('/auctions/{auction}', [\App\Http\Controllers\Admin\AuctionAdminController::class, 'destroy']);
+});
+
 // ---------- Semilla temporal sin consola ----------
 Route::get('/__seed', function () {
     $animal = Animal::firstOrCreate(

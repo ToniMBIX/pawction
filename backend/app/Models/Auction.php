@@ -7,18 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Auction extends Model
 {
     protected $fillable = [
-        'product_id','title','description',
-        'starting_price','current_price','end_at',
-        'status','winner_user_id','payed','image_url',
-    ];
+  'product_id','title','description','image_url',
+  'starting_price','current_price','end_at','status','winner_user_id','payed'
+];
+
 
     protected $casts = [
         'end_at' => 'datetime',
         'payed'  => 'boolean',
     ];
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+    public function product(){ return $this->belongsTo(\App\Models\Product::class); }
+
 }
