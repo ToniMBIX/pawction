@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{AuctionController,BidController,FavoriteController,PaymentController,WebhookController,UserController,AuthController};
+use App\Support\BootstrapSeeder;
 
 // Public
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -31,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
+
 Route::get('/__seed', function (\Illuminate\Http\Request $req) {
     abort_unless($req->query('token') === config('app.seed_token'), 403);
     return response()->json(BootstrapSeeder::run());

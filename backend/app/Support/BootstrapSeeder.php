@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Schema;
 
 class BootstrapSeeder
 {
-    // cambia la versión si necesitas volver a sembrar en el futuro
     const CACHE_KEY = 'bootstrap_seeded_v1';
 
     public static function run(): array
@@ -22,7 +21,6 @@ class BootstrapSeeder
             return ['status' => 'tables-missing'];
         }
 
-        // 1) Animal
         $animal = Animal::firstOrCreate(
             ['name' => 'Luna'],
             [
@@ -34,13 +32,11 @@ class BootstrapSeeder
             ]
         );
 
-        // 2) Producto (pack taza + llavero)
         $product = Product::firstOrCreate(
             ['name' => 'Pack taza + llavero'],
             ['animal_id' => $animal->id]
         );
 
-        // 3) Subastas (precio inicial 20€; la cuenta atrás real la activas tras 1ª puja)
         $items = [
             ['t' => 'Pack taza + llavero · Edición 1', 'img' => 'https://picsum.photos/seed/paw1/800/600'],
             ['t' => 'Pack taza + llavero · Edición 2', 'img' => 'https://picsum.photos/seed/paw2/800/600'],
@@ -51,10 +47,10 @@ class BootstrapSeeder
             Auction::firstOrCreate(
                 ['title' => $i['t'], 'product_id' => $product->id],
                 [
-                    'description'    => 'Subasta solidaria (taza + llavero). La cuenta atrás empieza al llegar a 20€ con la primera puja.',
+                    'description'    => 'Subasta solidaria (taza + llavero). El reloj empieza con la primera puja (mín. 20€).',
                     'starting_price' => 20.00,
-                    'current_price'  => 0,                   // 0 hasta la primera puja
-                    'end_at'         => Carbon::now()->addDays(7), // fecha “dummy” para listar algo
+                    'current_price'  => 0, // empieza en 0 hasta la primera puja de 20€
+                    'end_at'         => Carbon::now()->addDays(7),
                     'status'         => 'active',
                     'payed'          => false,
                     'image_url'      => $i['img'],
@@ -63,7 +59,6 @@ class BootstrapSeeder
         }
 
         Cache::forever(self::CACHE_KEY, 1);
-
         return ['status' => 'seeded'];
     }
 }
