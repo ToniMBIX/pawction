@@ -1,63 +1,62 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Models\Auction;
+use App\Models\Bid;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\{Auction,Bid};
-use App\Jobs\CloseAuctionJob;
-use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 
-class BidController extends Controller {
-    public function store(Request $req)
+class BidController extends Controller
 {
-    $data = $req->validate([
-        'auction_id' => ['required','exists:auctions,id'],
-        'amount'     => ['required','numeric','min:0.01'],
-    ]);
+    // Config: duración de subasta tras primera puja
+    private int $durationMinutes = 48 * 60; // 48h
 
-    $user = $req->user();
-
-    // Bloqueo optimista: evita condiciones de carrera en pujas simultáneas
-    $auction = \DB::transaction(function() use ($data, $user) {
-        $auction = \App\Models\Auction::lockForUpdate()->findOrFail($data['auction_id']);
-
-        if ($auction->status !== 'active') {
-            abort(response()->json(['message'=>'La subasta no está activa'], 422));
-        }
-
-        if (is_null($auction->end_at)) {
-            // PRIMERA PUJA
-            if ($data['amount'] < 20) {
-                abort(response()->json(['message'=>'La primera puja debe ser al menos 20€'], 422));
-            }
-            $auction->starting_price = 20.00;
-            $auction->current_price = max(20.00, $data['amount']);
-            // Arranca la cuenta atrás (ajusta horas si quieres)
-            $auction->end_at = now()->addHours(24);
-        } else {
-            // SIGUIENTES PUJAS
-            if ($data['amount'] <= $auction->current_price) {
-                abort(response()->json(['message'=>'La puja debe superar el precio actual'], 422));
-            }
-            $auction->current_price = $data['amount'];
-        }
-
-        $auction->save();
-
-        $auction->bids()->create([
-            'user_id' => $user->id,
-            'amount'  => $data['amount'],
+    public function store(Request $req)
+    {
+        $data = $req->validate([
+            'auction_id' => 'required|exists:auctions,id',
+            'amount'     => 'required|numeric|min:0.01',
         ]);
 
-        return $auction->fresh()->load('product.animal');
-    });
+        $auction = Auction::lockForUpdate()->find($data['auction_id']); // evita condiciones de carrera
+        if (!$auction || !$auction->isActive()) {
+            throw ValidationException::withMessages(['auction'=>'La subasta no está activa.']);
+        }
 
-    return response()->json([
-        'ok'      => true,
-        'auction' => $auction
-    ], 201);
-}
+        $amount = floatval($data['amount']);
 
+        // Reglas: primera puja mínima 20€, la cuenta atrás empieza aquí
+        if (floatval($auction->current_price) <= 0) {
+            if ($amount < 20) {
+                throw ValidationException::withMessages(['amount'=>'La primera puja debe ser de al menos 20€.']);
+            }
+            // Arranca temporizador si no existe end_at
+            if (empty($auction->end_at)) {
+                $auction->end_at = Carbon::now()->addMinutes($this->durationMinutes);
+            }
+        } else {
+            // Para pujas posteriores: debe superar el current_price
+            if ($amount <= floatval($auction->current_price)) {
+                throw ValidationException::withMessages(['amount'=>'La puja debe ser superior al precio actual.']);
+            }
+        }
 
+        // Guarda puja + actualiza precio actual
+        $bid = Bid::create([
+            'user_id'    => $req->user()->id,
+            'auction_id' => $auction->id,
+            'amount'     => $amount,
+        ]);
 
+        $auction->current_price = $amount;
+        $auction->save();
+
+        return response()->json([
+            'ok' => true,
+            'auction' => $auction->load('product.animal'),
+            'bid' => $bid,
+        ]);
+    }
 }

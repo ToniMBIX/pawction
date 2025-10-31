@@ -1,25 +1,55 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 
-class UserController extends Controller {
-    public function me(Request $req)
+class UserController extends Controller
 {
-    $u = $req->user()->loadMissing(['favorites']); // si tienes relación ->favorites()
-    return response()->json([
-        'id'        => $u->id,
-        'name'      => $u->name,
-        'email'     => $u->email,
-        'is_admin'  => (bool) $u->is_admin,
-        // Devuelve un array de IDs de subastas favoritas
-        'favorites' => $u->favorites()->pluck('auction_id')->toArray(),
-    ]);
-}
+    public function me(Request $req)
+    {
+        $u = $req->user()->load([
+            'favorites:id', // solo IDs
+        ]);
 
-    public function update(Request $request){
-        $data = $request->validate(['name'=>'string','avatar_url'=>'nullable|string','bio'=>'nullable|string']);
-        $u = $request->user(); $u->fill($data)->save();
-        return response()->json($u);
+        // historial de pujas (bids)
+        $bids = $req->user()->bids()
+            ->with(['auction:id,title,current_price,end_at,status'])
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
+
+        return response()->json([
+            'user' => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'favorites' => $u->favorites->pluck('id'),
+            ],
+            'bids' => $bids,
+        ]);
+    }
+
+    public function update(Request $req)
+    {
+        $user = $req->user();
+
+        $data = $req->validate([
+            'name' => 'nullable|string|min:2|max:100',
+            'email' => ['nullable','email','max:150', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:6|max:64',
+        ]);
+
+        if (isset($data['name'])) $user->name = $data['name'];
+        if (isset($data['email'])) $user->email = $data['email'];
+        if (!empty($data['password'])) $user->password = Hash::make($data['password']);
+
+        $user->save();
+
+        return response()->json(['ok'=>true,'user'=>[
+            'id'=>$user->id,'name'=>$user->name,'email'=>$user->email
+        ]]);
     }
 }

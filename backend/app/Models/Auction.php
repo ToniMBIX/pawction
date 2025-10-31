@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Auction extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'product_id','title','description','starting_price','current_price',
         'end_at','status','winner_user_id','payed','image_url'
@@ -19,15 +17,28 @@ class Auction extends Model
         'payed'  => 'boolean',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function winner()
+    public function winnerUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'winner_user_id');
+        return $this->belongsTo(User::class,'winner_user_id');
     }
-    public function bids(){ return $this->hasMany(\App\Models\Bid::class); }
 
+    public function bids()
+    {
+        return $this->hasMany(Bid::class)->latest();
+    }
+
+    public function favorites()
+    {
+        return $this->belongsToMany(User::class,'favorites')->withTimestamps();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
 }

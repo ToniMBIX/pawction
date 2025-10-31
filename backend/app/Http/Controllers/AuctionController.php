@@ -7,20 +7,42 @@ use Illuminate\Http\Request;
 
 class AuctionController extends Controller
 {
-    public function index(Request $request)
-    {
-        $q = Auction::with(['product.animal'])
-            ->where('status', 'active')
-            ->orderByDesc('id');
+    public function index(Request $req)
+{
+    $q = \App\Models\Auction::with(['product.animal'])
+        ->orderByDesc('id');
 
-        return $q->paginate(12);
+    $res = $q->paginate(20);
+
+    // Marca si es favorito del user
+    $favIds = [];
+    if ($req->user()) {
+        $favIds = $req->user()->favorites()->pluck('auctions.id')->toArray();
     }
 
-    public function show(Auction $auction)
-    {
-        $auction->load(['product.animal']);
-        return $auction;
+    $res->getCollection()->transform(function($a) use ($favIds){
+        $a->is_favorite = in_array($a->id, $favIds);
+        return $a;
+    });
+
+    return response()->json($res);
+}
+
+public function show(Request $req, \App\Models\Auction $auction)
+{
+    $auction->load('product.animal');
+
+    $isFav = false;
+    if ($req->user()) {
+        $isFav = $req->user()->favorites()->where('auction_id',$auction->id)->exists();
     }
+
+    return response()->json([
+        'data' => $auction,
+        'is_favorite' => $isFav,
+    ]);
+}
+
 
     public function qr(Auction $auction)
     {

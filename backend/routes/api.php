@@ -1,9 +1,10 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    AuctionController,BidController,FavoriteController,PaymentController,WebhookController,UserController,AuthController
+  AuctionController, BidController, FavoriteController, PaymentController,
+  WebhookController, UserController, AuthController
 };
+
 use App\Models\{Animal, Product, Auction};
 use Illuminate\Support\Str;
 use App\Http\Controllers\Admin\AuctionAdminController;

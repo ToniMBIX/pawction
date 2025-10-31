@@ -1,141 +1,105 @@
 import React from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { AuctionsAPI, FavoritesAPI } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
 
-function Countdown({ endAt }) {
-  if (!endAt) return null
-  const [left, setLeft] = React.useState(() => new Date(endAt) - Date.now())
-  React.useEffect(() => {
-    const t = setInterval(() => setLeft(new Date(endAt) - Date.now()), 1000)
-    return () => clearInterval(t)
-  }, [endAt])
-  if (left <= 0) return <div className="text-red-600 font-semibold">Finalizada</div>
-  const s = Math.floor(left / 1000)
-  const h = Math.floor(s / 3600)
-  const m = Math.floor((s % 3600) / 60)
-  const sec = s % 60
-  return <div className="text-sm opacity-80">Termina en: {h}h {m}m {sec}s</div>
-}
-
-export default function AuctionDetail() {
+export default function AuctionDetail(){
   const { id } = useParams()
-  const [auction, setAuction] = React.useState(null)
-  const [loading, setLoading] = React.useState(true)
-  const [amount, setAmount] = React.useState('')
-  const [placing, setPlacing] = React.useState(false)
+  const [a, setA] = React.useState(null)
   const [isFav, setIsFav] = React.useState(false)
+  const [amount, setAmount] = React.useState('')
+  const [left, setLeft] = React.useState('') // texto de cuenta atrás
+  const [loading, setLoading] = React.useState(false)
 
   const load = async () => {
-    setLoading(true)
-    try {
-      const a = await AuctionsAPI.get(id)
-      setAuction(a)
-      setIsFav(!!a.is_favorite)
-    } catch (e) {
-      console.error(e)
-      setAuction(null)
-    } finally {
-      setLoading(false)
-    }
+    const r = await AuctionsAPI.get(id)
+    // API devuelve { data, is_favorite }
+    setA(r.data)
+    setIsFav(!!r.is_favorite)
   }
 
-  React.useEffect(() => { load() }, [id])
+  React.useEffect(()=>{ load() }, [id])
 
-  const isStarted = !!auction?.end_at
-  const minBid = isStarted ? (Number(auction?.current_price || 0) + 1) : 20
+  // Temporizador
+  React.useEffect(()=>{
+    if (!a?.end_at) { setLeft('Comienza con la primera puja de 20€'); return }
+    const tick = () => {
+      const end = new Date(a.end_at).getTime()
+      const now = Date.now()
+      const diff = end - now
+      if (diff <= 0) { setLeft('Finalizada'); return }
+      const h = Math.floor(diff/3600000)
+      const m = Math.floor((diff%3600000)/60000)
+      const s = Math.floor((diff%60000)/1000)
+      setLeft(`${h}h ${m}m ${s}s`)
+    }
+    tick()
+    const i = setInterval(tick, 1000)
+    return ()=>clearInterval(i)
+  }, [a?.end_at])
+
+  const toggleFav = async () => {
+    if (!Auth.isLogged()) { alert('Inicia sesión para usar favoritos'); return }
+    try {
+      const r = await FavoritesAPI.toggle(a.id)
+      setIsFav(!!r.favorited)
+    } catch(e){ alert(e.message) }
+  }
 
   const submitBid = async (e) => {
     e.preventDefault()
-    if (!Auth.isLogged()) { alert('Debes iniciar sesión para pujar'); return }
-    if (placing) return
+    if (!Auth.isLogged()) { alert('Inicia sesión para pujar'); return }
+    const v = parseFloat(amount)
+    if (isNaN(v)) { alert('Introduce una cantidad'); return }
 
-    const val = Number(amount)
-    if (isNaN(val)) { alert('Importe no válido'); return }
-    if (!isStarted && val < 20) { alert('La primera puja debe ser al menos 20€'); return }
-    if (isStarted && val <= Number(auction?.current_price || 0)) {
-      alert(`La puja debe ser superior a ${auction.current_price}€`)
-      return
-    }
+    // Validación mínima en cliente (el servidor ya valida):
+    const curr = parseFloat(a.current_price || 0)
+    if (curr <= 0 && v < 20) { alert('La primera puja debe ser al menos 20€'); return }
+    if (curr > 0 && v <= curr) { alert('La puja debe superar el precio actual'); return }
 
-    setPlacing(true)
     try {
-      const r = await AuctionsAPI.bid(Number(id), val) // backend devuelve { ok, auction }
-      const updated = r.auction || r
-      setAuction(updated)
+      setLoading(true)
+      const r = await AuctionsAPI.bid(a.id, v)
+      setA(r.auction) // backend devuelve auction actualizado
       setAmount('')
-    } catch (e) {
-      alert(e.message || 'Error al pujar')
-    } finally {
-      setPlacing(false)
-    }
+    } catch(e){ alert(e.message) } finally { setLoading(false) }
   }
 
-  const toggleFav = async () => {
-    if (!Auth.isLogged()) { alert('Debes iniciar sesión'); return }
-    try {
-      const r = await FavoritesAPI.toggle(auction.id)
-      // backend recomendado: { favorite: boolean }
-      if (typeof r?.favorite !== 'undefined') setIsFav(!!r.favorite)
-      else setIsFav(v => !v) // fallback
-    } catch (e) {
-      alert(e.message || 'No se pudo actualizar favorito')
-    }
-  }
+  if (!a) return <div>Cargando…</div>
 
-  if (loading) return <div>Cargando…</div>
-  if (!auction) return <div>No encontrada</div>
-
-  const img = auction?.product?.animal?.photo_url || auction?.image_url || '/placeholder.jpg'
+  const img = a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <div>
-        <img
-          src={img}
-          alt=""
-          className="w-full h-64 object-cover rounded-xl"
-          onError={(e)=>{ e.currentTarget.src = '/placeholder.jpg' }}
-        />
-        {auction?.product?.animal?.info_url && (
-          <a href={auction.product.animal.info_url} target="_blank" rel="noreferrer" className="text-sm underline mt-2 inline-block">
-            Ver información del animal
-          </a>
-        )}
+        <img src={img} alt="" className="w-full rounded-xl object-cover" />
+        <div className="mt-2 text-sm">
+          {a?.product?.animal?.name && <>Animal: <b>{a.product.animal.name}</b></>}
+        </div>
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold">{auction.title}</h1>
-        {auction.description && <p className="opacity-80 mt-2">{auction.description}</p>}
+        <h1 className="text-2xl font-bold">{a.title}</h1>
+        <div className="opacity-70">{a.description}</div>
 
-        <div className="mt-3 text-sm">Precio actual: <b>{auction.current_price} €</b></div>
-        <div className="mt-1 text-xs opacity-60">
-          {isStarted
-            ? <Countdown endAt={auction.end_at} />
-            : 'Aún no ha comenzado. La primera puja (≥ 20€) inicia la cuenta atrás.'}
+        <div className="mt-4">
+          <div>Precio actual: <b>{a.current_price} €</b></div>
+          <div className="text-sm opacity-70">Termina en: {left}</div>
+        </div>
+
+        <div className="flex gap-3 mt-4">
+          <button onClick={toggleFav} className="btn">
+            {isFav ? '★ Quitar de favoritos' : '☆ Agregar a favoritos'}
+          </button>
         </div>
 
         <form onSubmit={submitBid} className="mt-4 flex gap-2">
-          <input
-            className="input"
-            type="number"
-            step="0.01"
-            min={minBid}
-            value={amount}
-            onChange={e=>setAmount(e.target.value)}
-            placeholder={`Mínimo ${minBid}€`}
-          />
-          <button className="btn" disabled={placing || (Number(amount) < minBid)}>
-            {isStarted ? 'Pujar' : 'Comenzar (≥ 20€)'}
+          <input className="input" placeholder="Tu puja (€)"
+            value={amount} onChange={e=>setAmount(e.target.value)} />
+          <button className="btn" disabled={loading}>
+            {loading ? 'Pujando…' : 'Pujar'}
           </button>
         </form>
-
-        <div className="mt-3 flex items-center gap-3">
-          <button className="text-sm underline" onClick={toggleFav}>
-            {isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-          </button>
-          <Link to="/" className="text-sm underline opacity-70">Volver</Link>
-        </div>
       </div>
     </div>
   )

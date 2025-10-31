@@ -2,31 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Favorite, Auction};
+use App\Models\Auction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class FavoriteController extends Controller
 {
-    public function toggle(Auction $auction)
+    public function toggle(Request $req, Auction $auction)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['message' => 'No autenticado'], 401);
+        $user = $req->user();
+
+        $exists = $user->favorites()->where('auction_id',$auction->id)->exists();
+
+        if ($exists) {
+            $user->favorites()->detach($auction->id);
+            $favorited = false;
+        } else {
+            $user->favorites()->attach($auction->id);
+            $favorited = true;
         }
 
-        $fav = $user->favorites()->where('auction_id', $auction->id)->first();
-        if ($fav) {
-            $fav->delete();
-            $status = 'removed';
-        } else {
-            $user->favorites()->create(['auction_id' => $auction->id]);
-            $status = 'added';
-        }
+        $count = $auction->favorites()->count();
 
         return response()->json([
-            'status' => $status,
-            'favorites' => $user->favorites()->pluck('auction_id')
+            'favorited' => $favorited,
+            'count' => $count,
+            'auction_id' => $auction->id,
         ]);
     }
 }

@@ -11,10 +11,10 @@ class User extends Authenticatable {
     protected $fillable = ['name','email','password','avatar_url','bio'];
     protected $hidden = ['password','remember_token'];
 
-    public function favorites()
-{
-    return $this->hasMany(\App\Models\Favorite::class);
+    public function favorites(){
+  return $this->belongsToMany(Auction::class,'favorites')->withTimestamps();
 }
 
-    public function bids() { return $this->hasMany(Bid::class); }
+
+public function bids(){ return $this->hasMany(\App\Models\Bid::class); }
 }
