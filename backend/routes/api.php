@@ -1,79 +1,109 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\{
   AuctionController, BidController, FavoriteController, PaymentController,
   WebhookController, UserController, AuthController
 };
-
+use App\Http\Controllers\Admin\AuctionAdminController;
 use App\Models\{Animal, Product, Auction};
 use Illuminate\Support\Str;
-use App\Http\Controllers\Admin\AuctionAdminController;
 
-
-// Auth públicas
+/**
+ * Auth públicas
+ */
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
 
-Route::get('/ping', fn() => response()->json(['ok' => true], 200));
+/**
+ * Rutas que requieren auth (Sanctum)
+ */
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', function(Request $request){
+        /** @var \App\Models\User $u */
+        $u = $request->user();
+        $favorites = $u->favorites()->pluck('auctions.id')->values();
+        return [
+            'id'        => $u->id,
+            'name'      => $u->name,
+            'email'     => $u->email,
+            'is_admin'  => (bool)($u->is_admin ?? false),
+            'favorites' => $favorites,
+        ];
+    });
 
-// Auctions públicas
-Route::get('/auctions',              [AuctionController::class, 'index']);
-Route::get('/auctions/{auction}',    [AuctionController::class, 'show']);
+    // Pujar
+    Route::post('/auctions/{auction}/bids', [BidController::class, 'store']);
+
+    // Favoritos
+    Route::post('/auctions/{auction}/favorite', [FavoriteController::class, 'toggle']);
+
+    // Checkout del ganador (Stripe PaymentIntent)
+    Route::post('/checkout/{auction}', [PaymentController::class, 'checkout']);
+});
+
+/**
+ * Rutas públicas de subastas/catálogo
+ */
+Route::get('/auctions', [AuctionController::class, 'index']);
+Route::get('/auctions/{auction}', [AuctionController::class, 'show']);
 Route::get('/auctions/{auction}/qr', [AuctionController::class, 'qr']);
 
-// Webhooks
+/**
+ * Webhooks de pago
+ */
 Route::post('/webhooks/stripe', [WebhookController::class, 'stripe']);
 Route::post('/webhooks/paypal', [WebhookController::class, 'paypal']);
 
-// Protegidas
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
-
-    Route::get('/me',           [UserController::class, 'me']);
-    Route::put('/me',           [UserController::class, 'update']);
-
-    Route::post('/bids',        [BidController::class, 'store']);
-    Route::post('/favorites/{auction}', [\App\Http\Controllers\FavoriteController::class, 'toggle']);
-    Route::post('/checkout/{auction}',  [PaymentController::class, 'checkout']);
+/**
+ * Admin (protegido por auth + middleware admin)
+ */
+Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
+    Route::get('/auctions', [AuctionAdminController::class, 'index']);
+    Route::post('/auctions', [AuctionAdminController::class, 'store']);
+    Route::put('/auctions/{auction}', [AuctionAdminController::class, 'update']);
+    Route::patch('/auctions/{auction}/status', [AuctionAdminController::class, 'updateStatus']);
+    Route::delete('/auctions/{auction}', [AuctionAdminController::class, 'destroy']);
 });
 
-// CORS preflight catch-all
-Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
-
-// --- SOLO PARA POV / SEED SIN SHELL (borra después) ---
-Route::get('/__seed', function () {
-    if (Auction::count() > 0) {
-        return response()->json(['seeded' => true, 'skipped' => 'auctions already exist']);
+/**
+ * Seed rápido (SOLO para desarrollo)
+ */
+Route::post('/dev/seed', function(){
+    if (!app()->environment(['local','development'])) {
+        abort(403, 'Solo en desarrollo');
     }
 
-    $animal = Animal::create([
-        'name' => 'Luna',
-        'species' => 'Perro',
-        'age' => 3,
-        'description' => 'Cariñosa y juguetona',
-        'photo_url' => 'https://placekitten.com/800/500',
-        'info_url' => 'https://example.org/luna'
-    ]);
-
-    $product = Product::create([
-        'name' => 'Pack taza + llavero',
-        'animal_id' => $animal->id
-    ]);
-
-    $items = [
-        ['title'=>'Pack solidario 1','image_url'=>'https://picsum.photos/seed/paw1/800/600'],
-        ['title'=>'Pack solidario 2','image_url'=>'https://picsum.photos/seed/paw2/800/600'],
-        ['title'=>'Pack solidario 3','image_url'=>'https://picsum.photos/seed/paw3/800/600'],
+    // Crea animales, productos y subastas de ejemplo
+    $animals = [
+        ['name'=>'Luna','species'=>'Perro','info_url'=>'https://example.com/luna','image_url'=>'https://picsum.photos/seed/luna/800/600'],
+        ['name'=>'Milo','species'=>'Gato','info_url'=>'https://example.com/milo','image_url'=>'https://picsum.photos/seed/milo/800/600'],
+        ['name'=>'Kira','species'=>'Perro','info_url'=>'https://example.com/kira','image_url'=>'https://picsum.photos/seed/kira/800/600'],
     ];
 
-    foreach ($items as $i) {
+    foreach ($animals as $i) {
+        $animal = Animal::create([
+            'name' => $i['name'],
+            'species' => $i['species'],
+            'info_url' => $i['info_url'],
+            'image_url' => $i['image_url'],
+        ]);
+
+        $product = Product::create([
+            'animal_id' => $animal->id,
+            'name' => 'Pack taza + llavero ' . $animal->name,
+            'sku'  => Str::uuid(),
+            'qr_code' => null, // lo genera QrService al crear PDF
+        ]);
+
         Auction::create([
             'product_id'     => $product->id,
-            'title'          => $i['title'],
-            'description'    => 'Pack solidario (taza + llavero) con QR del animal.',
-            'starting_price' => 20.00,     // mínimo 20€
-            'current_price'  => 20.00,     // empieza mostrando 20€
-            'end_at'         => now()->addDays(7),
+            'title'          => 'Subasta solidaria: ' . $animal->name,
+            'description'    => 'Pack solidario con la imagen de ' . $animal->name,
+            'starting_price' => 20.00,
+            'current_price'  => 0,
+            'end_at'         => now()->addDays(3),
             'status'         => 'active',
             'payed'          => false,
             'image_url'      => $i['image_url'],
@@ -81,11 +111,4 @@ Route::get('/__seed', function () {
     }
 
     return response()->json(['seeded' => true, 'count' => Auction::count()]);
-});
-
-Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
-    Route::post('/auctions', [AuctionAdminController::class, 'store']);
-    Route::delete('/auctions/{auction}', [AuctionAdminController::class, 'destroy']);
-  Route::put('/auctions/{auction}', [AuctionAdminController::class, 'update']);
-  Route::patch('/auctions/{auction}/status', [AuctionAdminController::class, 'updateStatus']);
 });

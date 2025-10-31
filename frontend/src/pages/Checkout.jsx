@@ -1,39 +1,41 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import { PaymentAPI } from '../lib/api.js'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-
-function CheckoutForm({ clientSecret }){
-  const stripe = useStripe()
-  const elements = useElements()
-  const [loading, setLoading] = React.useState(false)
-  const onPay = async () => {
-    if(!stripe || !elements) return
-    setLoading(true)
-    const { error } = await stripe.confirmPayment({ elements, confirmParams: {} })
-    if(error){ alert(error.message) } else { alert('Pago confirmado. Recibirás un email con el PDF.') }
-    setLoading(false)
-  }
-  return (
-    <div className="card">
-      <PaymentElement />
-      <button className="btn mt-3" onClick={onPay} disabled={!stripe || loading}>{loading?'Procesando...':'Pagar'}</button>
-    </div>
-  )
-}
+import { PaymentAPI, AuctionsAPI } from '../lib/api.js'
 
 export default function Checkout(){
   const { id } = useParams()
   const [intent, setIntent] = React.useState(null)
-  const [stripePromise, setStripePromise] = React.useState(() => loadStripe(import.meta.env.VITE_STRIPE_KEY || 'pk_test_xxx'))
+  const [auction, setAuction] = React.useState(null)
+  const [error, setError] = React.useState('')
 
-  React.useEffect(()=>{ PaymentAPI.checkout(id).then(setIntent).catch(e=>alert(e.message)) },[id])
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const a = await AuctionsAPI.get(id)
+        setAuction(a.data)
+        const r = await PaymentAPI.checkout(id)
+        setIntent(r)
+      } catch(e) {
+        setError(e.message)
+      }
+    })()
+  }, [id])
 
-  if(!intent?.client_secret) return <div>Cargando...</div>
+  if (error) return <div className="p-6 text-red-700">Error: {error}</div>
+  if (!auction || !intent) return <div className="p-6">Cargando…</div>
+
   return (
-    <Elements options={{ clientSecret: intent.client_secret }} stripe={stripePromise}>
-      <CheckoutForm clientSecret={intent.client_secret} />
-    </Elements>
+    <div className="max-w-xl mx-auto p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Pagar subasta #{auction.id}</h1>
+      <p className="text-gray-600">Importe: <b>{(auction.current_price||0).toFixed(2)} €</b></p>
+      <div className="p-4 rounded bg-gray-50">
+        <div className="text-sm text-gray-500">client_secret</div>
+        <code className="break-all">{intent.client_secret}</code>
+      </div>
+      <p className="text-sm text-gray-500">
+        Integra aquí Stripe Elements (opcional). El webhook de backend ya registra el pago,
+        crea el payout 50/50 y envía el email con PDF y QR al ganador.
+      </p>
+    </div>
   )
 }
