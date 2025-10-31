@@ -62,25 +62,26 @@ export default function AuctionDetail(){
   React.useEffect(()=>{ load() },[load])
 
   // Temporizador
-  React.useEffect(()=>{
-    if (r.end_at) {
+  React.useEffect(() => {
+  if (!a?.end_at) return
+
   const updateCountdown = () => {
-    const diff = new Date(r.end_at) - new Date()
-    if (diff <= 0) return setTimeLeft('Finalizada')
-    const h = Math.floor(diff / (1000*60*60))
-    const m = Math.floor((diff % (1000*60*60)) / (1000*60))
-    const s = Math.floor((diff % (1000*60)) / 1000)
+    const diff = new Date(a.end_at) - new Date()
+    if (diff <= 0) {
+      setTimeLeft('Finalizada')
+      return
+    }
+    const h = Math.floor(diff / (1000 * 60 * 60))
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    const s = Math.floor((diff % (1000 * 60)) / 1000)
     setTimeLeft(`${h}h ${m}m ${s}s`)
   }
-  updateCountdown()
-  const int = setInterval(updateCountdown, 1000)
-  return ()=>clearInterval(int)
-}
 
-    if (!a?.end_at) return
-    const t = setInterval(()=> updateLeft(a.end_at), 1000)
-    return ()=> clearInterval(t)
-  },[a?.end_at])
+  updateCountdown()
+  const interval = setInterval(updateCountdown, 1000)
+  return () => clearInterval(interval)
+}, [a?.end_at])
+
 
   // --- actions ---
   async function submitBid(e){
