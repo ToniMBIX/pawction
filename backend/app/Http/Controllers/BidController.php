@@ -53,4 +53,34 @@ class BidController extends Controller
             'end_at'  => $auction->end_at,
         ], 201);
     }
+    public function mine(Request $request)
+    {
+        $user = $request->user();
+
+        $bids = Bid::where('user_id', $user->id)
+            ->with(['auction.product.animal'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function($b){
+                return [
+                    'id'        => $b->id,
+                    'amount'    => $b->amount,
+                    'created_at'=> $b->created_at,
+                    'auction'   => $b->auction ? [
+                        'id'            => $b->auction->id,
+                        'title'         => $b->auction->title,
+                        'current_price' => $b->auction->current_price,
+                        'image_url'     => $b->auction->image_url,
+                        'product'       => $b->auction->product ? [
+                            'animal' => $b->auction->product->animal ? [
+                                'photo_url' => $b->auction->product->animal->photo_url
+                            ] : null
+                        ] : null,
+                    ] : null,
+                ];
+            });
+
+        return response()->json($bids);
+    }
+
 }

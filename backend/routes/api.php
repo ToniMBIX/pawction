@@ -21,15 +21,19 @@ Route::post('/webhooks/paypal', [WebhookController::class, 'paypal']);
 
 // Protegidos
 Route::middleware('auth:sanctum')->group(function () {
-  Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-  Route::get('/me',  [UserController::class, 'me']);
-  Route::put('/me',  [UserController::class, 'update']);
+    Route::get('/me', [UserController::class, 'me']);
+    Route::put('/me', [UserController::class, 'update']);
 
-  Route::post('/bids',                 [BidController::class, 'store']);
-  Route::post('/favorites/{auction}',  [FavoriteController::class, 'toggle']);
-  Route::post('/checkout/{auction}',   [PaymentController::class, 'checkout']);
+    Route::post('/bids', [BidController::class, 'store']);
+    Route::get('/bids/mine', [BidController::class, 'mine']); // <— NUEVO
+
+    Route::get('/favorites', [FavoriteController::class, 'index']); // <— NUEVO
+    Route::post('/favorites/{auction}', [FavoriteController::class, 'toggle']);
+    Route::post('/checkout/{auction}', [PaymentController::class, 'checkout']);
 });
+
 
 // Preflight
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');

@@ -1,36 +1,48 @@
 import React from 'react'
-import { AuthAPI, AuctionsAPI } from '../lib/api.js'
+import { Link } from 'react-router-dom'
+import { FavoritesAPI } from '../lib/api.js'
+import { Auth } from '../lib/auth.js'
 
 export default function Favorites(){
-  const [me, setMe] = React.useState(null)
   const [items, setItems] = React.useState([])
+  const [loading, setLoading] = React.useState(true)
 
-  React.useEffect(() => {
-    (async () => {
-      const u = await AuthAPI.me()
-      setMe(u)
-      const page1 = await AuctionsAPI.list(1)
-      const favs = new Set(u.favorites || [])
-      setItems((page1.data || []).filter(a => favs.has(a.id)))
+  React.useEffect(()=>{
+    (async ()=>{
+      try{
+        if (!Auth.token()) { setItems([]); return }
+        const list = await FavoritesAPI.list()
+        setItems(Array.isArray(list) ? list : (list.data || []))
+      } catch {
+        setItems([])
+      } finally {
+        setLoading(false)
+      }
     })()
-  }, [])
+  },[])
 
-  if (!me) return <div className="p-6">Cargando…</div>
+  if (!Auth.token()) return <div>Debes iniciar sesión para ver tus favoritos.</div>
+  if (loading) return <div>Cargando…</div>
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Mis favoritos</h1>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map(a => (
-          <a key={a.id} href={`/auctions/${a.id}`} className="block border rounded-xl overflow-hidden hover:shadow">
-            <img src={a.image_url || a.product?.animal?.image_url} alt={a.title} />
-            <div className="p-4">
-              <div className="font-semibold">{a.title}</div>
-              <div className="text-sm text-gray-600">{(a.current_price || 0).toFixed(2)} €</div>
+    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {items.map(a => {
+        const img = a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'
+        return (
+          <Link to={`/auctions/${a.id}`} key={a.id} className="card">
+            <img src={img} alt="" className="w-full h-40 object-cover rounded-xl" />
+            <div className="mt-3">
+              <h3 className="font-bold">{a.title}</h3>
+              <div className="mt-2 text-sm">Actual: <b>{a.current_price} €</b></div>
             </div>
-          </a>
-        ))}
-      </div>
+          </Link>
+        )
+      })}
+      {items.length === 0 && (
+        <div className="col-span-full text-center text-sm opacity-70">
+          No tienes favoritos todavía.
+        </div>
+      )}
     </div>
   )
 }
