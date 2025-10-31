@@ -15,6 +15,22 @@ console.log({
   Home, Auctions, AuctionDetail, Favorites, Profile,
   Checkout, Login, Register, AdminAuctions
 })
+// Renderiza un componente de forma segura y muestra qué falla si no es válido
+function SafeElement(Comp, name) {
+  if (!Comp) {
+    return <div className="p-6 text-red-700">Componente no encontrado: <b>{name}</b></div>
+  }
+  try {
+    const C = Comp
+    return <C />
+  } catch (e) {
+    return (
+      <div className="p-6 text-red-700">
+        Error al renderizar <b>{name}</b>: {String(e.message || e)}
+      </div>
+    )
+  }
+}
 
 function ErrorBoundary({ children }) {
   const [err, setErr] = React.useState(null)
@@ -84,16 +100,17 @@ export default function App(){
 
         <main className="container py-6">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/auctions" element={<Auctions />} />
-            <Route path="/auctions/:id" element={<AuctionDetail />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/checkout/:id" element={<Checkout />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/admin/auctions" element={<AdminAuctions />} />
-          </Routes>
+  <Route path="/" element={SafeElement(Home, 'Home')} />
+  <Route path="/auctions" element={SafeElement(Auctions, 'Auctions')} />
+  <Route path="/auctions/:id" element={SafeElement(AuctionDetail, 'AuctionDetail')} />
+  <Route path="/favorites" element={SafeElement(Favorites, 'Favorites')} />
+  <Route path="/profile" element={SafeElement(Profile, 'Profile')} />
+  <Route path="/checkout/:id" element={SafeElement(Checkout, 'Checkout')} />
+  <Route path="/login" element={SafeElement(Login, 'Login')} />
+  <Route path="/register" element={SafeElement(Register, 'Register')} />
+  <Route path="/admin/auctions" element={SafeElement(AdminAuctions, 'AdminAuctions')} />
+</Routes>
+
         </main>
 
         <footer className="border-t">
