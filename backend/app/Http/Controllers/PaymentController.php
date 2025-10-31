@@ -1,17 +1,26 @@
 <?php
-namespace App\Http\Controllers;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
 
-use Illuminate\Http\Request;
-use App\Models\{Auction,Payout};
-use App\Services\PaymentService;
+public function checkout(Request $request, Auction $auction)
+{
+    $user = $request->user();
 
-class PaymentController extends Controller {
-    public function checkout(Request $request, Auction $auction, PaymentService $pay){
-        // En producción: exigir que el usuario sea el ganador y la subasta esté finalizada.
-        if(app()->environment('production')){
-            abort_if($auction->status!=='finished' || $auction->winner_user_id !== $request->user()->id, 403, 'No autorizado');
-        }
-        $intent = $pay->createPaymentIntent($auction->id, $auction->current_price, 'EUR');
-        return response()->json($intent);
-    }
+    $pdf = Pdf::loadView('pdf.receipt', [
+        'user' => $user,
+        'auction' => $auction,
+        'amount_pawction' => $auction->current_price / 2,
+        'amount_greenpeace' => $auction->current_price / 2
+    ]);
+
+    $path = storage_path("app/receipts/receipt_{$auction->id}.pdf");
+    $pdf->save($path);
+
+    // Simula envío de correo
+    Mail::raw("Gracias por tu donación. Adjunto el recibo.", function($m) use ($user, $path) {
+        $m->to($user->email)->subject('Confirmación de pago Pawction');
+        $m->attach($path);
+    });
+
+    return response()->json(['message' => 'Pago confirmado y recibo enviado.']);
 }

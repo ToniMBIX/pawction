@@ -14,15 +14,25 @@ import { AuthAPI } from './lib/api.js'
 
 function UserMenu(){
   const nav = useNavigate()
+  const [user, setUser] = React.useState(Auth.user())
   const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
-  React.useEffect(()=>{ const int = setInterval(()=> setIsLogged(Auth.isLogged()), 500); return ()=>clearInterval(int) },[])
+
+  React.useEffect(()=>{
+    const int = setInterval(()=>{
+      setUser(Auth.user())
+      setIsLogged(Auth.isLogged())
+    }, 1000)
+    return ()=>clearInterval(int)
+  },[])
+
   return (
     <div className="ml-auto flex items-center gap-3">
       {isLogged ? (
         <>
+          <span className="text-sm opacity-70">Hola, {user?.name || 'Usuario'}</span>
           <Link to="/profile">Perfil</Link>
           <button className="text-sm underline" onClick={async()=>{
-            try{ await AuthAPI.logout() }catch{}
+            try { await AuthAPI.logout() } catch {}
             Auth.clear(); nav('/')
           }}>Salir</button>
         </>
@@ -32,9 +42,15 @@ function UserMenu(){
           <Link to="/register">Registro</Link>
         </>
       )}
-      <div className="text-xs opacity-60 hidden sm:block">build {__APP_BUILD_TIME__}</div>
     </div>
   )
+}
+function PrivateRoute({ children }) {
+  if (!Auth.isLogged()) {
+    window.location.href = '/login'
+    return null
+  }
+  return children
 }
 
 export default function App(){
@@ -54,16 +70,17 @@ export default function App(){
 
       <main className="container py-6">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auctions" element={<Auctions />} />
-          <Route path="/auctions/:id" element={<AuctionDetail />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/history" element={<BidsHistory />} />     {/* <— NUEVO */}
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/checkout/:id" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/auctions" element={<Auctions />} />
+  <Route path="/auctions/:id" element={<AuctionDetail />} />
+  <Route path="/favorites" element={<PrivateRoute><Favorites /></PrivateRoute>} />
+  <Route path="/history" element={<PrivateRoute><BidsHistory /></PrivateRoute>} />
+  <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+  <Route path="/checkout/:id" element={<PrivateRoute><Checkout /></PrivateRoute>} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/register" element={<Register />} />
+</Routes>
+
       </main>
 
       <footer className="border-t">

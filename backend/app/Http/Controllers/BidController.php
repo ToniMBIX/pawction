@@ -10,49 +10,38 @@ use Carbon\Carbon;
 class BidController extends Controller
 {
     public function store(Request $request)
-    {
-        $data = $request->validate([
-            'auction_id' => ['required','exists:auctions,id'],
-            'amount'     => ['required','numeric','min:0.01'],
-        ]);
+{
+    $data = $request->validate([
+        'auction_id' => ['required','exists:auctions,id'],
+        'amount' => ['required','numeric','min:0'],
+    ]);
 
-        $auction = Auction::lockForUpdate()->findOrFail($data['auction_id']);
+    $auction = \App\Models\Auction::findOrFail($data['auction_id']);
+    $user = $request->user();
 
-        if ($auction->status !== 'active') {
-            throw ValidationException::withMessages(['auction'=>'La subasta no está activa.']);
-        }
-
-        $amount = (float)$data['amount'];
-
-        if ((float)$auction->current_price <= 0) {
-            if ($amount < 20) {
-                throw ValidationException::withMessages(['amount'=>'La primera puja debe ser mínimo 20 €']);
-            }
-            // arranca contador en primera puja (ej: +48h; ajusta a tu regla)
-            if (!$auction->end_at) {
-                $auction->end_at = Carbon::now()->addHours(48);
-            }
-        } else {
-            if ($amount <= (float)$auction->current_price) {
-                throw ValidationException::withMessages(['amount'=>'La puja debe superar el precio actual.']);
-            }
-        }
-
-        Bid::create([
-            'auction_id' => $auction->id,
-            'user_id'    => $request->user()->id,
-            'amount'     => $amount,
-        ]);
-
-        $auction->current_price = $amount;
-        $auction->save();
-
-        return response()->json([
-            'ok'      => true,
-            'current' => $auction->current_price,
-            'end_at'  => $auction->end_at,
-        ], 201);
+    // Si es la primera puja
+    $min = $auction->current_price > 0 ? $auction->current_price + 1 : 20;
+    if ($data['amount'] < $min) {
+        return response()->json(['message'=>"La puja mínima actual es de {$min}€"], 422);
     }
+
+    $auction->bids()->create([
+        'user_id' => $user->id,
+        'amount' => $data['amount']
+    ]);
+
+    // Si es la primera puja, inicia o reinicia temporizador
+    if (!$auction->end_at || now()->greaterThan($auction->end_at)) {
+        $auction->end_at = now()->addDay();
+    } else {
+        $auction->end_at = now()->addDay();
+    }
+    $auction->current_price = $data['amount'];
+    $auction->save();
+
+    return response()->json(['message'=>'Puja registrada', 'auction'=>$auction->fresh()]);
+}
+
     public function mine(Request $request)
     {
         $user = $request->user();

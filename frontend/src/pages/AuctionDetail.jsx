@@ -7,6 +7,7 @@ import { Auth } from '../lib/auth.js'
 export default function AuctionDetail(){
   const { id } = useParams()
   const [a, setA] = React.useState(null)
+  const [timeLeft, setTimeLeft] = React.useState('')
   const [amount, setAmount] = React.useState('')
   const [fav, setFav] = React.useState(false)
   const [left, setLeft] = React.useState('—')
@@ -62,6 +63,20 @@ export default function AuctionDetail(){
 
   // Temporizador
   React.useEffect(()=>{
+    if (r.end_at) {
+  const updateCountdown = () => {
+    const diff = new Date(r.end_at) - new Date()
+    if (diff <= 0) return setTimeLeft('Finalizada')
+    const h = Math.floor(diff / (1000*60*60))
+    const m = Math.floor((diff % (1000*60*60)) / (1000*60))
+    const s = Math.floor((diff % (1000*60)) / 1000)
+    setTimeLeft(`${h}h ${m}m ${s}s`)
+  }
+  updateCountdown()
+  const int = setInterval(updateCountdown, 1000)
+  return ()=>clearInterval(int)
+}
+
     if (!a?.end_at) return
     const t = setInterval(()=> updateLeft(a.end_at), 1000)
     return ()=> clearInterval(t)
@@ -120,6 +135,8 @@ export default function AuctionDetail(){
           className="w-full rounded-xl object-cover max-h-[420px]"
           onError={(ev)=>{ ev.currentTarget.src = '/placeholder.jpg' }}
         />
+        <img src={`${import.meta.env.VITE_API_URL}/auctions/${id}/qr`} alt="QR Animal" className="mt-3 w-32" />
+
       </div>
 
       <div className="space-y-3">
@@ -127,7 +144,10 @@ export default function AuctionDetail(){
         {a.description && <p className="opacity-80">{a.description}</p>}
 
         <div>Precio actual: <b>{Number(a.current_price || 0)} €</b></div>
-        <div>Termina en: <b>{left}</b></div>
+        <div className="text-sm opacity-70 mt-1">
+  Termina en: <b>{timeLeft}</b>
+</div>
+
 
         <form onSubmit={submitBid} className="flex gap-2">
           <input

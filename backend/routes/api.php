@@ -5,6 +5,7 @@ use App\Http\Controllers\{
   AuctionController, BidController, FavoriteController, PaymentController,
   WebhookController, UserController, AuthController
 };
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 // Públicos
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -37,3 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Preflight
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
+Route::get('/auctions/{auction}/qr', function(\App\Models\Auction $auction) {
+    return QrCode::size(200)->generate($auction->product->animal->info_url ?? 'https://pawction.org');
+})->name('auction.qr');

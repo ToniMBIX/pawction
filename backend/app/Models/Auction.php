@@ -25,4 +25,9 @@ class Auction extends Model
     {
         return $this->belongsToMany(User::class, 'favorites')->withTimestamps();
     }
+    public function getQrUrlAttribute()
+{
+    return route('auction.qr', $this->id);
+}
+
 }
