@@ -1,16 +1,20 @@
 import React from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
-import Home from './pages/Home.jsx'
-import Auctions from './pages/Auctions.jsx'
-import AuctionDetail from './pages/AuctionDetail.jsx'
-import Favorites from './pages/Favorites.jsx'
-import Profile from './pages/Profile.jsx'
-import Checkout from './pages/Checkout.jsx'
-import Login from './pages/Login.jsx'
-import Register from './pages/Register.jsx'
-import AdminAuctions from './pages/AdminAuctions.jsx'
+import {Home} from './pages/Home.jsx'
+import {Auctions} from './pages/Auctions.jsx'
+import {AuctionDetail} from './pages/AuctionDetail.jsx'
+import {Favorites} from './pages/Favorites.jsx'
+import {Profile} from './pages/Profile.jsx'
+import {Checkout} from './pages/Checkout.jsx'
+import {Login} from './pages/Login.jsx'
+import {Register} from './pages/Register.jsx'
+import {AdminAuctions} from './pages/AdminAuctions.jsx'
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
+console.log({
+  Home, Auctions, AuctionDetail, Favorites, Profile,
+  Checkout, Login, Register, AdminAuctions
+})
 
 function ErrorBoundary({ children }) {
   const [err, setErr] = React.useState(null)
