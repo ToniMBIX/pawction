@@ -1,63 +1,69 @@
 import React from 'react'
 import { AuthAPI } from '../lib/api.js'
-import { Auth } from '../lib/auth.js'
 
 export default function Profile(){
   const [me, setMe] = React.useState(null)
-  const [bids, setBids] = React.useState([])
-  const [form, setForm] = React.useState({ name:'', email:'', password:'' })
-  const [saving, setSaving] = React.useState(false)
+  const [form, setForm] = React.useState({ name:'', email:'', password:'', password_confirmation:'' })
+  const [loading, setLoading] = React.useState(true)
 
-  const load = async () => {
-    const r = await AuthAPI.me()
-    setMe(r.user)
-    setBids(r.bids || [])
-    setForm({ name:r.user.name || '', email:r.user.email || '', password:'' })
-  }
+  React.useEffect(()=>{
+    (async ()=>{
+      try{
+        const u = await AuthAPI.me()
+        setMe(u)
+        setForm({ name: u?.name || '', email: u?.email || '', password:'', password_confirmation:'' })
+      } catch {
+        setMe(null)
+      } finally {
+        setLoading(false)
+      }
+    })()
+  },[])
 
-  React.useEffect(()=>{ load() },[])
+  if (loading) return <div>Cargando…</div>
+  if (!me)     return <div>No estás autenticado.</div>
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    setSaving(true)
-    try{
-      const payload = {}
-      if (form.name !== me.name) payload.name = form.name
-      if (form.email !== me.email) payload.email = form.email
-      if (form.password) payload.password = form.password
-      const r = await AuthAPI.updateMe(payload)
-      alert('Datos actualizados')
-      await load()
-    }catch(e){ alert(e.message) } finally { setSaving(false) }
-  }
+    const payload = { name: form.name, email: form.email }
+    if (form.password) {
+      payload.password = form.password
+      payload.password_confirmation = form.password_confirmation
+    }
+    const updated = await fetch(import.meta.env.VITE_API_URL + '/me', {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', 'Accept':'application/json', 'Authorization':'Bearer '+localStorage.getItem('auth_token') },
+      body: JSON.stringify(payload)
+    }).then(r=>r.json())
 
-  if (!Auth.isLogged()) return <div className="text-center">Inicia sesión</div>
-  if (!me) return <div>Cargando…</div>
+    setMe(updated)
+    // si guardas en local:
+    const local = JSON.parse(localStorage.getItem('auth_user') || '{}')
+    localStorage.setItem('auth_user', JSON.stringify({...local, ...updated}))
+  }
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
-      <form onSubmit={onSubmit} className="card grid gap-3">
-        <h2 className="text-lg font-bold">Mi perfil</h2>
-        <input className="input" placeholder="Nombre" value={form.name}
-          onChange={e=>setForm({...form, name:e.target.value})} />
-        <input className="input" placeholder="Email" type="email" value={form.email}
-          onChange={e=>setForm({...form, email:e.target.value})} />
-        <input className="input" placeholder="Nueva contraseña (opcional)" type="password" value={form.password}
-          onChange={e=>setForm({...form, password:e.target.value})} />
-        <button className="btn" disabled={saving}>{saving?'Guardando…':'Guardar cambios'}</button>
+      <form onSubmit={onSubmit} className="card">
+        <h2 className="font-bold text-lg mb-3">Mi perfil</h2>
+        <input className="input mb-2" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} placeholder="Nombre" />
+        <input className="input mb-2" type="email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})} placeholder="Email" />
+        <input className="input mb-2" type="password" value={form.password} onChange={e=>setForm({...form, password:e.target.value})} placeholder="Nueva contraseña (opcional)" />
+        <input className="input mb-2" type="password" value={form.password_confirmation} onChange={e=>setForm({...form, password_confirmation:e.target.value})} placeholder="Confirmar contraseña" />
+        <button className="btn">Guardar</button>
       </form>
 
       <div className="card">
-        <h2 className="text-lg font-bold mb-3">Historial de pujas</h2>
-        <div className="space-y-2">
-          {bids.length === 0 && <div className="opacity-70 text-sm">Todavía no has pujado.</div>}
-          {bids.map(b=>(
-            <div key={b.id} className="border rounded-xl p-3">
-              <div className="font-semibold">{b.auction?.title || 'Subasta'}</div>
-              <div className="text-sm">Cantidad: <b>{b.amount} €</b></div>
-              <div className="text-xs opacity-70">{new Date(b.created_at).toLocaleString()}</div>
+        <h2 className="font-bold text-lg mb-3">Mis favoritos</h2>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {(me.favorites || []).map(a=>(
+            <div key={a.id} className="border rounded-xl p-3">
+              <img src={a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'} className="w-full h-32 object-cover rounded-lg" />
+              <div className="mt-2 font-semibold">{a.title}</div>
+              <div className="text-sm opacity-70">{a.current_price} €</div>
             </div>
           ))}
+          {(me.favorites || []).length === 0 && <div className="opacity-70 text-sm">Aún no tienes favoritos.</div>}
         </div>
       </div>
     </div>

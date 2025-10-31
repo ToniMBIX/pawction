@@ -48,8 +48,12 @@ export const AuctionsAPI = {
 
 export const FavoritesAPI = {
   toggle: (auctionId) => api(`/favorites/${auctionId}`, { method:'POST' }),
-  mine:   () => api('/me'), // si tu backend devuelve favoritos dentro de /me
+  mine:   async () => {
+    const me = await AuthAPI.me()
+    return me?.favorites || []
+  }
 }
+
 
 export const PaymentAPI = {
   checkout: (auctionId) => api(`/checkout/${auctionId}`, { method:'POST' }),

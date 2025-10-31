@@ -1,33 +1,28 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable {
+class User extends Authenticatable
+{
     use HasApiTokens, Notifiable;
 
-    protected $fillable = ['name','email','password','avatar_url','bio'];
+    protected $fillable = ['name','email','password','is_admin'];
+
     protected $hidden = ['password','remember_token'];
 
-    public function favoriteAuctions()
-{
-    return $this->belongsToMany(\App\Models\Auction::class, 'favorites');
-}
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_admin' => 'boolean',
+    ];
 
-
-public function bids(){
-    return $this->hasMany(\App\Models\Bid::class);
-}
-public function favorites()
-{
-    return $this->belongsToMany(Auction::class, 'favorites')->withTimestamps();
-}
-
-public function hasFavorited($auctionId): bool
-{
-    return $this->favorites()->where('auction_id',$auctionId)->exists();
-}
-
+    public function favorites()
+    {
+        // pivot: favorites (user_id, auction_id)
+        return $this->belongsToMany(Auction::class, 'favorites', 'user_id', 'auction_id')
+            ->withTimestamps();
+    }
 }

@@ -10,11 +10,29 @@ class UserController extends Controller
     {
         $user = $request->user();
 
+        // Evita nulls y carga favoritos con lo necesario para el front
+        $user->load([
+            'favorites.product.animal'
+        ]);
+
         return response()->json([
-            'id'       => $user?->id,
-            'name'     => $user?->name,
-            'email'    => $user?->email,
-            'is_admin' => (int)($user?->is_admin ?? 0),
+            'id'       => $user->id,
+            'name'     => $user->name ?? '',
+            'email'    => $user->email ?? '',
+            'is_admin' => (int)($user->is_admin ?? 0),
+            'favorites'=> $user->favorites->map(function ($a) {
+                return [
+                    'id'            => $a->id,
+                    'title'         => $a->title,
+                    'current_price' => $a->current_price,
+                    'image_url'     => $a->image_url,
+                    'product'       => $a->product ? [
+                        'animal' => $a->product->animal ? [
+                            'photo_url' => $a->product->animal->photo_url,
+                        ] : null
+                    ] : null,
+                ];
+            })->values(),
         ]);
     }
 
@@ -36,8 +54,8 @@ class UserController extends Controller
 
         return response()->json([
             'id'       => $user->id,
-            'name'     => $user->name,
-            'email'    => $user->email,
+            'name'     => $user->name ?? '',
+            'email'    => $user->email ?? '',
             'is_admin' => (int)($user->is_admin ?? 0),
         ]);
     }

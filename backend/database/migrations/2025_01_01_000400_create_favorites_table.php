@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('favorites', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('auction_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
-            $table->unique(['user_id','auction_id']);
+        Schema::create('favorites', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $t->foreignId('auction_id')->constrained()->cascadeOnDelete();
+            $t->timestamps();
+
+            $t->unique(['user_id','auction_id']); // evita duplicados
         });
     }
 
