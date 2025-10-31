@@ -11,10 +11,6 @@ import Register from './pages/Register.jsx'
 import AdminAuctions from './pages/AdminAuctions.jsx'
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
-console.log({
-  Home, Auctions, AuctionDetail, Favorites, Profile,
-  Checkout, Login, Register, AdminAuctions
-})
 // Renderiza un componente de forma segura y muestra qué falla si no es válido
 function SafeElement(Comp, name) {
   if (!Comp) {
@@ -85,7 +81,6 @@ function UserMenu(){
 
 export default function App(){
   return (
-    <ErrorBoundary>
       <div>
         <header className="border-b">
           <div className="container flex items-center gap-6 py-4">
@@ -98,20 +93,20 @@ export default function App(){
           </div>
         </header>
 
-        <main className="container py-6">
-          <Routes>
-  <Route path="/" element={SafeElement(Home, 'Home')} />
-  <Route path="/auctions" element={SafeElement(Auctions, 'Auctions')} />
-  <Route path="/auctions/:id" element={SafeElement(AuctionDetail, 'AuctionDetail')} />
-  <Route path="/favorites" element={SafeElement(Favorites, 'Favorites')} />
-  <Route path="/profile" element={SafeElement(Profile, 'Profile')} />
-  <Route path="/checkout/:id" element={SafeElement(Checkout, 'Checkout')} />
-  <Route path="/login" element={SafeElement(Login, 'Login')} />
-  <Route path="/register" element={SafeElement(Register, 'Register')} />
-  <Route path="/admin/auctions" element={SafeElement(AdminAuctions, 'AdminAuctions')} />
-</Routes>
-
-        </main>
+        
+      <main className="container py-6">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/auctions" element={<Auctions />} />
+          <Route path="/auctions/:id" element={<AuctionDetail />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/checkout/:id" element={<Checkout />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/admin/auctions" element={<AdminAuctions />} /> {/* opcional */}
+        </Routes>
+      </main>
 
         <footer className="border-t">
           <div className="container py-6 text-sm opacity-70">
@@ -119,6 +114,5 @@ export default function App(){
           </div>
         </footer>
       </div>
-    </ErrorBoundary>
   )
 }
