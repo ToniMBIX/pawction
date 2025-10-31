@@ -135,7 +135,6 @@ export default function AuctionDetail(){
           className="w-full rounded-xl object-cover max-h-[420px]"
           onError={(ev)=>{ ev.currentTarget.src = '/placeholder.jpg' }}
         />
-        <img src={`${import.meta.env.VITE_API_URL}/auctions/${id}/qr`} alt="QR Animal" className="mt-3 w-32" />
 
       </div>
 
