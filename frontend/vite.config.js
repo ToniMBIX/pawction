@@ -1,11 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Este config:
-// - Inyecta shims para 'process.env' y 'global' (algunas libs lo referencian).
-// - Fija target moderno para evitar transformaciones problemáticas.
-// - Evita que Vite intente prebundlear módulos de Node.
-
 export default defineConfig({
   plugins: [react()],
   define: {
@@ -14,11 +9,11 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
-    sourcemap: false,
+    sourcemap: false
   },
   optimizeDeps: {
     esbuildOptions: {
-      define: { global: 'globalThis' },
-    },
-  },
+      define: { global: 'globalThis' }
+    }
+  }
 })

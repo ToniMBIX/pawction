@@ -1,11 +1,18 @@
 import React from 'react'
-import { createRoot } from 'react-dom/client'
+import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import App from './App.jsx'
 import './styles/index.css'
 
-createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+import AuctionDetail from './pages/AuctionDetail.jsx'
+// importa aquí tus otras páginas/rutas
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/auctions/:id" element={<AuctionDetail />} />
+        {/* Más rutas */}
+      </Routes>
+    </BrowserRouter>
+  </React.StrictMode>
 )
