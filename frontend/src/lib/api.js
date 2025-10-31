@@ -1,4 +1,5 @@
 import { Auth } from './auth.js'
+
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 async function handle(res) {
@@ -17,7 +18,7 @@ export async function api(path, opts = {}) {
     ...(opts.body && !(opts.headers && opts.headers['Content-Type']) ? { 'Content-Type': 'application/json' } : {}),
     ...(opts.headers || {})
   }
-  const token = Auth?.token?.()
+  const token = Auth.token?.()
   if (token) headers['Authorization'] = 'Bearer ' + token
 
   const res = await fetch(API + path, { ...opts, headers, mode: 'cors', credentials: 'omit' })
@@ -28,6 +29,8 @@ export const AuthAPI = {
   register: (data) => api('/auth/register', { method:'POST', body: JSON.stringify(data) }),
   login:    (data) => api('/auth/login',    { method:'POST', body: JSON.stringify(data) }),
   me:       ()      => api('/me'),
+  // Si tu backend no tiene /auth/logout, este call fallará y en tu UI ya lo ignoras en try/catch.
+  logout:   ()      => api('/auth/logout',  { method:'POST' }),
 }
 
 export const AuctionsAPI = {
@@ -48,4 +51,13 @@ export const FavoritesAPI = {
 
 export const PaymentAPI = {
   checkout: (auctionId) => api(`/checkout/${auctionId}`, { method:'POST' }),
+}
+
+// 🔹 NUEVO: API de administración (coincide con tus rutas /api/admin/...)
+export const AdminAPI = {
+  listAuctions:   (page=1)         => api(`/admin/auctions?page=${page}`),
+  createAuction:  (payload)        => api(`/admin/auctions`, { method:'POST',  body: JSON.stringify(payload) }),
+  updateAuction:  (id, payload)    => api(`/admin/auctions/${id}`, { method:'PUT', body: JSON.stringify(payload) }),
+  updateStatus:   (id, status)     => api(`/admin/auctions/${id}/status`, { method:'PATCH', body: JSON.stringify({ status }) }),
+  deleteAuction:  (id)             => api(`/admin/auctions/${id}`, { method:'DELETE' }),
 }
