@@ -10,25 +10,49 @@ export default function AuctionDetail(){
 
   React.useEffect(()=>{
     AuctionsAPI.get(id).then(setAuction)
-    if (Auth.token()) AuthAPI.me().then(u => setUserFavs(u.favorites?.map(f => f.auction_id) || []))
+if (Auth.token()) AuthAPI.me().then(u => setUserFavs(u.favorites?.map(Number) || []))
   }, [id])
 
   const toggleFav = async () => {
-    if (!Auth.token()) {
-      alert('Debes iniciar sesión para usar favoritos')
-      return
-    }
-    try {
-      const r = await FavoritesAPI.toggle(id)
-      setUserFavs(r.favorites)
-    } catch (e) {
-      alert('Error al actualizar favorito')
-    }
+  if (!Auth.token()) {
+    alert('Debes iniciar sesión para usar favoritos')
+    return
   }
+  try {
+    const r = await FavoritesAPI.toggle(id) // id es string de la URL
+    const auctionId = Number(id)            // normaliza a número para el includes()
+    setUserFavs(prev => {
+      if (r.favorite) {
+        // lo marcó como favorito → añade si no existe
+        return prev.includes(auctionId) ? prev : [...prev, auctionId]
+      } else {
+        // lo quitó → filtra
+        return prev.filter(x => x !== auctionId)
+      }
+    })
+  } catch (e) {
+    alert('Error al actualizar favorito')
+  }
+}
+
 
   if (!auction) return <p>Cargando...</p>
 
-  const isFav = userFavs.includes(auction.id)
+const isFav = userFavs.includes(Number(auction?.id))
+const isStarted = !!auction?.end_at
+const minBid = isStarted ? (Number(auction?.current_price || 0) + 1) : 20
+function Countdown({ endAt }) {
+  const [left, setLeft] = React.useState(() => new Date(endAt) - Date.now())
+  React.useEffect(()=>{
+    const t = setInterval(()=> setLeft(new Date(endAt) - Date.now()), 1000)
+    return ()=>clearInterval(t)
+  },[endAt])
+  if (!endAt) return null
+  if (left <= 0) return <div className="text-red-600 font-semibold">Finalizada</div>
+  const s = Math.floor(left/1000)
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60
+  return <div className="text-sm opacity-80">Termina en: {h}h {m}m {sec}s</div>
+}
 
   const img =
     auction?.product?.animal?.photo_url ||
@@ -45,6 +69,26 @@ export default function AuctionDetail(){
           {isFav ? '★ Quitar de favoritos' : '☆ Agregar a favoritos'}
         </button>
       </div>
+      {!isStarted ? (
+  <div className="text-sm opacity-70 mb-2">Aún no ha comenzado. La primera puja la inicia (mín. 20€).</div>
+) : (
+  <Countdown endAt={auction.end_at} />
+)}
+
+<form onSubmit={submitBid} className="mt-3 flex gap-2">
+  <input
+    className="input"
+    type="number"
+    step="0.01"
+    min={minBid}
+    value={amount}
+    onChange={e=>setAmount(parseFloat(e.target.value))}
+    placeholder={`Mínimo ${minBid}€`}
+  />
+  <button className="btn" disabled={isNaN(amount) || amount < minBid}>
+    {isStarted ? 'Pujar' : 'Comenzar (≥ 20€)'}
+  </button>
+</form>
     </div>
   )
 }

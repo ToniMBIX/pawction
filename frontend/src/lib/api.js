@@ -46,5 +46,8 @@ export const AdminAPI = {
     list:   () => api('/auctions'),
     create: (data) => api('/admin/auctions', { method:'POST', body: JSON.stringify(data) }),
     remove: (id)   => api(`/admin/auctions/${id}`, { method:'DELETE' }),
+    update: (id, data) => api(`/admin/auctions/${id}`, { method:'PUT', body: JSON.stringify(data) }),
+    setStatus: (id, status) => api(`/admin/auctions/${id}/status`, { method:'PATCH', body: JSON.stringify({ status }) }),
   }
 }
+

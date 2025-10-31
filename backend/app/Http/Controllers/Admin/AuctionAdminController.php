@@ -64,6 +64,28 @@ class AuctionAdminController extends Controller
         return response()->json($auction, 201);
     }
 
+    public function update(Request $req, Auction $auction)
+{
+    $data = $req->validate([
+      'title' => ['sometimes','string','max:255'],
+      'description' => ['nullable','string'],
+      'image_url' => ['nullable','string'],
+      // si quieres permitir cambiar product_id, valídalo aquí
+    ]);
+    $auction->update($data);
+    return response()->json($auction->fresh()->load('product.animal'));
+}
+
+public function updateStatus(Request $req, Auction $auction)
+{
+    $data = $req->validate([
+      'status' => ['required','in:active,finished,cancelled']
+    ]);
+    $auction->status = $data['status'];
+    $auction->save();
+    return response()->json(['ok'=>true, 'status'=>$auction->status]);
+}
+
     public function destroy(Auction $auction)
     {
         $auction->delete();

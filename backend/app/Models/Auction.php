@@ -28,4 +28,6 @@ class Auction extends Model
     {
         return $this->belongsTo(User::class, 'winner_user_id');
     }
+    public function bids(){ return $this->hasMany(\App\Models\Bid::class); }
+
 }

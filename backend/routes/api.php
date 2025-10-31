@@ -85,4 +85,6 @@ Route::get('/__seed', function () {
 Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
     Route::post('/auctions', [AuctionAdminController::class, 'store']);
     Route::delete('/auctions/{auction}', [AuctionAdminController::class, 'destroy']);
+  Route::put('/auctions/{auction}', [AuctionAdminController::class, 'update']);
+  Route::patch('/auctions/{auction}/status', [AuctionAdminController::class, 'updateStatus']);
 });

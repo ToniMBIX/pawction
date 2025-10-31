@@ -8,46 +8,56 @@ use App\Jobs\CloseAuctionJob;
 use Carbon\Carbon;
 
 class BidController extends Controller {
-    public function store(Request $request)
+    public function store(Request $req)
 {
-    $data = $request->validate([
-        'auction_id' => 'required|exists:auctions,id',
-        'amount'     => 'required|numeric|min:0',
+    $data = $req->validate([
+        'auction_id' => ['required','exists:auctions,id'],
+        'amount'     => ['required','numeric','min:0.01'],
     ]);
 
-    $auction = \App\Models\Auction::lockForUpdate()->findOrFail($data['auction_id']);
-    if ($auction->status !== 'active') {
-        return response()->json(['message' => 'La subasta no está activa'], 422);
-    }
+    $user = $req->user();
 
-    $amount = (float) $data['amount'];
+    // Bloqueo optimista: evita condiciones de carrera en pujas simultáneas
+    $auction = \DB::transaction(function() use ($data, $user) {
+        $auction = \App\Models\Auction::lockForUpdate()->findOrFail($data['auction_id']);
 
-    // Si es la primera puja (precio actual == 0), debe ser >= 20
-    if ((float)$auction->current_price <= 0 && $amount < 20) {
-        return response()->json(['message' => 'La primera puja debe ser de al menos 20 €'], 422);
-    }
+        if ($auction->status !== 'active') {
+            abort(response()->json(['message'=>'La subasta no está activa'], 422));
+        }
 
-    // A partir de ahí, debe superar el precio actual
-    if ($amount <= (float)$auction->current_price) {
-        return response()->json(['message' => 'La puja debe superar el precio actual'], 422);
-    }
+        if (is_null($auction->end_at)) {
+            // PRIMERA PUJA
+            if ($data['amount'] < 20) {
+                abort(response()->json(['message'=>'La primera puja debe ser al menos 20€'], 422));
+            }
+            $auction->starting_price = 20.00;
+            $auction->current_price = max(20.00, $data['amount']);
+            // Arranca la cuenta atrás (ajusta horas si quieres)
+            $auction->end_at = now()->addHours(24);
+        } else {
+            // SIGUIENTES PUJAS
+            if ($data['amount'] <= $auction->current_price) {
+                abort(response()->json(['message'=>'La puja debe superar el precio actual'], 422));
+            }
+            $auction->current_price = $data['amount'];
+        }
 
-    // Si es la primera puja, arranca la cuenta atrás (ej. 7 días)
-    if ((float)$auction->current_price <= 0) {
-        // Solo si quieres re-calcular el fin al arrancar:
-        $auction->end_at = now()->addDays(7);
-    }
+        $auction->save();
 
-    $auction->current_price = $amount;
-    $auction->save();
+        $auction->bids()->create([
+            'user_id' => $user->id,
+            'amount'  => $data['amount'],
+        ]);
 
-    // Guarda el bid si tienes el modelo Bid
-    // Bid::create([...]);
+        return $auction->fresh()->load('product.animal');
+    });
 
     return response()->json([
-        'message' => 'Puja aceptada',
-        'auction' => $auction->fresh(['product.animal']),
-    ]);
+        'ok'      => true,
+        'auction' => $auction
+    ], 201);
 }
+
+
 
 }
