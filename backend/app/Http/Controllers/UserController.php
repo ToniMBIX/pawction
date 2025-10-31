@@ -26,7 +26,7 @@ class UserController extends Controller
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
-                'favorites' => $u->favorites->pluck('id'),
+            'favorites' => $user->favoriteAuctions->pluck('id'),
             ],
             'bids' => $bids,
         ]);

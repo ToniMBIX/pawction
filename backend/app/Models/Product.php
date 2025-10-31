@@ -3,21 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
-    use HasFactory;
+    protected $fillable = ['name','animal_id'];
 
-    protected $fillable = ['name','animal_id','image_url'];
-
-    public function animal(){
-    return $this->belongsTo(\App\Models\Animal::class);
-}
-
-
-    public function auction()
+    public function animal()
     {
-        return $this->hasOne(Auction::class);
+        return $this->belongsTo(Animal::class);
+    }
+
+    public function auctions()
+    {
+        return $this->hasMany(Auction::class);
     }
 }

@@ -7,24 +7,19 @@ use Illuminate\Http\Request;
 
 class FavoriteController extends Controller
 {
-    public function toggle(Request $req, Auction $auction)
+    public function toggle(Request $request, Auction $auction)
     {
-        $user = $req->user();
+        $user = $request->user();
 
-        $isFav = $user->favorites()->where('auction_id',$auction->id)->exists();
-
-        if ($isFav) {
-            $user->favorites()->detach($auction->id);
-            $isFav = false;
+        $exists = $user->favoriteAuctions()->where('auction_id', $auction->id)->exists();
+        if ($exists) {
+            $user->favoriteAuctions()->detach($auction->id);
+            $state = false;
         } else {
-            $user->favorites()->attach($auction->id);
-            $isFav = true;
+            $user->favoriteAuctions()->attach($auction->id);
+            $state = true;
         }
 
-        return response()->json([
-            'favorited' => $isFav,
-            'count' => $auction->favorites()->count(),
-            'auction_id' => $auction->id,
-        ]);
+        return response()->json(['favorite' => $state]);
     }
 }
