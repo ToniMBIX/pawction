@@ -14,13 +14,13 @@ async function handle(res) {
 export async function api(path, opts = {}) {
   const headers = {
     'Accept': 'application/json',
-    ...(opts.body && !(opts.headers && opts.headers['Content-Type']) ? {'Content-Type':'application/json'} : {}),
+    ...(opts.body && !(opts.headers && opts.headers['Content-Type']) ? { 'Content-Type': 'application/json' } : {}),
     ...(opts.headers || {})
   }
-  const token = Auth.token()
+  const token = Auth?.token?.()
   if (token) headers['Authorization'] = 'Bearer ' + token
 
-  const res = await fetch(API + path, { ...opts, headers, mode:'cors', credentials:'omit' })
+  const res = await fetch(API + path, { ...opts, headers, mode: 'cors', credentials: 'omit' })
   return handle(res)
 }
 

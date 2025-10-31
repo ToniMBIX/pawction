@@ -31,7 +31,6 @@ export default function AuctionDetail(){
 
   React.useEffect(() => { load() }, [id])
 
-  // Cuenta atrás
   React.useEffect(() => {
     if (!a?.end_at) return
     const t = setInterval(() => setLeft(fmtLeft(a.end_at)), 1000)
