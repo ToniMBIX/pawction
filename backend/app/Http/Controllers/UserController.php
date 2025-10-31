@@ -3,53 +3,42 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function me(Request $req)
+    public function me(Request $request)
     {
-        $u = $req->user()->load([
-            'favorites:id', // solo IDs
-        ]);
-
-        // historial de pujas (bids)
-        $bids = $req->user()->bids()
-            ->with(['auction:id,title,current_price,end_at,status'])
-            ->orderByDesc('created_at')
-            ->limit(100)
-            ->get();
+        $user = $request->user();
 
         return response()->json([
-            'user' => [
-                'id' => $u->id,
-                'name' => $u->name,
-                'email' => $u->email,
-            'favorites' => $user->favoriteAuctions->pluck('id'),
-            ],
-            'bids' => $bids,
+            'id'       => $user?->id,
+            'name'     => $user?->name,
+            'email'    => $user?->email,
+            'is_admin' => (int)($user?->is_admin ?? 0),
         ]);
     }
 
-    public function update(Request $req)
+    public function update(Request $request)
     {
-        $user = $req->user();
+        $user = $request->user();
 
-        $data = $req->validate([
-            'name' => 'nullable|string|min:2|max:100',
-            'email' => ['nullable','email','max:150', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:6|max:64',
+        $data = $request->validate([
+            'name'     => ['sometimes','string','max:255'],
+            'email'    => ['sometimes','email','max:255','unique:users,email,'.$user->id],
+            'password' => ['sometimes','confirmed','min:8'],
         ]);
 
-        if (isset($data['name'])) $user->name = $data['name'];
-        if (isset($data['email'])) $user->email = $data['email'];
-        if (!empty($data['password'])) $user->password = Hash::make($data['password']);
+        if(isset($data['password'])){
+            $data['password'] = \Hash::make($data['password']);
+        }
 
-        $user->save();
+        $user->update($data);
 
-        return response()->json(['ok'=>true,'user'=>[
-            'id'=>$user->id,'name'=>$user->name,'email'=>$user->email
-        ]]);
+        return response()->json([
+            'id'       => $user->id,
+            'name'     => $user->name,
+            'email'    => $user->email,
+            'is_admin' => (int)($user->is_admin ?? 0),
+        ]);
     }
 }
