@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/me',           [UserController::class, 'update']);
 
     Route::post('/bids',        [BidController::class, 'store']);
-    Route::post('/favorites/{auction}', [FavoriteController::class, 'toggle']);
+    Route::post('/favorites/{auction}', [\App\Http\Controllers\FavoriteController::class, 'toggle']);
     Route::post('/checkout/{auction}',  [PaymentController::class, 'checkout']);
 });
 

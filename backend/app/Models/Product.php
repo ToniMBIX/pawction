@@ -11,10 +11,10 @@ class Product extends Model
 
     protected $fillable = ['name','animal_id','image_url'];
 
-    public function animal()
-    {
-        return $this->belongsTo(Animal::class);
-    }
+    public function animal(){
+    return $this->belongsTo(\App\Models\Animal::class);
+}
+
 
     public function auction()
     {

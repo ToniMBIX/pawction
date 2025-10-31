@@ -32,10 +32,10 @@ class Auction extends Model
         return $this->hasMany(Bid::class)->latest();
     }
 
-    public function favorites()
-    {
-        return $this->belongsToMany(User::class,'favorites')->withTimestamps();
-    }
+    public function favorites(){
+    return $this->belongsToMany(\App\Models\User::class, 'favorites')->withTimestamps();
+}
+
 
     public function isActive(): bool
     {

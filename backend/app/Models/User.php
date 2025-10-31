@@ -12,9 +12,12 @@ class User extends Authenticatable {
     protected $hidden = ['password','remember_token'];
 
     public function favorites(){
-  return $this->belongsToMany(Auction::class,'favorites')->withTimestamps();
+    return $this->belongsToMany(\App\Models\Auction::class, 'favorites')
+        ->withTimestamps();
 }
 
+public function bids(){
+    return $this->hasMany(\App\Models\Bid::class);
+}
 
-public function bids(){ return $this->hasMany(\App\Models\Bid::class); }
 }

@@ -11,21 +11,19 @@ class FavoriteController extends Controller
     {
         $user = $req->user();
 
-        $exists = $user->favorites()->where('auction_id',$auction->id)->exists();
+        $isFav = $user->favorites()->where('auction_id',$auction->id)->exists();
 
-        if ($exists) {
+        if ($isFav) {
             $user->favorites()->detach($auction->id);
-            $favorited = false;
+            $isFav = false;
         } else {
             $user->favorites()->attach($auction->id);
-            $favorited = true;
+            $isFav = true;
         }
 
-        $count = $auction->favorites()->count();
-
         return response()->json([
-            'favorited' => $favorited,
-            'count' => $count,
+            'favorited' => $isFav,
+            'count' => $auction->favorites()->count(),
             'auction_id' => $auction->id,
         ]);
     }
