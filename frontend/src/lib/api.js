@@ -1,63 +1,39 @@
 import { Auth } from './auth.js'
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
-
-async function handle(res) {
-  if (!res.ok) {
-    let txt = await res.text()
-    try { const j = JSON.parse(txt); txt = j.message || JSON.stringify(j) } catch {}
-    throw new Error(txt || ('HTTP ' + res.status))
-  }
-  const ct = res.headers.get('content-type') || ''
-  return ct.includes('application/json') ? res.json() : res.text()
-}
+const API = import.meta.env.VITE_API_URL || 'https://pawction-backend.onrender.com/api'
 
 export async function api(path, opts = {}) {
   const headers = {
+    'Content-Type': 'application/json',
     'Accept': 'application/json',
-    ...(opts.body && !(opts.headers && opts.headers['Content-Type']) ? { 'Content-Type': 'application/json' } : {}),
     ...(opts.headers || {})
   }
-  const token = Auth.token?.()
+  const token = Auth.token()
   if (token) headers['Authorization'] = 'Bearer ' + token
 
-  const res = await fetch(API + path, { ...opts, headers, mode: 'cors', credentials: 'omit' })
-  return handle(res)
+  const res = await fetch(API + path, { ...opts, headers, mode: 'cors' })
+  if (!res.ok) {
+    const text = await res.text()
+    try { throw new Error(JSON.parse(text).message || text) }
+    catch { throw new Error(text) }
+  }
+  return res.status === 204 ? {} : res.json()
 }
 
 export const AuthAPI = {
   register: (data) => api('/auth/register', { method:'POST', body: JSON.stringify(data) }),
   login:    (data) => api('/auth/login',    { method:'POST', body: JSON.stringify(data) }),
-  me:       ()      => api('/me'),
-  // Si tu backend no tiene /auth/logout, este call fallará y en tu UI ya lo ignoras en try/catch.
-  logout:   ()      => api('/auth/logout',  { method:'POST' }),
+  logout:         () => api('/auth/logout', { method:'POST' }),
+  me:             () => api('/me'),
 }
 
 export const AuctionsAPI = {
-  list: (page=1) => api(`/auctions?page=${page}`),
-  get:  (id)    => api(`/auctions/${id}`),
-}
-
-export const BidsAPI = {
-  create: (auctionId, amount) => api(`/auctions/${auctionId}/bids`, {
-    method: 'POST',
-    body: JSON.stringify({ amount })
-  })
+  list: ()   => api('/auctions'),
+  get:  (id) => api(`/auctions/${id}`),
+  bid:  (auction_id, amount) =>
+          api('/bids', { method:'POST', body: JSON.stringify({ auction_id, amount }) }),
 }
 
 export const FavoritesAPI = {
-  toggle: (auctionId) => api(`/auctions/${auctionId}/favorite`, { method:'POST' }),
-}
-
-export const PaymentAPI = {
-  checkout: (auctionId) => api(`/checkout/${auctionId}`, { method:'POST' }),
-}
-
-// 🔹 NUEVO: API de administración (coincide con tus rutas /api/admin/...)
-export const AdminAPI = {
-  listAuctions:   (page=1)         => api(`/admin/auctions?page=${page}`),
-  createAuction:  (payload)        => api(`/admin/auctions`, { method:'POST',  body: JSON.stringify(payload) }),
-  updateAuction:  (id, payload)    => api(`/admin/auctions/${id}`, { method:'PUT', body: JSON.stringify(payload) }),
-  updateStatus:   (id, status)     => api(`/admin/auctions/${id}/status`, { method:'PATCH', body: JSON.stringify({ status }) }),
-  deleteAuction:  (id)             => api(`/admin/auctions/${id}`, { method:'DELETE' }),
+  toggle: (auctionId) => api(`/favorites/${auctionId}`, { method:'POST' }),
+  list:   () => api('/favorites'),
 }

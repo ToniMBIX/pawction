@@ -20,5 +20,14 @@ class User extends Authenticatable {
 public function bids(){
     return $this->hasMany(\App\Models\Bid::class);
 }
+public function favorites()
+{
+    return $this->belongsToMany(Auction::class, 'favorites')->withTimestamps();
+}
+
+public function hasFavorited($auctionId): bool
+{
+    return $this->favorites()->where('auction_id',$auctionId)->exists();
+}
 
 }

@@ -27,12 +27,12 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $token = $user->createToken('api')->plainTextToken;
+        $token = $user->createToken('web')->plainTextToken;
+return response()->json([
+  'user' => ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email,'is_admin'=>$user->is_admin ?? false],
+  'token'=> $token
+]);
 
-        return response()->json([
-            'user'  => $this->userPayload($user),
-            'token' => $token,
-        ], 201);
     }
 
     /**
@@ -50,12 +50,12 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $token = $user->createToken('api')->plainTextToken;
+        $token = $user->createToken('web')->plainTextToken;
+return response()->json([
+  'user' => ['id'=>$user->id,'name'=>$user->name,'email'=>$user->email,'is_admin'=>$user->is_admin ?? false],
+  'token'=> $token
+]);
 
-        return response()->json([
-            'token' => $token,
-            'user'  => $this->userPayload($user),
-        ]);
     }
 
     /**

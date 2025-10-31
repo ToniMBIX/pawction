@@ -9,6 +9,11 @@ export default function Register(){
     name:'', email:'', password:'', password_confirmation:''
   })
   const [loading, setLoading] = React.useState(false)
+  const r = await AuthAPI.register(form)
+Auth.setToken(r.token)
+if (r.user) Auth.setUser(r.user)
+nav('/')
+
 
   const onSubmit = async (e) => {
     e.preventDefault()

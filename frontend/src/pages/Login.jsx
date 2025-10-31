@@ -7,6 +7,11 @@ export default function Login(){
   const nav = useNavigate()
   const [form, setForm] = React.useState({ email:'', password:'' })
   const [loading, setLoading] = React.useState(false)
+  const r = await AuthAPI.login(form)
+Auth.setToken(r.token)
+if (r.user) Auth.setUser(r.user)
+nav('/')
+
 
   const onSubmit = async (e) => {
     e.preventDefault(); setLoading(true)

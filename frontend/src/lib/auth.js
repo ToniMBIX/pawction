@@ -1,14 +1,17 @@
-const KEY_TOKEN = 'auth_token'
-const KEY_USER  = 'auth_user'
+const KEY = 'pawction_token'
+const USER_KEY = 'pawction_user'
 
 export const Auth = {
-  setToken(t) { localStorage.setItem('token', t) },
-  token() { return localStorage.getItem('token') },
-  clear() { localStorage.removeItem('token'); localStorage.removeItem('user') },
-
-  setUser(u) { localStorage.setItem('user', JSON.stringify(u || {})) },
-  user() { try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} } },
-  isLogged() { return !!localStorage.getItem('token') },
-  isAdmin() { return !!Auth.user()?.is_admin },
+  token(){ return localStorage.getItem(KEY) || null },
+  setToken(t){ localStorage.setItem(KEY, t) },
+  clear(){
+    localStorage.removeItem(KEY)
+    localStorage.removeItem(USER_KEY)
+  },
+  setUser(u){ localStorage.setItem(USER_KEY, JSON.stringify(u)) },
+  user(){
+    try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null') }
+    catch { return null }
+  },
+  isLogged(){ return !!Auth.token() }
 }
-

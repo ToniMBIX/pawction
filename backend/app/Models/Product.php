@@ -12,9 +12,4 @@ class Product extends Model
     {
         return $this->belongsTo(Animal::class);
     }
-
-    public function auctions()
-    {
-        return $this->hasMany(Auction::class);
-    }
 }
