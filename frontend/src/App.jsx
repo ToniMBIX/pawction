@@ -12,6 +12,22 @@ import AdminAuctions from './pages/AdminAuctions.jsx'
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
 
+function ErrorBoundary({ children }) {
+  const [err, setErr] = React.useState(null)
+  return err ? (
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-xl font-bold mb-2">Error en la UI</h2>
+      <pre className="text-sm p-3 bg-red-50 border rounded whitespace-pre-wrap">
+        {String(err.stack || err.message || err)}
+      </pre>
+    </div>
+  ) : (
+    <React.ErrorBoundary fallbackRender={({ error }) => setErr(error) || null}>
+      {children}
+    </React.ErrorBoundary>
+  )
+}
+
 function UserMenu(){
   const nav = useNavigate()
   const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
@@ -49,35 +65,39 @@ function UserMenu(){
 
 export default function App(){
   return (
-    <div>
-      <header className="border-b">
-        <div className="container flex items-center gap-6 py-4">
-          <Link to="/" className="text-2xl font-extrabold">Pawction</Link>
-          <nav className="flex gap-4 text-sm">
-            <Link to="/auctions">Subastas</Link>
-            <Link to="/favorites">Favoritos</Link>
-          </nav>
-          <UserMenu />
-        </div>
-      </header>
-      <main className="container py-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auctions" element={<Auctions />} />
-          <Route path="/auctions/:id" element={<AuctionDetail />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/checkout/:id" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/admin/auctions" element={<AdminAuctions />} />
-        </Routes>
-      </main>
-      <footer className="border-t">
-        <div className="container py-6 text-sm opacity-70">
-          © {new Date().getFullYear()} Pawction — 50/50 Pawction / Greenpeace
-        </div>
-      </footer>
-    </div>
+    <ErrorBoundary>
+      <div>
+        <header className="border-b">
+          <div className="container flex items-center gap-6 py-4">
+            <Link to="/" className="text-2xl font-extrabold">Pawction</Link>
+            <nav className="flex gap-4 text-sm">
+              <Link to="/auctions">Subastas</Link>
+              <Link to="/favorites">Favoritos</Link>
+            </nav>
+            <UserMenu />
+          </div>
+        </header>
+
+        <main className="container py-6">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/auctions" element={<Auctions />} />
+            <Route path="/auctions/:id" element={<AuctionDetail />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/checkout/:id" element={<Checkout />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/admin/auctions" element={<AdminAuctions />} />
+          </Routes>
+        </main>
+
+        <footer className="border-t">
+          <div className="container py-6 text-sm opacity-70">
+            © {new Date().getFullYear()} Pawction — 50/50 Pawction / Greenpeace
+          </div>
+        </footer>
+      </div>
+    </ErrorBoundary>
   )
 }
