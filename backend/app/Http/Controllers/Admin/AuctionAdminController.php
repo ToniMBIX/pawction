@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 
 class AuctionAdminController extends Controller
 {
-     public function index()
+    public function index()
     {
-        // lista paginada con relaciones
+        // Devuelve lista paginada con relaciones
         return Auction::with('product.animal')->orderByDesc('id')->paginate(20);
     }
 
@@ -22,7 +22,6 @@ class AuctionAdminController extends Controller
             'image_url'   => ['nullable','string','max:2048'],
             'product_id'  => ['nullable','integer','exists:products,id'],
 
-            // para crear animal+pack al vuelo
             'animal.name'      => ['nullable','string','max:255'],
             'animal.species'   => ['nullable','string','max:255'],
             'animal.age'       => ['nullable','integer'],
@@ -30,13 +29,8 @@ class AuctionAdminController extends Controller
             'animal.info_url'  => ['nullable','string','max:2048'],
         ]);
 
-        // producto
-        if (!empty($data['product_id'])) {
-            $productId = $data['product_id'];
-        } else {
-            if (empty($data['animal']['name'])) {
-                return response()->json(['message'=>'Falta product_id o animal.name'], 422);
-            }
+        // Si no viene product_id y sí datos de animal, creamos el pack al vuelo
+        if (empty($data['product_id']) && !empty($data['animal']['name'])) {
             $animal = Animal::create([
                 'name'      => $data['animal']['name'],
                 'species'   => $data['animal']['species'] ?? 'Perro',
@@ -47,28 +41,30 @@ class AuctionAdminController extends Controller
             $product = Product::create([
                 'name'      => 'Pack taza + llavero',
                 'animal_id' => $animal->id,
-                'image_url' => $data['image_url'] ?? null,
             ]);
-            $productId = $product->id;
+            $data['product_id'] = $product->id;
         }
 
         $auction = Auction::create([
-            'product_id'     => $productId,
+            'product_id'     => $data['product_id'],
             'title'          => $data['title'],
             'description'    => $data['description'] ?? null,
             'image_url'      => $data['image_url'] ?? null,
-            'starting_price' => 20,
-            'current_price'  => 0,          // arranca en 0; la primera puja será >= 20
+            'starting_price' => 20,     // requisito
+            'current_price'  => 0,      // hasta primera puja
+            'end_at'         => null,   // se inicia con la primera puja
             'status'         => 'active',
-            'end_at'         => null,       // se inicia con la primera puja
         ]);
 
-        return response()->json($auction->load('product.animal'), 201);
+        return response()->json(
+            Auction::with('product.animal')->findOrFail($auction->id),
+            201
+        );
     }
 
     public function destroy(Auction $auction)
     {
         $auction->delete();
-        return response()->json(['ok'=>true]);
+        return response()->json(['ok' => true]);
     }
 }

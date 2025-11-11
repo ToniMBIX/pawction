@@ -6,6 +6,8 @@ use App\Http\Controllers\{
   WebhookController, UserController, AuthController
 };
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Controllers\Admin\AuctionAdminController; // <-- IMPORTANTE
+
 
 // ---------- Público ----------
 Route::post('/auth/register', [AuthController::class, 'register']);
