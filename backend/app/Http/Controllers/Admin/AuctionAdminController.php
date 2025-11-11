@@ -3,92 +3,75 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\Models\{Auction, Product, Animal};
+use Illuminate\Http\Request;
 
 class AuctionAdminController extends Controller
 {
-    public function store(Request $req)
+    public function index()
     {
-        $data = $req->validate([
-            'title'        => ['required','string','max:255'],
-            'description'  => ['nullable','string'],
-            'image_url'    => ['nullable','string'],
-            'product_id'   => ['nullable','integer','exists:products,id'],
-            'animal'       => ['nullable','array'],
-            'animal.name'      => ['required_without:product_id','string','max:255'],
-            'animal.species'   => ['nullable','string','max:100'],
+        $list = Auction::with('product.animal')
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return response()->json($list);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'title'       => ['required','string','max:255'],
+            'description' => ['nullable','string'],
+            'image_url'   => ['nullable','string','max:2048'],
+            'product_id'  => ['nullable','integer','exists:products,id'],
+
+            // para crear animal+pack al vuelo
+            'animal.name'      => ['nullable','string','max:255'],
+            'animal.species'   => ['nullable','string','max:255'],
             'animal.age'       => ['nullable','integer'],
-            'animal.photo_url' => ['nullable','string'],
-            'animal.info_url'  => ['nullable','string'],
+            'animal.photo_url' => ['nullable','string','max:2048'],
+            'animal.info_url'  => ['nullable','string','max:2048'],
         ]);
 
-        // 1) Resolver product
+        // producto
         if (!empty($data['product_id'])) {
-            $product = Product::find($data['product_id']);
+            $productId = $data['product_id'];
         } else {
-            // crear animal + product pack
+            if (empty($data['animal']['name'])) {
+                return response()->json(['message'=>'Falta product_id o animal.name'], 422);
+            }
             $animal = Animal::create([
-                'name'        => $data['animal']['name'],
-                'species'     => $data['animal']['species'] ?? 'Perro',
-                'age'         => $data['animal']['age'] ?? null,
-                'photo_url'   => $data['animal']['photo_url'] ?? null,
-                'info_url'    => $data['animal']['info_url'] ?? null,
-                'description' => 'Animal asociado al pack solidario',
+                'name'      => $data['animal']['name'],
+                'species'   => $data['animal']['species'] ?? 'Perro',
+                'age'       => $data['animal']['age'] ?? null,
+                'photo_url' => $data['animal']['photo_url'] ?? null,
+                'info_url'  => $data['animal']['info_url'] ?? null,
             ]);
-
             $product = Product::create([
                 'name'      => 'Pack taza + llavero',
                 'animal_id' => $animal->id,
-                // si usas image_url en products, puedes guardarla también aquí
+                'image_url' => $data['image_url'] ?? null,
             ]);
+            $productId = $product->id;
         }
 
-        // 2) Crear la subasta con mínimo 20€ y fecha de fin a 7 días
         $auction = Auction::create([
-            'product_id'     => $product->id,
+            'product_id'     => $productId,
             'title'          => $data['title'],
             'description'    => $data['description'] ?? null,
-            'starting_price' => 20.00,
-            'current_price'  => 20.00,
-            'end_at'         => now()->addDays(7),
-            'status'         => 'active',
-            'payed'          => false,
             'image_url'      => $data['image_url'] ?? null,
+            'starting_price' => 20,
+            'current_price'  => 0,          // arranca en 0; la primera puja será >= 20
+            'status'         => 'active',
+            'end_at'         => null,       // se inicia con la primera puja
         ]);
 
-        // incluir relaciones para que el front tenga imagen/animal
-        $auction->load('product.animal');
-
-        return response()->json($auction, 201);
+        return response()->json($auction->load('product.animal'), 201);
     }
-
-    public function update(Request $req, Auction $auction)
-{
-    $data = $req->validate([
-      'title' => ['sometimes','string','max:255'],
-      'description' => ['nullable','string'],
-      'image_url' => ['nullable','string'],
-      // si quieres permitir cambiar product_id, valídalo aquí
-    ]);
-    $auction->update($data);
-    return response()->json($auction->fresh()->load('product.animal'));
-}
-
-public function updateStatus(Request $req, Auction $auction)
-{
-    $data = $req->validate([
-      'status' => ['required','in:active,finished,cancelled']
-    ]);
-    $auction->status = $data['status'];
-    $auction->save();
-    return response()->json(['ok'=>true, 'status'=>$auction->status]);
-}
 
     public function destroy(Auction $auction)
     {
         $auction->delete();
-        return response()->noContent();
+        return response()->json(['ok'=>true]);
     }
 }

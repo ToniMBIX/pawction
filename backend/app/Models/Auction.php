@@ -14,6 +14,7 @@ class Auction extends Model
     protected $casts = [
         'end_at'        => 'datetime',
         'current_price' => 'integer',
+        'payed'  => 'boolean',
     ];
 
     protected $appends = ['ends_in_seconds','started'];

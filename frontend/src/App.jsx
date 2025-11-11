@@ -9,6 +9,7 @@ import Profile from './pages/Profile.jsx'
 import Checkout from './pages/Checkout.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import AdminAuctions from './pages/AdminAuctions.jsx'
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
 
@@ -63,6 +64,7 @@ export default function App(){
             <Link to="/auctions">Subastas</Link>
             <Link to="/favorites">Favoritos</Link>
             <Link to="/history">Historial</Link> {/* <— NUEVO */}
+            {Auth.isAdmin() && <Link to="/admin/auctions">Admin</Link>}
           </nav>
           <UserMenu />
         </div>
@@ -79,6 +81,8 @@ export default function App(){
   <Route path="/checkout/:id" element={<PrivateRoute><Checkout /></PrivateRoute>} />
   <Route path="/login" element={<Login />} />
   <Route path="/register" element={<Register />} />
+  <Route path="/admin/auctions" element={<AdminAuctions />} />
+
 </Routes>
 
       </main>

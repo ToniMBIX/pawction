@@ -56,7 +56,7 @@ class UserController extends Controller
             'id'       => $user->id,
             'name'     => $user->name ?? '',
             'email'    => $user->email ?? '',
-            'is_admin' => (int)($user->is_admin ?? 0),
+            'is_admin' => (bool)($user->is_admin),
         ]);
     }
 }
