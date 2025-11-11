@@ -41,3 +41,8 @@ Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
 Route::get('/auctions/{auction}/qr', function(\App\Models\Auction $auction) {
     return QrCode::size(200)->generate($auction->product->animal->info_url ?? 'https://pawction.org');
 })->name('auction.qr');
+
+Route::middleware(['auth:sanctum','admin'])->post('/admin/cron/close-expired', function () {
+    Artisan::call('auctions:close-expired');
+    return response()->json(['ok'=>true,'ran'=>'auctions:close-expired']);
+});

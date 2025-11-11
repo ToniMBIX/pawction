@@ -2,45 +2,87 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Auction,Bid};
+use App\Models\{Auction, Bid};
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BidController extends Controller
 {
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'auction_id' => ['required','exists:auctions,id'],
-        'amount' => ['required','numeric','min:0'],
-    ]);
+    {
+        $data = $request->validate([
+            'auction_id' => ['required', 'exists:auctions,id'],
+            // Puja SIEMPRE entera (sin decimales)
+            'amount'     => ['required', 'integer', 'min:1'],
+        ]);
 
-    $auction = \App\Models\Auction::findOrFail($data['auction_id']);
-    $user = $request->user();
+        $userId  = $request->user()->id;
+        $auction = null;
 
-    // Si es la primera puja
-    $min = $auction->current_price > 0 ? $auction->current_price + 1 : 20;
-    if ($data['amount'] < $min) {
-        return response()->json(['message'=>"La puja mínima actual es de {$min}€"], 422);
+        DB::transaction(function () use ($data, $userId, &$auction) {
+            // Bloqueo para evitar condiciones de carrera
+            $auction = Auction::lockForUpdate()->findOrFail($data['auction_id']);
+
+            // Si usas status, valida que esté activa
+            if (isset($auction->status) && $auction->status !== 'active') {
+                abort(422, 'La subasta no está activa.');
+            }
+
+            // Si tiene end_at y ya venció, ciérrala y aborta
+            if ($auction->end_at && now()->greaterThanOrEqualTo($auction->end_at)) {
+                // Fijamos ganador con la puja más alta registrada
+                $lastBid = Bid::where('auction_id', $auction->id)
+                    ->orderByDesc('amount')
+                    ->orderByDesc('id')
+                    ->first();
+
+                if (isset($auction->status)) {
+                    $auction->status = 'finished';
+                }
+                $auction->winner_user_id = $lastBid?->user_id;
+                $auction->save();
+
+                abort(422, 'La subasta ya finalizó.');
+            }
+
+            $amount  = (int) $data['amount'];
+            $current = (int) $auction->current_price;
+
+            // Reglas de puja:
+            // - primera puja: >= 20 €
+            // - siguientes: al menos +1 €
+            if ($current === 0) {
+                if ($amount < 20) {
+                    abort(422, 'La primera puja debe ser de al menos 20 €.');
+                }
+            } else {
+                $minNext = $current + 1;
+                if ($amount < $minNext) {
+                    abort(422, "La puja mínima ahora es de {$minNext} €.");
+                }
+            }
+
+            // Registramos la puja
+            Bid::create([
+                'auction_id' => $auction->id,
+                'user_id'    => $userId,
+                'amount'     => $amount, // entero
+            ]);
+
+            // Actualizamos precio y REINICIAMOS el crono a 24h desde AHORA
+            $auction->current_price = $amount;
+            $auction->end_at        = now()->addDay(); // 24h
+            $auction->save();
+        });
+
+        // Devolvemos la subasta actualizada con relaciones
+        $auction->refresh()->load('product.animal');
+
+        return response()->json([
+            'message' => 'Puja registrada',
+            'auction' => $auction,
+        ], 201);
     }
-
-    $auction->bids()->create([
-        'user_id' => $user->id,
-        'amount' => $data['amount']
-    ]);
-
-    // Si es la primera puja, inicia o reinicia temporizador
-    if (!$auction->end_at || now()->greaterThan($auction->end_at)) {
-        $auction->end_at = now()->addDay();
-    } else {
-        $auction->end_at = now()->addDay();
-    }
-    $auction->current_price = $data['amount'];
-    $auction->save();
-
-    return response()->json(['message'=>'Puja registrada', 'auction'=>$auction->fresh()]);
-}
 
     public function mine(Request $request)
     {
@@ -50,12 +92,12 @@ class BidController extends Controller
             ->with(['auction.product.animal'])
             ->orderByDesc('created_at')
             ->get()
-            ->map(function($b){
+            ->map(function ($b) {
                 return [
-                    'id'        => $b->id,
-                    'amount'    => $b->amount,
-                    'created_at'=> $b->created_at,
-                    'auction'   => $b->auction ? [
+                    'id'         => $b->id,
+                    'amount'     => $b->amount,
+                    'created_at' => $b->created_at,
+                    'auction'    => $b->auction ? [
                         'id'            => $b->auction->id,
                         'title'         => $b->auction->title,
                         'current_price' => $b->auction->current_price,
@@ -71,5 +113,4 @@ class BidController extends Controller
 
         return response()->json($bids);
     }
-
 }
