@@ -8,13 +8,10 @@ use Illuminate\Http\Request;
 
 class AuctionAdminController extends Controller
 {
-    public function index()
+     public function index()
     {
-        $list = Auction::with('product.animal')
-            ->orderByDesc('id')
-            ->paginate(20);
-
-        return response()->json($list);
+        // lista paginada con relaciones
+        return Auction::with('product.animal')->orderByDesc('id')->paginate(20);
     }
 
     public function store(Request $request)
