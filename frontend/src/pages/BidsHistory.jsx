@@ -2,6 +2,8 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { BidsAPI } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
+import { assetUrl } from '../lib/api.js'
+
 
 export default function BidsHistory(){
   const [bids, setBids] = React.useState([])

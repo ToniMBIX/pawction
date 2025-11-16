@@ -3,6 +3,8 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { FavoritesAPI, assetUrl } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
+import { assetUrl } from '../lib/api.js'
+
 
 export default function Favorites() {
   const [items, setItems] = React.useState([])
