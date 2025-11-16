@@ -29,6 +29,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bids',                [BidController::class, 'store']);
     Route::post('/favorites/{auction}', [FavoriteController::class, 'toggle']);
     Route::post('/checkout/{auction}',  [PaymentController::class, 'checkout']);
+
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::get('/bids/mine', [BidController::class, 'mine']);
 });
 
 // ---------- ADMIN (protegido + admin) ----------
