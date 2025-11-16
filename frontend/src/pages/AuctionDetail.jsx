@@ -23,16 +23,18 @@ export default function AuctionDetail() {
     }
   }
 
-  // --- load auction ---
+  // --- carga de subasta ---
   const load = React.useCallback(async () => {
     setLoading(true)
     try {
       const data = await AuctionsAPI.get(id)
       setA(data)
 
+      // 1º: si el backend manda is_favorite, lo usamos
       if (typeof data.is_favorite !== 'undefined') {
         setFav(!!data.is_favorite)
       } else {
+        // 2º: plan B: consultamos /favorites
         const isFav = await resolveFavorite(id)
         setFav(isFav)
       }
@@ -47,7 +49,6 @@ export default function AuctionDetail() {
 
   // --- temporizador ---
   React.useEffect(() => {
-    // Preferimos ends_in_seconds si el backend lo expone; si no, calculamos con end_at
     if (a?.ends_in_seconds != null) {
       let s = Number(a.ends_in_seconds) || 0
       if (s <= 0) {
@@ -74,6 +75,7 @@ export default function AuctionDetail() {
       setTimeLeft(a?.current_price > 0 ? 'Finalizada' : 'Aún no iniciada')
       return
     }
+
     const updateCountdown = () => {
       const diff = new Date(a.end_at) - new Date()
       if (diff <= 0) {
@@ -85,6 +87,7 @@ export default function AuctionDetail() {
       const s = Math.floor((diff % (1000 * 60)) / 1000)
       setTimeLeft(`${h}h ${m}m ${s}s`)
     }
+
     updateCountdown()
     const interval = setInterval(updateCountdown, 1000)
     return () => clearInterval(interval)
@@ -99,7 +102,7 @@ export default function AuctionDetail() {
     (a?.ends_in_seconds != null && Number(a.ends_in_seconds) <= 0) ||
     (!!a?.end_at && new Date(a.end_at) <= new Date())
 
-  // --- actions ---
+  // --- acciones ---
   async function submitBid(e) {
     e.preventDefault()
     if (!Auth.isLogged()) return alert('Inicia sesión para pujar')
@@ -122,6 +125,7 @@ export default function AuctionDetail() {
     if (!Auth.isLogged()) return alert('Inicia sesión para usar favoritos')
     try {
       const r = await FavoritesAPI.toggle(a.id)
+      // el controlador devuelve { favorited: bool, ... }
       setFav(!!r.favorited)
     } catch (e) {
       alert(e.message || 'No se pudo actualizar el favorito')
@@ -135,7 +139,7 @@ export default function AuctionDetail() {
     a?.product?.animal?.photo_url ||
     a?.image_url ||
     a?.photo_url ||
-    '/placeholder.jpg'
+    null
 
   const img = assetUrl(rawImg) || '/placeholder.jpg'
 
