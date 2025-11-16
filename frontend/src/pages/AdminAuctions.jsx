@@ -9,16 +9,18 @@ export default function AdminAuctions(){
     title: '',
     description: '',
     image_url: '',
-    image_file: null, // <-- NUEVO
-    // opción 1: usar product existente
+    image_file: null,
     product_id: '',
-    // opción 2: crear animal+pack al vuelo
     animal: { name: '', species: 'Perro', age: '', photo_url: '', info_url: '' }
   })
 
   const load = async () => {
-    const r = await AdminAPI.auctions.list()
-    setItems(Array.isArray(r) ? r : (r.data || []))
+    try {
+      const r = await AdminAPI.auctions.list()
+      setItems(Array.isArray(r) ? r : (r.data || []))
+    } catch (e) {
+      console.error('Error cargando subastas admin', e)
+    }
   }
 
   React.useEffect(()=>{ load() },[])
@@ -26,49 +28,59 @@ export default function AdminAuctions(){
   const create = async (e) => {
     e.preventDefault()
 
-    const fd = new FormData()
-    fd.append('title', form.title)
-    if (form.description) fd.append('description', form.description)
+    if (!form.title.trim()) {
+      alert('El título es obligatorio')
+      return
+    }
 
-    // Si subes archivo, lo mandamos como 'image'
+    const fd = new FormData()
+    fd.append('title', form.title.trim())
+    if (form.description.trim()) fd.append('description', form.description.trim())
+
     if (form.image_file) {
       fd.append('image', form.image_file)
-    } else if (form.image_url) {
-      // si quieres seguir permitiendo URL
-      fd.append('image_url', form.image_url)
+    } else if (form.image_url.trim()) {
+      fd.append('image_url', form.image_url.trim())
     }
 
-    if (form.product_id) {
-      fd.append('product_id', String(form.product_id))
-    } else if (form.animal.name) {
-      fd.append('animal[name]', form.animal.name)
-      if (form.animal.species)   fd.append('animal[species]', form.animal.species)
-      if (form.animal.age)       fd.append('animal[age]', String(form.animal.age))
-      if (form.animal.photo_url) fd.append('animal[photo_url]', form.animal.photo_url)
-      if (form.animal.info_url)  fd.append('animal[info_url]', form.animal.info_url)
+    if (form.product_id.trim()) {
+      fd.append('product_id', form.product_id.trim())
+    } else if (form.animal.name.trim()) {
+      fd.append('animal[name]', form.animal.name.trim())
+      if (form.animal.species.trim())   fd.append('animal[species]', form.animal.species.trim())
+      if (form.animal.age)              fd.append('animal[age]', String(form.animal.age))
+      if (form.animal.photo_url.trim()) fd.append('animal[photo_url]', form.animal.photo_url.trim())
+      if (form.animal.info_url.trim())  fd.append('animal[info_url]', form.animal.info_url.trim())
     }
 
-    await AdminAPI.auctions.create(fd)
-
-    setForm({
-      title:'',
-      description:'',
-      image_url:'',
-      image_file:null,
-      product_id:'',
-      animal:{ name:'', species:'Perro', age:'', photo_url:'', info_url:'' }
-    })
-
-    await load()
+    try {
+      await AdminAPI.auctions.create(fd)
+      setForm({
+        title: '',
+        description: '',
+        image_url: '',
+        image_file: null,
+        product_id: '',
+        animal: { name: '', species: 'Perro', age: '', photo_url: '', info_url: '' }
+      })
+      await load()
+    } catch (err) {
+      alert(err.message || 'Error creando la subasta')
+      console.error(err)
+    }
   }
 
   const remove = async (id) => {
     if (!confirm('¿Eliminar subasta?')) return
-    await AdminAPI.auctions.remove(id)
-    setItems(items.filter(x=>x.id!==id))
+    try {
+      await AdminAPI.auctions.remove(id)
+      setItems(items.filter(x=>x.id!==id))
+    } catch (e) {
+      alert('No se pudo eliminar')
+      console.error(e)
+    }
   }
 
-  // Gate muy simple: solo admin
   if (!Auth.token() || !Auth.isAdmin()) {
     return <div className="text-center">Debes iniciar sesión como admin.</div>
   }
@@ -95,7 +107,6 @@ export default function AdminAuctions(){
           placeholder="Descripción (opcional)"
         />
 
-        {/* Campo URL opcional */}
         <input
           value={form.image_url}
           onChange={e=>setForm({...form, image_url:e.target.value})}
@@ -103,7 +114,6 @@ export default function AdminAuctions(){
           placeholder="Imagen URL (opcional si no subes archivo)"
         />
 
-        {/* Campo archivo imagen */}
         <input
           type="file"
           accept="image/*"
@@ -122,38 +132,53 @@ export default function AdminAuctions(){
             placeholder="product_id (opcional si creas el animal)"
           />
           <div className="text-sm opacity-70 self-center">
-            O rellena datos del animal para crear el pack
+            O rellena datos del animal para crear el pack automáticamente
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-3">
           <input
             value={form.animal.name}
-            onChange={e=>setForm({...form, animal:{...form.animal, name:e.target.value}})}
+            onChange={e=>setForm({
+              ...form,
+              animal:{...form.animal, name:e.target.value}
+            })}
             className="input"
             placeholder="Animal nombre (para crear pack)"
           />
           <input
             value={form.animal.photo_url}
-            onChange={e=>setForm({...form, animal:{...form.animal, photo_url:e.target.value}})}
+            onChange={e=>setForm({
+              ...form,
+              animal:{...form.animal, photo_url:e.target.value}
+            })}
             className="input"
             placeholder="Animal photo_url"
           />
           <input
             value={form.animal.species}
-            onChange={e=>setForm({...form, animal:{...form.animal, species:e.target.value}})}
+            onChange={e=>setForm({
+              ...form,
+              animal:{...form.animal, species:e.target.value}
+            })}
             className="input"
             placeholder="Especie (Perro/Gato...)"
           />
           <input
             value={form.animal.age}
-            onChange={e=>setForm({...form, animal:{...form.animal, age:e.target.value}})}
+            onChange={e=>setForm({
+              ...form,
+              animal:{...form.animal, age:e.target.value}
+            })}
             className="input"
             placeholder="Edad"
           />
           <input
             value={form.animal.info_url}
-            onChange={e=>setForm({...form, animal:{...form.animal, info_url:e.target.value}})}
+            onChange={e=>setForm({
+              ...form,
+              animal:{...form.animal, info_url:e.target.value}
+            })}
             className="input"
             placeholder="Info URL"
           />
@@ -168,6 +193,7 @@ export default function AdminAuctions(){
             <img
               src={a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'}
               className="w-full h-40 object-cover rounded-xl"
+              alt=""
             />
             <div className="mt-2">
               <div className="font-semibold">{a.title}</div>
