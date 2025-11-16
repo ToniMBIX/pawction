@@ -56,14 +56,17 @@ export const AuctionsAPI = {
 }
 
 export const FavoritesAPI = {
-  toggle: (auctionId) => api(`/favorites/${auctionId}`, { method:'POST' }),
-  mine:   () => api('/favorites'), // si tienes el endpoint /favorites GET
+  list:   () => api('/favorites'),
+  toggle: (auctionId) => api(`/favorites/${auctionId}`, { method: 'POST' }),
 }
+
+
 
 // 🆕 Historial de pujas
 export const BidsAPI = {
-  mine: () => api('/me'),
-}
+  mine: () => api('/bids/mine'),
+};
+
 
 export const PaymentAPI = {
   checkout: (auctionId) => api(`/checkout/${auctionId}`, { method:'POST' }),

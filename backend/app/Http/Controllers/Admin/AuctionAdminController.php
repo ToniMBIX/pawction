@@ -60,8 +60,9 @@ class AuctionAdminController extends Controller
     // Imagen: archivo tiene prioridad sobre image_url
     $imageUrl = $data['image_url'] ?? null;
     if ($request->hasFile('image')) {
-        $path = $request->file('image')->store('auctions', 'public');
-        $imageUrl = Storage::url($path); // típicamente /storage/auctions/xxx.jpg
+        $path = $request->file('image')->store('auctions','public');
+        $imageUrl = url('/storage/'.$path);
+
     }
 
     $auction = Auction::create([

@@ -34,6 +34,12 @@ class Auction extends Model
         return (int)$this->current_price > 0 && !is_null($this->end_at);
     }
 
+    public function favoredBy()
+{
+    return $this->belongsToMany(User::class, 'favorites', 'auction_id', 'user_id')
+                ->withTimestamps();
+}
+
     /** Cierra la subasta y fija ganador (última puja más alta) */
     public function closeNow(): void
     {

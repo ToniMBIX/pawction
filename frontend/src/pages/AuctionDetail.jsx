@@ -16,9 +16,8 @@ export default function AuctionDetail(){
   async function resolveFavorite(auctionId){
     if (!Auth.isLogged()) return false
     try {
-      const me = await AuthAPI.me()
-      const favs = me?.favorites || []
-      return favs.some(f => Number(f.id) === Number(auctionId))
+      const favs = await FavoritesAPI.list();
+      return favs.some(f => f.id === Number(auctionId))
     } catch {
       return false
     }
@@ -106,15 +105,16 @@ export default function AuctionDetail(){
     }
   }
 
-  async function toggleFav(){
-    if(!Auth.isLogged()) return alert('Inicia sesión para usar favoritos')
-    try{
-      const r = await FavoritesAPI.toggle(a.id)
-      setFav(!!r.favorited)
-    }catch(e){
-      alert(e.message || 'No se pudo actualizar el favorito')
-    }
+ async function toggleFav() {
+  if (!Auth.isLogged()) return alert('Inicia sesión para usar favoritos')
+  try {
+    const r = await FavoritesAPI.toggle(a.id)
+    setFav(!!r.favorited)   // usa el campo que hemos añadido en el controller
+  } catch (e) {
+    alert(e.message || 'No se pudo actualizar el favorito')
   }
+}
+
 
   // --- render ---
   if(loading || !a) return <div>Cargando…</div>

@@ -7,13 +7,18 @@ use App\Models\Auction;
 
 class FavoriteController extends Controller
 {
+    /**
+     * Devuelve las subastas favoritas del usuario autenticado.
+     */
     public function index(Request $request)
     {
         $user = $request->user();
+
+        // Cargamos relaciones encadenadas para tener la foto del animal
         $user->load('favorites.product.animal');
 
-        // Devolvemos solo la lista de favoritos (array de subastas)
-        return response()->json($user->favorites->map(function ($a) {
+        // Devolvemos SOLO la lista de subastas favoritas ya “normalizadas”
+        $favorites = $user->favorites->map(function (Auction $a) {
             return [
                 'id'            => $a->id,
                 'title'         => $a->title,
@@ -23,17 +28,25 @@ class FavoriteController extends Controller
                 'product'       => $a->product ? [
                     'animal' => $a->product->animal ? [
                         'photo_url' => $a->product->animal->photo_url,
-                    ] : null
+                    ] : null,
                 ] : null,
             ];
-        })->values());
+        })->values();
+
+        return response()->json($favorites);
     }
 
+    /**
+     * Alterna una subasta como favorita / no favorita
+     */
     public function toggle(Request $request, Auction $auction)
     {
         $user = $request->user();
 
-        $attached = $user->favorites()->where('auction_id', $auction->id)->exists();
+        // ¿Ya está en favoritos?
+        $attached = $user->favorites()
+            ->where('auction_id', $auction->id)
+            ->exists();
 
         if ($attached) {
             $user->favorites()->detach($auction->id);
@@ -44,8 +57,8 @@ class FavoriteController extends Controller
         }
 
         return response()->json([
-            'favorited' => $favorited,
-            'favorites_count' => $user->favorites()->count(),
+            'favorited'        => $favorited,                     // <--- para el botón (Agregar/Quitar)
+            'favorites_count'  => $user->favorites()->count(),    // opcional, por si quieres mostrar un contador
         ]);
     }
 }
