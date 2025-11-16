@@ -45,7 +45,7 @@ export const PaymentAPI = {
 export const AdminAPI = {
   auctions: {
     list:   () => api('/admin/auctions'),
-    create: (payload) => api('/admin/auctions', { method:'POST', body: JSON.stringify(payload) }),
+    create: (payload) => api('/admin/auctions', { method:'POST', body: payload }),
     remove: (id) => api(`/admin/auctions/${id}`, { method:'DELETE' }),
   },
 }
