@@ -1,6 +1,6 @@
 import React from 'react'
 import { AdminAPI } from '../lib/api.js'
-import { Auth } from '../lib/auth'
+import { Auth } from '../lib/auth.js'
 
 export default function AdminAuctions(){
   const [items, setItems] = React.useState([])
