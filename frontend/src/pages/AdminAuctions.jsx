@@ -1,6 +1,6 @@
 // frontend/src/pages/AdminAuctions.jsx
 import React from 'react'
-import { AdminAPI } from '../lib/api.js'
+import { AdminAPI, assetUrl } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
 
 export default function AdminAuctions(){
@@ -188,21 +188,31 @@ export default function AdminAuctions(){
       </form>
 
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {items.map(a=>(
-          <div key={a.id} className="card">
-            <img
-              src={a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'}
-              className="w-full h-40 object-cover rounded-xl"
-              alt=""
-            />
-            <div className="mt-2">
-              <div className="font-semibold">{a.title}</div>
-              <div className="text-sm opacity-80">Actual: {a.current_price} €</div>
-              <div className="text-xs opacity-60">Estado: {a.status}</div>
-              <button onClick={()=>remove(a.id)} className="btn mt-2 w-full">Eliminar</button>
+        {items.map(a=>{
+          const raw =
+            a?.product?.animal?.photo_url ||
+            a?.image_url ||
+            a?.photo_url
+
+          const img = assetUrl(raw) || '/placeholder.jpg'
+
+          return (
+            <div key={a.id} className="card">
+              <img
+                src={img}
+                className="w-full h-40 object-cover rounded-xl"
+                alt=""
+                onError={ev => { ev.currentTarget.src = '/placeholder.jpg' }}
+              />
+              <div className="mt-2">
+                <div className="font-semibold">{a.title}</div>
+                <div className="text-sm opacity-80">Actual: {a.current_price} €</div>
+                <div className="text-xs opacity-60">Estado: {a.status}</div>
+                <button onClick={()=>remove(a.id)} className="btn mt-2 w-full">Eliminar</button>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

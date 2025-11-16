@@ -29,11 +29,19 @@ export default function Favorites(){
     <h1 className="text-2xl font-bold mb-4">❤️ Mis Favoritos</h1>
     <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
       {items.map(a => {
-        const img = a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'
-        return (
+const raw =
+          a?.product?.animal?.photo_url ||
+          a?.image_url ||
+          a?.photo_url
+
+        const img = assetUrl(raw) || '/placeholder.jpg'        return (
           <Link to={`/auctions/${a.id}`} key={a.id} className="card hover:shadow-xl transition-all">
-            <img src={img} alt="" className="w-full h-44 object-cover rounded-xl" />
-            <div className="mt-3">
+<img
+              src={img}
+              alt=""
+              className="w-full h-40 object-cover rounded-xl"
+              onError={(ev)=>{ ev.currentTarget.src = '/placeholder.jpg' }}
+            />            <div className="mt-3">
               <h3 className="font-bold text-lg">{a.title}</h3>
               <div className="mt-1 text-sm opacity-80">Precio actual: <b>{a.current_price} €</b></div>
             </div>

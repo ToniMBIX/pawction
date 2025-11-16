@@ -1,27 +1,37 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { AuctionsAPI } from '../lib/api.js'
+import { AuctionsAPI, assetUrl } from '../lib/api.js'
 
 export default function Home(){
   const [items, setItems] = React.useState([])
 
   React.useEffect(()=>{
     AuctionsAPI.list()
-      .then(r => setItems(Array.isArray(r)? r : (r.data||[])))
-      .catch(()=>setItems([]))
+      .then(r => {
+        const list = Array.isArray(r) ? r : (r.data || [])
+        setItems(list)
+      })
+      .catch(()=> setItems([]))
   },[])
 
   return (
     <div className="grid md:grid-cols-3 gap-4">
       {items.map(a => {
-        const img =
-          a?.image_url ||
+        const raw =
           a?.product?.animal?.photo_url ||
-          a?.photo_url ||
-          '/placeholder.jpg'
+          a?.image_url ||
+          a?.photo_url
+
+        const img = assetUrl(raw) || '/placeholder.jpg'
+
         return (
           <Link to={`/auctions/${a.id}`} key={a.id} className="card">
-            <img src={img} alt="" className="w-full h-40 object-cover rounded-xl" />
+            <img
+              src={img}
+              alt=""
+              className="w-full h-40 object-cover rounded-xl"
+              onError={(ev)=>{ ev.currentTarget.src = '/placeholder.jpg' }}
+            />
             <div className="mt-3">
               <h3 className="font-bold">{a.title}</h3>
               <p className="text-sm opacity-70 line-clamp-2">{a.description}</p>

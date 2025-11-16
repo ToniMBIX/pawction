@@ -39,6 +39,16 @@ export async function api(path, opts = {}) {
   return res.json()
 }
 
+export function assetUrl(path) {
+  if (!path) return null
+  // si ya es absoluta, la dejamos
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  // si empieza por / (ej: /storage/auctions/...)
+  if (path.startsWith('/')) return BACKEND_URL + path
+  // cualquier otra cosa
+  return `${BACKEND_URL}/${path}`
+}
+
 // ==== APIs públicas / protegidas ====
 
 export const AuthAPI = {

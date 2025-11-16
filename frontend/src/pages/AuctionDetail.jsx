@@ -119,8 +119,12 @@ export default function AuctionDetail(){
   // --- render ---
   if(loading || !a) return <div>Cargando…</div>
 
-  const img = a?.product?.animal?.photo_url || a?.image_url || '/placeholder.jpg'
+ const rawImg =
+    a?.product?.animal?.photo_url ||
+    a?.image_url ||
+    a?.photo_url
 
+  const img = assetUrl(rawImg) || '/placeholder.jpg'
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <div>
