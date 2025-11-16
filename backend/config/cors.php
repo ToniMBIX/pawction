@@ -1,12 +1,75 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie', '*'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Paths
+    |--------------------------------------------------------------------------
+    |
+    | Para simplificar, permitimos CORS en todas las rutas. Si quieres
+    | luego puedes limitar a 'api/*'.
+    |
+    */
+
+    'paths' => ['*'],  // o ['api/*'] si prefieres, pero '*'' es lo más sencillo ahora
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Methods
+    |--------------------------------------------------------------------------
+    */
+
     'allowed_methods' => ['*'],
-    'allowed_origins' => [env('FRONTEND_URL', 'https://pawction-frontend.onrender.com')],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Origins
+    |--------------------------------------------------------------------------
+    |
+    | Como NO usamos cookies ni credentials (solo Authorization: Bearer),
+    | podemos usar '*'. Esto es lo que evita el error actual.
+    |
+    */
+
+    'allowed_origins' => ['*'],
+
     'allowed_origins_patterns' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed Headers
+    |--------------------------------------------------------------------------
+    */
+
     'allowed_headers' => ['*'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Exposed Headers
+    |--------------------------------------------------------------------------
+    */
+
     'exposed_headers' => [],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Max Age
+    |--------------------------------------------------------------------------
+    */
+
     'max_age' => 0,
-    'supports_credentials' => false, // usamos Bearer tokens, no cookies
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supports Credentials
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANTE: debe ser false si usas allowed_origins = ['*']
+    | y no trabajas con cookies.
+    |
+    */
+
+    'supports_credentials' => false,
+
 ];
