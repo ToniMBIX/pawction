@@ -2,8 +2,6 @@
 import React from 'react'
 import { AdminAPI, assetUrl } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
-import { assetUrl } from '../lib/api.js'
-
 
 export default function AdminAuctions(){
   const [items, setItems] = React.useState([])
@@ -19,7 +17,8 @@ export default function AdminAuctions(){
   const load = async () => {
     try {
       const r = await AdminAPI.auctions.list()
-      setItems(Array.isArray(r) ? r : (r.data || []))
+      const list = Array.isArray(r) ? r : (r.data || [])
+      setItems(list)
     } catch (e) {
       console.error('Error cargando subastas admin', e)
     }
@@ -39,15 +38,18 @@ export default function AdminAuctions(){
     fd.append('title', form.title.trim())
     if (form.description.trim()) fd.append('description', form.description.trim())
 
+    // Imagen: o archivo o URL
     if (form.image_file) {
       fd.append('image', form.image_file)
     } else if (form.image_url.trim()) {
       fd.append('image_url', form.image_url.trim())
     }
 
+    // O bien product_id...
     if (form.product_id.trim()) {
       fd.append('product_id', form.product_id.trim())
     } else if (form.animal.name.trim()) {
+      // ...o datos del animal para crear pack automático
       fd.append('animal[name]', form.animal.name.trim())
       if (form.animal.species.trim())   fd.append('animal[species]', form.animal.species.trim())
       if (form.animal.age)              fd.append('animal[age]', String(form.animal.age))
@@ -57,6 +59,7 @@ export default function AdminAuctions(){
 
     try {
       await AdminAPI.auctions.create(fd)
+      // limpiar form
       setForm({
         title: '',
         description: '',
@@ -83,6 +86,7 @@ export default function AdminAuctions(){
     }
   }
 
+  // Gate admin
   if (!Auth.token() || !Auth.isAdmin()) {
     return <div className="text-center">Debes iniciar sesión como admin.</div>
   }
@@ -155,7 +159,7 @@ export default function AdminAuctions(){
               animal:{...form.animal, photo_url:e.target.value}
             })}
             className="input"
-            placeholder="Animal photo_url"
+            placeholder="Animal photo_url (si no subes archivo)"
           />
           <input
             value={form.animal.species}
