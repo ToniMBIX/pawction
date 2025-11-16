@@ -1,18 +1,55 @@
 // frontend/src/lib/api.js
 import { Auth } from './auth.js'
 
-const API = import.meta.env.VITE_API_URL || 'https://pawction-backend.onrender.com/api'
+// =======================================================
+//   CONFIGURACIÓN DE URLS
+// =======================================================
 
-// Helper de fetch con JSON y token
+// URL base del backend incluyendo /api
+const RAW_API =
+  import.meta.env.VITE_API_URL ||
+  'https://pawction-backend.onrender.com/api'
+
+export const API = RAW_API
+
+// URL del backend SIN /api → sirve para /storage/...
+export const BACKEND_URL = RAW_API.replace(/\/api\/?$/, '')
+
+
+// =======================================================
+//   HELPER assetUrl()
+//   Normaliza URLs de imágenes del backend
+// =======================================================
+
+export function assetUrl(path) {
+  if (!path) return null
+
+  const str = String(path)
+
+  // Si ya es absoluta, no tocamos nada
+  if (/^https?:\/\//i.test(str)) return str
+
+  // Si empieza con / → /storage/..
+  if (str.startsWith('/')) return BACKEND_URL + str
+
+  // Cualquier otra ruta relativa
+  return `${BACKEND_URL}/${str}`
+}
+
+
+// =======================================================
+//   FETCH helper (API genérica JSON + FormData)
+// =======================================================
+
 export async function api(path, opts = {}) {
   const isFormData = opts.body instanceof FormData
 
   const headers = {
-    'Accept': 'application/json',
+    Accept: 'application/json',
     ...(opts.headers || {})
   }
 
-  // Solo ponemos Content-Type JSON si NO es FormData
+  // ⚠️ SOLO poner Content-Type JSON si NO es FormData
   if (!isFormData) {
     headers['Content-Type'] = 'application/json'
   }
@@ -23,14 +60,14 @@ export async function api(path, opts = {}) {
   const res = await fetch(API + path, {
     ...opts,
     headers,
-    mode: 'cors',
+    mode: 'cors'
   })
 
   if (!res.ok) {
     let msg = await res.text()
     try {
-      const j = JSON.parse(msg)
-      msg = j.message || JSON.stringify(j)
+      const parsed = JSON.parse(msg)
+      msg = parsed.message || JSON.stringify(parsed)
     } catch {}
     throw new Error(msg || `HTTP ${res.status}`)
   }
@@ -39,57 +76,99 @@ export async function api(path, opts = {}) {
   return res.json()
 }
 
-export function assetUrl(path) {
-  if (!path) return null
-  // si ya es absoluta, la dejamos
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  // si empieza por / (ej: /storage/auctions/...)
-  if (path.startsWith('/')) return BACKEND_URL + path
-  // cualquier otra cosa
-  return `${BACKEND_URL}/${path}`
-}
 
-// ==== APIs públicas / protegidas ====
+
+// =======================================================
+//   AUTH API
+// =======================================================
 
 export const AuthAPI = {
-  register: (data) => api('/auth/register', { method:'POST', body: JSON.stringify(data) }),
-  login:    (data) => api('/auth/login',    { method:'POST', body: JSON.stringify(data) }),
-  logout:   ()     => api('/auth/logout',   { method:'POST' }),
-  me:              () => api('/me'),
+  register: (data) =>
+    api('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  login: (data) =>
+    api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+
+  logout: () => api('/auth/logout', { method: 'POST' }),
+
+  me: () => api('/me'),
 }
+
+
+
+// =======================================================
+//   AUCTIONS API
+// =======================================================
 
 export const AuctionsAPI = {
-  list: ()      => api('/auctions'),
-  get:  (id)    => api(`/auctions/${id}`),
-  bid:  (auction_id, amount) =>
-    api('/bids', { method:'POST', body: JSON.stringify({ auction_id, amount }) }),
+  list: () => api('/auctions'),
+  get: (id) => api(`/auctions/${id}`),
+  bid: (auction_id, amount) =>
+    api('/bids', {
+      method: 'POST',
+      body: JSON.stringify({ auction_id, amount })
+    }),
 }
+
+
+
+// =======================================================
+//   FAVORITES API
+// =======================================================
 
 export const FavoritesAPI = {
-  list:   () => api('/favorites'),
-  toggle: (auctionId) => api(`/favorites/${auctionId}`, { method: 'POST' }),
+  list: () => api('/favorites'),
+  toggle: (auctionId) =>
+    api(`/favorites/${auctionId}`, { method: 'POST' }),
 }
 
 
 
-// 🆕 Historial de pujas
+// =======================================================
+//   HISTORIAL DE PUJAS
+// =======================================================
+
 export const BidsAPI = {
   mine: () => api('/bids/mine'),
-};
-
-
-export const PaymentAPI = {
-  checkout: (auctionId) => api(`/checkout/${auctionId}`, { method:'POST' }),
 }
 
-// Admin
+
+
+// =======================================================
+//   PAGOS
+// =======================================================
+
+export const PaymentAPI = {
+  checkout: (auctionId) =>
+    api(`/checkout/${auctionId}`, { method: 'POST' }),
+}
+
+
+
+// =======================================================
+//   ADMIN API
+// =======================================================
+
 export const AdminAPI = {
   auctions: {
-    list:   () => api('/admin/auctions'),
-    create: (formData) => api('/admin/auctions', {
-      method: 'POST',
-      body: formData,
-    }),
-    remove: (id) => api(`/admin/auctions/${id}`, { method:'DELETE' }),
-  },
+    list: () => api('/admin/auctions'),
+
+    // FormData para subir imágenes reales
+    create: (formData) =>
+      api('/admin/auctions', {
+        method: 'POST',
+        body: formData
+      }),
+
+    remove: (id) =>
+      api(`/admin/auctions/${id}`, {
+        method: 'DELETE'
+      })
+  }
 }
