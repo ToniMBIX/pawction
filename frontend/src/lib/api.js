@@ -57,17 +57,22 @@ export const AuctionsAPI = {
 
 export const FavoritesAPI = {
   toggle: (auctionId) => api(`/favorites/${auctionId}`, { method:'POST' }),
-  mine:   () => api('/me'),
+  mine:   () => api('/favorites'), // si tienes el endpoint /favorites GET
+}
+
+// 🆕 Historial de pujas
+export const BidsAPI = {
+  mine: () => api('/me'),
 }
 
 export const PaymentAPI = {
   checkout: (auctionId) => api(`/checkout/${auctionId}`, { method:'POST' }),
 }
 
+// Admin
 export const AdminAPI = {
   auctions: {
     list:   () => api('/admin/auctions'),
-    // MUY IMPORTANTE: aquí esperamos un FormData
     create: (formData) => api('/admin/auctions', {
       method: 'POST',
       body: formData,
