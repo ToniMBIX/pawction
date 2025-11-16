@@ -9,7 +9,6 @@ export default function Favorites() {
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    // si no está logueado, no llamamos a la API
     if (!Auth.isLogged()) {
       setLoading(false)
       setItems([])
@@ -18,7 +17,7 @@ export default function Favorites() {
 
     FavoritesAPI.list()
       .then(r => {
-        const list = Array.isArray(r) ? r : (r.data || [])
+        const list = Array.isArray(r) ? r : r.data || []
         setItems(list)
       })
       .catch(err => {
@@ -68,16 +67,16 @@ export default function Favorites() {
               src={img}
               alt=""
               className="w-full h-40 object-cover rounded-xl"
-              onError={ev => { ev.currentTarget.src = '/placeholder.jpg' }}
+              onError={ev => {
+                ev.currentTarget.src = '/placeholder.jpg'
+              }}
             />
             <div className="mt-3">
               <h3 className="font-bold">{a.title}</h3>
               <div className="mt-2 text-sm">
                 Precio actual: <b>{Number(a.current_price || 0)} €</b>
               </div>
-              <div className="text-xs opacity-60">
-                Estado: {a.status}
-              </div>
+              <div className="text-xs opacity-60">Estado: {a.status}</div>
             </div>
           </Link>
         )

@@ -1,9 +1,8 @@
 // frontend/src/pages/AuctionDetail.jsx
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import { AuctionsAPI, FavoritesAPI } from '../lib/api.js'
+import { AuctionsAPI, FavoritesAPI, assetUrl } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
-import { assetUrl } from '../lib/api.js'
 
 export default function AuctionDetail() {
   const { id } = useParams()
@@ -92,11 +91,9 @@ export default function AuctionDetail() {
   }, [a?.ends_in_seconds, a?.end_at, a?.current_price])
 
   // --- reglas de puja ---
-  // Primera puja: mínimo 20 (entero). Siguientes: al menos +1 respecto al precio actual (enteros).
   const current = Number(a?.current_price || 0)
-  const minNext = current > 0 ? (current + 1) : 20
+  const minNext = current > 0 ? current + 1 : 20
 
-  // ¿está finalizada?
   const finished =
     (a?.status && a.status !== 'active') ||
     (a?.ends_in_seconds != null && Number(a.ends_in_seconds) <= 0) ||
@@ -115,7 +112,7 @@ export default function AuctionDetail() {
     try {
       await AuctionsAPI.bid(a.id, val)
       setAmount('')
-      await load() // traerá current_price y ends_in_seconds renovados (24h) si el backend lo hace
+      await load()
     } catch (err) {
       alert(err.message || 'No se pudo registrar la puja')
     }
@@ -149,7 +146,9 @@ export default function AuctionDetail() {
           src={img}
           alt=""
           className="w-full rounded-xl object-cover max-h-[420px]"
-          onError={(ev) => { ev.currentTarget.src = '/placeholder.jpg' }}
+          onError={ev => {
+            ev.currentTarget.src = '/placeholder.jpg'
+          }}
         />
       </div>
 
@@ -157,10 +156,14 @@ export default function AuctionDetail() {
         <h1 className="text-2xl font-bold">{a.title}</h1>
         {a.description && <p className="opacity-80">{a.description}</p>}
 
-        <div>Precio actual: <b>{Number(a.current_price || 0)} €</b></div>
+        <div>
+          Precio actual: <b>{Number(a.current_price || 0)} €</b>
+        </div>
         <div className="text-sm opacity-70 mt-1">
           Termina en: <b>{timeLeft}</b>
-          {current === 0 && !finished ? ' (empieza con la primera puja ≥ 20€)' : ''}
+          {current === 0 && !finished
+            ? ' (empieza con la primera puja ≥ 20€)'
+            : ''}
         </div>
 
         <form onSubmit={submitBid} className="flex gap-2">
@@ -174,7 +177,9 @@ export default function AuctionDetail() {
             placeholder={`≥ ${minNext}`}
             disabled={finished}
           />
-          <button className="btn" disabled={finished}>Pujar</button>
+          <button className="btn" disabled={finished}>
+            Pujar
+          </button>
         </form>
 
         <button onClick={toggleFav} className="btn">

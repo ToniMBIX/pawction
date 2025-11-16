@@ -23,19 +23,15 @@ export const BACKEND_URL = RAW_API.replace(/\/api\/?$/, '')
 
 export function assetUrl(path) {
   if (!path) return null
-
-  const str = String(path)
-
-  // Si ya es absoluta, no tocamos nada
-  if (/^https?:\/\//i.test(str)) return str
-
-  // Si empieza con / → /storage/..
-  if (str.startsWith('/')) return BACKEND_URL + str
-
-  // Cualquier otra ruta relativa
-  return `${BACKEND_URL}/${str}`
+  // ya es absoluta
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  // empieza por / -> lo colgamos del backend
+  if (path.startsWith('/')) return `${BACKEND_URL}${path}`
+  // cualquier otra cosa -> backend + /
+  return `${BACKEND_URL}/${path}`
 }
 
+export const PLACEHOLDER_IMG = 'https://placehold.co/600x400?text=Pawction'
 
 // =======================================================
 //   FETCH helper (API genérica JSON + FormData)
