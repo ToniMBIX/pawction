@@ -1,9 +1,28 @@
 <?php
+
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
-public function boot()
+class AppServiceProvider extends ServiceProvider
 {
-    if (app()->environment('production')) {
-        URL::forceScheme('https');
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        // Forzar HTTPS en producción (Render utiliza HTTPS)
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
