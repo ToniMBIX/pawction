@@ -14,7 +14,7 @@ import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
 
 // 🆕 IMPORTAMOS EL ICONO DE LA WEB DESDE /public
-import favicon from '/favicon.png'
+import logo from '/logo.png'
 
 function UserMenu() {
   const nav = useNavigate()
@@ -68,7 +68,7 @@ export default function App() {
 
           {/* 🆕 LOGO CON FAVICON */}
           <Link to="/" className="flex items-center gap-2 text-2xl font-extrabold">
-            <img src={favicon} alt="Pawction" className="w-8 h-8 rounded" />
+            <img src={logo} alt="Pawction" className="w-8 h-8 rounded" />
             Pawction
           </Link>
 
