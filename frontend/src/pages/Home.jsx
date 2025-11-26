@@ -23,8 +23,7 @@ export default function Auctions() {
         <h1 className="text-3xl font-bold mb-2">Bienvenido a Pawction 🐾</h1>
 
         <p className="text-sm opacity-80 max-w-2xl mx-auto leading-relaxed">
-          Pawction es una plataforma solidaria donde puedes pujar por packs exclusivos,
-          ilustraciones y artículos benéficos.  
+          Pawction es una plataforma solidaria donde puedes pujar por packs benéficos.  
           Cada subasta ayuda a financiar iniciativas ambientales y de protección animal
           a través de nuestra colaboración con Greenpeace.
           <br /><br />
