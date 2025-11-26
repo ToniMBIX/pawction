@@ -15,23 +15,24 @@ export default function Home() {
       .catch(() => setItems([]))
   }, [])
 
-  // Función auxiliar para mostrar el estado de cada subasta
   function getStatusText(a) {
-    // Aún no ha empezado → sin primera puja
-    if ((!a.end_at || a.current_price === null) && a.status !== 'active') {
+    const price = Number(a.current_price || 0)
+    const ends = Number(a.ends_in_seconds ?? null)
+
+    // ❌ Sin pujas → aún no ha empezado
+    if (price === 0) {
       return "Esperando primera puja"
     }
 
-    // Subasta activa con contador
-    if (a.ends_in_seconds != null && a.ends_in_seconds > 0) {
-      const s = a.ends_in_seconds
-      const h = Math.floor(s / 3600)
-      const m = Math.floor((s % 3600) / 60)
-      const sec = s % 60
-      return `Termina en: ${h}h ${m}m ${sec}s`
+    // 🔄 Activa → contador
+    if (a.status === "active" && ends > 0) {
+      const h = Math.floor(ends / 3600)
+      const m = Math.floor((ends % 3600) / 60)
+      const s = ends % 60
+      return `Termina en: ${h}h ${m}m ${s}s`
     }
 
-    // Finalizada
+    // ✔️ Finalizada
     return "Finalizada"
   }
 
@@ -62,7 +63,6 @@ export default function Home() {
                 Precio actual: <b>{a.current_price || 20} €</b>
               </div>
 
-              {/* NUEVA LÓGICA AQUÍ */}
               <div className="text-xs opacity-60 mt-1">
                 {getStatusText(a)}
               </div>

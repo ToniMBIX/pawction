@@ -78,6 +78,7 @@ export default function Profile() {
             Cambiar contraseña
           </h2>
 
+          <div>
           <input
             type="password"
             className="input bg-gray-900 text-white border border-gray-700"
@@ -85,7 +86,9 @@ export default function Profile() {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
+          </div>
 
+          <div>
           <input
             type="password"
             className="input bg-gray-900 text-white border border-gray-700"
@@ -93,7 +96,8 @@ export default function Profile() {
             value={password2}
             onChange={e => setPassword2(e.target.value)}
           />
-
+          </div>
+          
           {msg && (
             <div className="text-sm text-center text-purple-400 mt-2">
               {msg}
