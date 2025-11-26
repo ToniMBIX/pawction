@@ -35,8 +35,8 @@ export default function Home(){
             <div className="mt-3">
               <h3 className="font-bold">{a.title}</h3>
               <p className="text-sm opacity-70 line-clamp-2">{a.description}</p>
-              <div className="mt-2 text-sm">Precio actual: <b>{a.current_price} €</b></div>
-              <div className="text-xs opacity-60">Termina: {new Date(a.end_at).toLocaleString()}</div>
+              <div className="mt-2 text-sm">Precio actual: <b>{a.current_price || 20} €</b></div>
+              <div className="text-xs opacity-60">Termina: {new Date(a.end_at).toLocaleString() || ""}</div>
             </div>
           </Link>
         )
