@@ -55,7 +55,7 @@ export default function Auctions() {
               <div className="mt-3">
                 <h3 className="font-bold">{a.title}</h3>
                 <div className="mt-2 text-sm">
-                  Actual: <b>{a.current_price || 0} €</b>
+                  Actual: <b>{a.current_price || 20} €</b>
                 </div>
               </div>
             </Link>
