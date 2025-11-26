@@ -20,7 +20,7 @@ export default function Home() {
     const ends = Number(a.ends_in_seconds ?? null)
 
     // ❌ Sin pujas → aún no ha empezado
-    if (a.status === "active") {
+    if (a.status === "active" && ends < 0) {
       return "Esperando primera puja"
     }
 
