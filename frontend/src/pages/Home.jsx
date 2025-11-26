@@ -1,21 +1,23 @@
+
+// frontend/src/pages/Auctions.jsx
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { AuctionsAPI, assetUrl } from '../lib/api.js'
 
-export default function Home(){
+export default function Auctions() {
   const [items, setItems] = React.useState([])
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     AuctionsAPI.list()
       .then(r => {
-        const list = Array.isArray(r) ? r : (r.data || [])
+        const list = Array.isArray(r) ? r : r.data || []
         setItems(list)
       })
-      .catch(()=> setItems([]))
-  },[])
+      .catch(() => setItems([]))
+  }, [])
 
   return (
-    <div className="grid md:grid-cols-3 gap-4">
+    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
       {items.map(a => {
         const raw =
           a?.product?.animal?.photo_url ||
@@ -30,17 +32,24 @@ export default function Home(){
               src={img}
               alt=""
               className="w-full h-40 object-cover rounded-xl"
-              onError={(ev)=>{ ev.currentTarget.src = '/placeholder.jpg' }}
+              onError={ev => {
+                ev.currentTarget.src = '/placeholder.jpg'
+              }}
             />
             <div className="mt-3">
               <h3 className="font-bold">{a.title}</h3>
-              <p className="text-sm opacity-70 line-clamp-2">{a.description}</p>
-              <div className="mt-2 text-sm">Precio actual: <b>{a.current_price || 20} €</b></div>
-              <div className="text-xs opacity-60">Termina: {new Date(a.end_at).toLocaleString()}</div>
+              <div className="mt-2 text-sm">
+                Actual: <b>{a.current_price || 20} €</b>
+              </div>
             </div>
           </Link>
         )
       })}
+      {items.length === 0 && (
+        <div className="col-span-full text-center text-sm opacity-70">
+          No hay subastas disponibles todavía.
+        </div>
+      )}
     </div>
   )
 }
