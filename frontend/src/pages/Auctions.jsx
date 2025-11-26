@@ -14,6 +14,24 @@ export default function Home() {
       })
       .catch(() => setItems([]))
   }, [])
+  React.useEffect(() => {
+    const t = setInterval(() => {
+      setItems(prev =>
+        prev.map(a => {
+          if (a.status !== "active") return a
+          if (a.ends_in_seconds == null) return a
+
+          const next = a.ends_in_seconds - 1
+          return {
+            ...a,
+            ends_in_seconds: next > 0 ? next : 0
+          }
+        })
+      )
+    }, 1000)
+
+    return () => clearInterval(t)
+  }, [])
 
   function getStatusText(a) {
     const price = Number(a.current_price || 0)
