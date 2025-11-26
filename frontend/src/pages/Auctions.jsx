@@ -20,8 +20,8 @@ export default function Home() {
     const ends = Number(a.ends_in_seconds ?? null)
 
     // ❌ Sin pujas → aún no ha empezado
-    if (a.status === "active" && ends < 0) {
-      return "Esperando primera puja"
+    if (!a.status === "active") {
+    return "Finalizada"
     }
 
     // 🔄 Activa → contador
@@ -33,7 +33,8 @@ export default function Home() {
     }
 
     // ✔️ Finalizada
-    return "Finalizada"
+    return "Esperando primera puja"
+
   }
 
   return (
