@@ -13,7 +13,6 @@ import AdminAuctions from './pages/AdminAuctions.jsx'
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
 
-// 🆕 IMPORTAMOS EL ICONO DE LA WEB DESDE /public
 import logo from '/logo.png'
 
 function UserMenu() {
@@ -25,7 +24,7 @@ function UserMenu() {
     const int = setInterval(() => {
       setUser(Auth.user())
       setIsLogged(Auth.isLogged())
-    }, 1000)
+    }, 800)
     return () => clearInterval(int)
   }, [])
 
@@ -35,10 +34,14 @@ function UserMenu() {
         <>
           <span className="text-sm opacity-70">Hola, {user?.name || 'Usuario'}</span>
           <Link to="/profile">Perfil</Link>
-          <button className="text-sm underline" onClick={async () => {
-            try { await AuthAPI.logout() } catch {}
-            Auth.clear(); nav('/')
-          }}>
+          <button
+            className="text-sm underline"
+            onClick={async () => {
+              try { await AuthAPI.logout() } catch {}
+              Auth.clear()
+              nav('/')
+            }}
+          >
             Salir
           </button>
         </>
@@ -61,12 +64,26 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
+  const [user, setUser] = React.useState(Auth.user())
+  const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
+  const [isAdmin, setIsAdmin] = React.useState(Auth.isAdmin())
+
+  // 🔄 Mantener usuario en tiempo real
+  React.useEffect(() => {
+    const int = setInterval(() => {
+      setUser(Auth.user())
+      setIsLogged(Auth.isLogged())
+      setIsAdmin(Auth.isAdmin())
+    }, 800)
+
+    return () => clearInterval(int)
+  }, [])
+
   return (
     <div>
       <header className="border-b">
         <div className="container flex items-center gap-6 py-4">
 
-          {/* 🆕 LOGO CON FAVICON */}
           <Link to="/" className="flex items-center gap-2 text-2xl font-extrabold">
             <img src={logo} alt="Pawction" className="w-8 h-8 rounded" />
             Pawction
@@ -76,7 +93,9 @@ export default function App() {
             <Link to="/auctions">Subastas</Link>
             <Link to="/favorites">Favoritos</Link>
             <Link to="/history">Historial</Link>
-            {Auth.isAdmin() && <Link to="/admin/auctions">Admin</Link>}
+
+            {/* 🆕 ADMIN REACTIVO */}
+            {isAdmin && <Link to="/admin/auctions">Admin</Link>}
           </nav>
 
           <UserMenu />
