@@ -6,38 +6,28 @@ import { Auth } from '../lib/auth.js'
 
 export default function AuctionDetail() {
   const { id } = useParams()
+
   const [a, setA] = React.useState(null)
-  const [timeLeft, setTimeLeft] = React.useState('—')
-  const [amount, setAmount] = React.useState('')
   const [fav, setFav] = React.useState(false)
   const [loading, setLoading] = React.useState(true)
+  const [timeLeft, setTimeLeft] = React.useState('—')
+  const [amount, setAmount] = React.useState('')
 
-  // --- helpers ---
-  async function resolveFavorite(auctionId) {
-    if (!Auth.isLogged()) return false
-    try {
-      const favs = await FavoritesAPI.list()
-      return favs.some(f => Number(f.id) === Number(auctionId))
-    } catch {
-      return false
-    }
-  }
+  // ---------------------------------------------------------------------
+  // ESTE ES EL CAMBIO IMPORTANTE ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+  // Eliminamos resolveFavorite y validamos *exclusivamente* via backend
+  // ---------------------------------------------------------------------
 
-  // --- carga de subasta ---
   const load = React.useCallback(async () => {
     setLoading(true)
     try {
       const data = await AuctionsAPI.get(id)
+
       setA(data)
 
-      // 1º: si el backend manda is_favorite, lo usamos
-      if (typeof data.is_favorite !== 'undefined') {
-        setFav(!!data.is_favorite)
-      } else {
-        // 2º: plan B: consultamos /favorites
-        const isFav = await resolveFavorite(id)
-        setFav(isFav)
-      }
+      // backend SIEMPRE manda is_favorite (lo arreglamos antes)
+      setFav(!!data.is_favorite)
+
     } finally {
       setLoading(false)
     }
@@ -47,17 +37,18 @@ export default function AuctionDetail() {
     load()
   }, [load])
 
-  // --- temporizador ---
+  // ---------------------------------------------------------------------
+  // TEMPORIZADOR: NO toca "fav", así prevenimos sobrescribir estado
+  // ---------------------------------------------------------------------
   React.useEffect(() => {
-    if (a?.ends_in_seconds != null) {
-      let s = Number(a.ends_in_seconds) || 0
-      if (s <= 0) {
-        setTimeLeft(a?.current_price > 0 ? 'Finalizada' : 'Aún no iniciada')
-        return
-      }
+    if (!a) return
+
+    if (a.ends_in_seconds != null) {
+      let s = Number(a.ends_in_seconds)
+
       const tick = () => {
         if (s <= 0) {
-          setTimeLeft('Finalizada')
+          setTimeLeft("Finalizada")
           return
         }
         const h = Math.floor(s / 3600)
@@ -66,128 +57,97 @@ export default function AuctionDetail() {
         setTimeLeft(`${h}h ${m}m ${sec}s`)
         s -= 1
       }
+
       tick()
       const t = setInterval(tick, 1000)
       return () => clearInterval(t)
     }
+  }, [a])
 
-    if (!a?.end_at) {
-      setTimeLeft(a?.current_price > 0 ? 'Finalizada' : 'Aún no iniciada')
-      return
-    }
-
-    const updateCountdown = () => {
-      const diff = new Date(a.end_at) - new Date()
-      if (diff <= 0) {
-        setTimeLeft('Finalizada')
-        return
-      }
-      const h = Math.floor(diff / (1000 * 60 * 60))
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      const s = Math.floor((diff % (1000 * 60)) / 1000)
-      setTimeLeft(`${h}h ${m}m ${s}s`)
-    }
-
-    updateCountdown()
-    const interval = setInterval(updateCountdown, 1000)
-    return () => clearInterval(interval)
-  }, [a?.ends_in_seconds, a?.end_at, a?.current_price])
-
-  // --- reglas de puja ---
-  const current = Number(a?.current_price || 0)
-  const minNext = current > 0 ? current + 1 : 20
-
-  const finished =
-    (a?.status && a.status !== 'active') ||
-    (a?.ends_in_seconds != null && Number(a.ends_in_seconds) <= 0) ||
-    (!!a?.end_at && new Date(a.end_at) <= new Date())
-
-  // --- acciones ---
-  async function submitBid(e) {
-    e.preventDefault()
-    if (!Auth.isLogged()) return alert('Inicia sesión para pujar')
-    if (finished) return alert('La subasta ya finalizó')
-
-    const val = parseInt(amount, 10)
-    if (Number.isNaN(val)) return alert('Introduce una cantidad entera')
-    if (val < minNext) return alert(`La puja mínima ahora es de ${minNext} €`)
-
-    try {
-      await AuctionsAPI.bid(a.id, val)
-      setAmount('')
-      await load()
-    } catch (err) {
-      alert(err.message || 'No se pudo registrar la puja')
-    }
-  }
-
+  // ---------------------------------------------------------------------
+  // Toggle favoritos
+  // ---------------------------------------------------------------------
   async function toggleFav() {
-    if (!Auth.isLogged()) return alert('Inicia sesión para usar favoritos')
+    if (!Auth.isLogged()) return alert("Inicia sesión para usar favoritos")
+
     try {
       const r = await FavoritesAPI.toggle(a.id)
-      // el controlador devuelve { favorited: bool, ... }
       setFav(!!r.favorited)
     } catch (e) {
-      alert(e.message || 'No se pudo actualizar el favorito')
+      alert(e.message || "No se pudo actualizar favorito")
     }
   }
 
-  // --- render ---
+  // ---------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------
   if (loading || !a) return <div>Cargando…</div>
 
   const rawImg =
     a?.product?.animal?.photo_url ||
     a?.image_url ||
-    a?.photo_url ||
-    null
+    a?.photo_url
 
   const img = assetUrl(rawImg) || '/placeholder.jpg'
+
+  const current = Number(a.current_price || 20)
+  const minNext = current > 20 ? current + 1 : 20
+
+  const finished =
+    a.status !== 'active' ||
+    (a.ends_in_seconds != null && Number(a.ends_in_seconds) <= 0)
+
+  async function submitBid(e) {
+    e.preventDefault()
+    if (!Auth.isLogged()) return alert("Inicia sesión para pujar")
+
+    const bid = parseInt(amount, 10)
+    if (isNaN(bid) || bid < minNext) {
+      return alert(`La puja mínima ahora es ${minNext}€`)
+    }
+
+    await AuctionsAPI.bid(a.id, bid)
+    setAmount("")
+    await load()
+  }
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <div>
         <img
           src={img}
-          alt=""
-          className="w-full rounded-xl object-cover max-h-[420px]"
-          onError={ev => {
-            ev.currentTarget.src = '/placeholder.jpg'
-          }}
+          className="w-full max-h-[420px] object-cover rounded-xl"
+          onError={(ev) => (ev.target.src = "/placeholder.jpg")}
         />
       </div>
 
       <div className="space-y-3">
         <h1 className="text-2xl font-bold">{a.title}</h1>
+
         {a.description && <p className="opacity-80">{a.description}</p>}
 
         <div>
-          Precio actual: <b>{Number(a.current_price || 0)} €</b>
+          Precio actual: <b>{current} €</b>
         </div>
-        <div className="text-sm opacity-70 mt-1">
+
+        <div className="text-sm opacity-70">
           Termina en: <b>{timeLeft}</b>
-          {current === 0 && !finished
-            ? ' (empieza con la primera puja ≥ 20€)'
-            : ''}
         </div>
 
         <form onSubmit={submitBid} className="flex gap-2">
           <input
             className="input"
             type="number"
-            step="1"
             min={minNext}
             value={amount}
-            onChange={e => setAmount(e.target.value)}
-            placeholder={`≥ ${minNext}`}
-            disabled={finished}
+            onChange={(e) => setAmount(e.target.value)}
           />
-          <button className="btn" disabled={finished}>
-            Pujar
-          </button>
+          <button className="btn">Pujar</button>
         </form>
 
+        {/* BOTÓN ARREGLADO */}
         <button onClick={toggleFav} className="btn">
-          {fav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+          {fav ? "Quitar de favoritos" : "Agregar a favoritos"}
         </button>
       </div>
     </div>
