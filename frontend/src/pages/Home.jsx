@@ -20,7 +20,7 @@ export default function Auctions() {
 
       {/* 🟣 BLOQUE DE BIENVENIDA */}
       <div className="text-center bg-gray-900/40 p-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">Bienvenido a Pawction 🐾</h1>
+        <h1 className="text-3xl font-bold mb-2">Bienvenido/a a Pawction 🐾</h1>
 
         <p className="text-sm opacity-80 max-w-2xl mx-auto leading-relaxed">
           Pawction es una plataforma solidaria donde puedes pujar por packs benéficos.  
