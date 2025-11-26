@@ -5,12 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Auction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuctionController extends Controller
 {
+    /**
+     * Resolver el usuario autenticado a partir del Bearer token
+     * aunque la ruta no tenga el middleware auth:sanctum.
+     */
+    protected function userFromToken(Request $request)
+    {
+        $token = $request->bearerToken();
+        if (!$token) {
+            return null;
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+        return $accessToken ? $accessToken->tokenable : null;
+    }
+
     public function index(Request $request)
     {
-        $user = $request->user();
+        // IMPORTANTE: usamos el helper en vez de $request->user()
+        $user = $this->userFromToken($request);
 
         $query = Auction::with('product.animal')
             ->orderBy('id', 'desc');
@@ -68,7 +85,8 @@ class AuctionController extends Controller
     {
         $auction->load('product.animal');
 
-        $user = $request->user();
+        // También aquí usamos el helper
+        $user = $this->userFromToken($request);
         $isFavorite = false;
 
         if ($user) {
