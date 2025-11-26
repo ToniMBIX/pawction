@@ -18,7 +18,7 @@ export default function Home() {
   // Función auxiliar para mostrar el estado de cada subasta
   function getStatusText(a) {
     // Aún no ha empezado → sin primera puja
-    if ((!a.end_at || a.current_price === 0) && a.status !== 'active') {
+    if ((!a.end_at || a.current_price === null) && a.status !== 'active') {
       return "Esperando primera puja"
     }
 
@@ -59,7 +59,7 @@ export default function Home() {
               <p className="text-sm opacity-70 line-clamp-2">{a.description}</p>
 
               <div className="mt-2 text-sm">
-                Precio actual: <b>{a.current_price || 0} €</b>
+                Precio actual: <b>{a.current_price || 20} €</b>
               </div>
 
               {/* NUEVA LÓGICA AQUÍ */}
