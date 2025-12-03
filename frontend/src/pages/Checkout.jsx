@@ -1,45 +1,31 @@
-// frontend/src/pages/Checkout.jsx
-import React from 'react'
-import { useParams } from 'react-router-dom'
-import { PaymentAPI, AuctionsAPI } from '../lib/api.js'
+import { loadStripe } from "@stripe/stripe-js";
+import { PaymentAPI } from "../lib/api";
+import { useParams } from "react-router-dom";
 
-export default function Checkout(){
-  const { id } = useParams()
-  const [auction, setAuction] = React.useState(null)
-  const [loading, setLoading] = React.useState(false)
+export default function Checkout() {
 
-  React.useEffect(()=>{
-    AuctionsAPI.get(id).then(setAuction).catch(()=>setAuction(null))
-  }, [id])
+    const { id } = useParams();
 
-  const pay = async () => {
-    setLoading(true)
-    try {
-      // tu backend debería devolver, p.ej., { url: 'https://...' }
-      const r = await PaymentAPI.checkout(id)
-      if (r?.url) {
-        window.location.href = r.url // redirigir a Stripe/PayPal
-      } else {
-        alert('No se recibió URL de pago.')
-      }
-    } catch (e) {
-      alert(e.message || 'Error iniciando el checkout')
-    } finally {
-      setLoading(false)
-    }
-  }
+    const pay = async () => {
+        const stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC);
 
-  if (!auction) return <div className="opacity-70">Cargando...</div>
-  return (
-    <div className="card max-w-xl mx-auto">
-      <h1 className="text-xl font-bold mb-2">Pagar subasta</h1>
-      <div className="mb-4">
-        <div className="font-semibold">{auction.title}</div>
-        <div className="text-sm opacity-70">Actual: {auction.current_price} €</div>
-      </div>
-      <button className="btn w-full" onClick={pay} disabled={loading}>
-        {loading ? 'Redirigiendo…' : 'Ir al pago'}
-      </button>
-    </div>
-  )
+        const res = await PaymentAPI.createSession({ auction_id: id });
+
+        await stripe.redirectToCheckout({
+            sessionId: res.data.id
+        });
+    };
+
+    return (
+        <div className="p-10">
+            <h1 className="text-3xl font-bold mb-4">Finalizar pago</h1>
+
+            <button
+                onClick={pay}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+            >
+                Pagar ahora
+            </button>
+        </div>
+    );
 }

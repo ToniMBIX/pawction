@@ -3,11 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
   AuctionController, BidController, FavoriteController, PaymentController,
-  WebhookController, UserController, AuthController
+  WebhookController, UserController, AuthController, PaymentController, ShippingController
 };
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\Admin\AuctionAdminController; // <-- IMPORTANTE
-
 
 // ---------- Público ----------
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -54,3 +53,8 @@ Route::get('/auctions/{auction}/qr', function(\App\Models\Auction $auction) {
     return QrCode::size(200)->generate($auction->product->animal->info_url ?? 'https://pawction.org');
 })->name('auction.qr');
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
+
+Route::post("/payment/create-session", [PaymentController::class, "createCheckoutSession"]);
+Route::get("/payment/success", [PaymentController::class, "paymentSuccess"]);
+
+Route::post("/shipping/submit", [ShippingController::class, "submit"]);

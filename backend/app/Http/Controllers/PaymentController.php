@@ -1,26 +1,60 @@
 <?php
-use Barryvdh\DomPDF\Facade\Pdf;
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+use App\Models\Auction;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ShippingFormMail;
 
-public function checkout(Request $request, Auction $auction)
+class PaymentController extends Controller
 {
-    $user = $request->user();
+    public function createCheckoutSession(Request $request)
+    {
+        $auction = Auction::findOrFail($request->auction_id);
 
-    $pdf = Pdf::loadView('pdf.receipt', [
-        'user' => $user,
-        'auction' => $auction,
-        'amount_pawction' => $auction->current_price / 2,
-        'amount_greenpeace' => $auction->current_price / 2
-    ]);
+        Stripe::setApiKey(env('STRIPE_SECRET'));
 
-    $path = storage_path("app/receipts/receipt_{$auction->id}.pdf");
-    $pdf->save($path);
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'eur',
+                    'product_data' => [
+                        'name' => $auction->title,
+                    ],
+                    'unit_amount' => intval($auction->current_price * 100),
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => url('/api/payment/success?auction_id=' . $auction->id),
+            'cancel_url' => url('/api/payment/cancel'),
+        ]);
 
-    // Simula envío de correo
-    Mail::raw("Gracias por tu donación. Adjunto el recibo.", function($m) use ($user, $path) {
-        $m->to($user->email)->subject('Confirmación de pago Pawction');
-        $m->attach($path);
-    });
+        return response()->json(['id' => $session->id]);
+    }
 
-    return response()->json(['message' => 'Pago confirmado y recibo enviado.']);
+
+    public function paymentSuccess(Request $request)
+    {
+        $auction = Auction::findOrFail($request->auction_id);
+        $auction->status = "paid";
+
+        // Generar un token para el formulario de envío
+        $auction->shipping_token = bin2hex(random_bytes(16));
+        $auction->save();
+
+        // Enviar email al ganador
+        Mail::to($auction->winner->email)->send(
+            new ShippingFormMail($auction)
+        );
+
+        return response()->json([
+            "message" => "Pago completado. Revisa tu email para confirmar el envío."
+        ]);
+    }
 }

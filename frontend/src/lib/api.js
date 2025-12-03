@@ -141,9 +141,14 @@ export const BidsAPI = {
 // =======================================================
 
 export const PaymentAPI = {
-  checkout: (auctionId) =>
-    api(`/checkout/${auctionId}`, { method: 'POST' }),
+    createSession: (data) => api.post("/payment/create-session", data)
 }
+
+export const ShippingAPI = {
+    submit: (data) => api.post("/shipping/submit", data)
+}
+
+
 
 
 
