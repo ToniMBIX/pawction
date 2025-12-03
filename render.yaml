@@ -1,16 +1,19 @@
 services:
   - type: web
     name: pawction-backend
-    env: node
     rootDir: backend
+    env: php
     plan: free
+
     buildCommand: |
       composer install --no-dev --prefer-dist --optimize-autoloader
       php artisan key:generate
+      php artisan config:clear
+      php artisan route:clear
       php artisan migrate --force
-      php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider" --force || true
-      php artisan vendor:publish --tag="sanctum-migrations" --force || true
+
     startCommand: php artisan serve --host 0.0.0.0 --port 10000
+
     envVars:
       - key: APP_ENV
         value: production
@@ -24,6 +27,7 @@ services:
         value: pawction-frontend.onrender.com
       - key: QUEUE_CONNECTION
         value: sync
+
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -46,6 +50,7 @@ services:
         fromDatabase:
           name: pawction-db
           property: password
+
       - key: STRIPE_SECRET
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
