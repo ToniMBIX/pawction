@@ -54,7 +54,7 @@ Route::get('/auctions/{auction}/qr', function(\App\Models\Auction $auction) {
 })->name('auction.qr');
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
 
-Route::post("/payment/create-session", [PaymentController::class, "createCheckoutSession"]);
-Route::get("/payment/success", [PaymentController::class, "paymentSuccess"]);
+Route::post('/payment/create-session', [PaymentController::class, 'createCheckoutSession']);
+Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
 
-Route::post("/shipping/submit", [ShippingController::class, "submit"]);
+Route::post('/shipping/submit', [ShippingController::class, 'submit']);
