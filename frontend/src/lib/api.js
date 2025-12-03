@@ -141,12 +141,21 @@ export const BidsAPI = {
 // =======================================================
 
 export const PaymentAPI = {
-    createSession: (data) => api.post("/payment/create-session", data)
+  createSession: (data) =>
+    api('/payment/create-session', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
 }
 
 export const ShippingAPI = {
-    submit: (data) => api.post("/shipping/submit", data)
+  submit: (data) =>
+    api('/shipping/submit', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    })
 }
+
 
 
 
