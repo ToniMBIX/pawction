@@ -16,8 +16,6 @@ export default defineConfig({
     esbuildOptions: {
       define: { global: 'globalThis' }
     },
-  include: ["@stripe/stripe-js"]
-
-
+    include: ["@stripe/stripe-js"]
   }
 })
