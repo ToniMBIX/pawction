@@ -41,9 +41,14 @@ class ShippingController extends Controller
     }
 
     public function pending()
-    {
-        return Auction::where('winner_user_id', auth()->id())
-            ->where('is_paid', false)
-            ->get();
-    }
+{
+    return Auction::where('is_paid', false)
+        ->whereIn('id', function ($q) {
+            $q->select('auction_id')
+              ->from('bids')
+              ->where('user_id', auth()->id());
+        })
+        ->get();
+}
+
 }

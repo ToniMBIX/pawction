@@ -3,7 +3,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
   AuctionController, BidController, FavoriteController, PaymentController,
-  WebhookController, UserController, AuthController, ShippingController
+  WebhookController, UserController, AuthController, ShippingController, FakePaymentController
 };
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\Admin\AuctionAdminController; // <-- IMPORTANTE
@@ -45,6 +45,8 @@ Route::post('/shipping/submit', [ShippingController::class, 'submit']);
 // Pasarela simulada
 Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
 Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
+Route::post('/fake-payment', [FakePaymentController::class, 'pay']);
+
 });
 
 // ---------- ADMIN (protegido + admin) ----------
