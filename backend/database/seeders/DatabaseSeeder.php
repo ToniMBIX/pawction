@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
             AuctionSeeder::class,
             \Database\Seeders\AdminUserSeeder::class,
         ]);
-        $this->call(PendingAuctionsSeeder::class);
 
     }
 }
