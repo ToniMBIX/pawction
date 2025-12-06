@@ -153,12 +153,16 @@ export const PaymentAPI = {
 
 
 export const ShippingAPI = {
+  // Guarda los datos de envío
   submit: (data) =>
-    api('/shipping/submit', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-}
+    api("/shipping/submit", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Obtiene subastas pendientes del usuario
+  listPending: () => api("/pending-orders"),
+};
 
 
 
