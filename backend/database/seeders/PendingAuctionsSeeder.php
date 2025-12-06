@@ -17,7 +17,7 @@ class PendingAuctionsSeeder extends Seeder
 
         foreach ($auctionIds as $id) {
             Auction::where('id', $id)->update([
-                'winner_id' => $winnerId,
+                'winner_user_id' => $winnerId,
                 'is_paid'   => false,
             ]);
         }

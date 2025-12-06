@@ -9,7 +9,6 @@ class AddWinnerIdToAuctions extends Migration
     public function up()
     {
         Schema::table('auctions', function (Blueprint $table) {
-            $table->foreignId('winner_id')->nullable()->constrained('users');
             $table->string('winner_email')->nullable();
             $table->boolean('is_paid')->default(false);
         });
@@ -18,7 +17,7 @@ class AddWinnerIdToAuctions extends Migration
     public function down()
     {
         Schema::table('auctions', function (Blueprint $table) {
-            $table->dropColumn(['winner_id', 'winner_email', 'is_paid']);
+            $table->dropColumn([ 'winner_email', 'is_paid']);
         });
     }
 }
