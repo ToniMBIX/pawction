@@ -54,6 +54,8 @@ Route::middleware(['auth:sanctum', 'admin'])
         Route::get('/auctions',               [AuctionAdminController::class, 'index']);   // <-- ESTA ES LA QUE FALTA
         Route::post('/auctions',              [AuctionAdminController::class, 'store']);
         Route::delete('/auctions/{auction}',  [AuctionAdminController::class, 'destroy']);
+        Route::post('/admin/auctions/{id}/close', [AdminAuctionController::class, 'close']);
+
     });
 
 

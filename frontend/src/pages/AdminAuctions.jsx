@@ -93,6 +93,24 @@ export default function AdminAuctions() {
     }
   }
 
+  const closeAuction = async id => {
+  if (!confirm("¿Cerrar esta subasta y asignar el ganador automáticamente?")) {
+    return;
+  }
+
+  try {
+    const res = await AdminAPI.auctions.close(id);
+    alert("Subasta cerrada correctamente. Ganador: " + res.winner);
+
+    // Recargar lista
+    load();
+  } catch (err) {
+    alert("Error al cerrar subasta: " + err.message);
+    console.error(err);
+  }
+};
+
+
   if (!Auth.token() || !Auth.isAdmin()) {
     return <div className="text-center">Debes iniciar sesión como admin.</div>
   }
@@ -240,6 +258,13 @@ export default function AdminAuctions() {
                 >
                   Eliminar
                 </button>
+                <button
+  onClick={() => closeAuction(a.id)}
+  className="btn bg-yellow-500 text-white mt-2 w-full"
+>
+  Cerrar subasta
+</button>
+
               </div>
             </div>
           )

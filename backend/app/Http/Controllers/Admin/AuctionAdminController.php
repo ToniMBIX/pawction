@@ -88,4 +88,39 @@ class AuctionAdminController extends Controller
         $auction->delete();
         return response()->json(['ok' => true]);
     }
+
+    public function close($id)
+{
+    $auction = Auction::findOrFail($id);
+
+    // Obtener última puja (la mayor)
+    $lastBid = $auction->bids()
+        ->orderBy('amount', 'desc')
+        ->first();
+
+    if (!$lastBid) {
+        return response()->json([
+            "success" => false,
+            "message" => "No hay pujas en esta subasta. No se puede cerrar."
+        ], 400);
+    }
+
+    // Asignar ganador
+    $auction->winner_user_id = $lastBid->user_id;
+    $auction->winner_email = $lastBid->user->email;
+
+    // Marcar como completada (simulamos que terminó)
+    $auction->status = "completed";
+    $auction->is_paid = false;
+    $auction->end_at = now()->subMinute(); // ya terminó
+
+    $auction->save();
+
+    return response()->json([
+        "success" => true,
+        "message" => "Subasta cerrada correctamente",
+        "winner"  => $lastBid->user->email
+    ]);
+}
+
 }

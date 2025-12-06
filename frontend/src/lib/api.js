@@ -177,7 +177,6 @@ export const AdminAPI = {
   auctions: {
     list: () => api('/admin/auctions'),
 
-    // FormData para subir imágenes reales
     create: (formData) =>
       api('/admin/auctions', {
         method: 'POST',
@@ -187,6 +186,12 @@ export const AdminAPI = {
     remove: (id) =>
       api(`/admin/auctions/${id}`, {
         method: 'DELETE'
-      })
+      }),
+
+    // 👉 NUEVO ENDPOINT PARA CERRAR SUBASTA
+    close: (id) =>
+      api(`/admin/auctions/${id}/close`, {
+        method: "POST"
+      }),
   }
-}
+};
