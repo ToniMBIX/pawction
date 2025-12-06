@@ -1,49 +1,49 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { ShippingAPI } from "../lib/api";
 
 export default function ShippingForm() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-    const [form, setForm] = useState({
-        full_name: "",
-        address: "",
-        city: "",
-        province: "",
-        postal_code: "",
-        phone: "",
-        notes: "",
-        token: new URLSearchParams(window.location.search).get("token")
-    });
+  const [form, setForm] = useState({
+    full_name: "",
+    address: "",
+    city: "",
+    country: "",
+    postal_code: "",
+    phone: ""
+  });
 
-    const handleChange = e => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
-    };
+  const change = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
-    const submit = async e => {
-        e.preventDefault();
-        await ShippingAPI.submit(form);
-        alert("Datos de envío confirmados.");
-    };
+  const submit = async () => {
+    await ShippingAPI.submit({ ...form, auction_id: id });
+    navigate(`/fake-payment?auction_id=${id}`);
+  };
 
-    return (
-        <div className="max-w-xl mx-auto p-10">
-            <h1 className="text-2xl font-bold mb-4">Confirmar envío</h1>
+  return (
+    <div className="p-10 max-w-lg">
+      <h1 className="text-2xl mb-4">Datos de envío</h1>
 
-            <form onSubmit={submit} className="grid gap-4">
-                <input className="input" name="full_name" placeholder="Nombre completo" onChange={handleChange} />
-                <input className="input" name="address" placeholder="Dirección" onChange={handleChange} />
-                <input className="input" name="city" placeholder="Ciudad" onChange={handleChange} />
-                <input className="input" name="province" placeholder="Provincia" onChange={handleChange} />
-                <input className="input" name="postal_code" placeholder="Código Postal" onChange={handleChange} />
-                <input className="input" name="phone" placeholder="Teléfono" onChange={handleChange} />
-                <textarea className="input" name="notes" placeholder="Notas (opcional)" onChange={handleChange}></textarea>
+      {Object.keys(form).map((key) => (
+        <input
+          key={key}
+          name={key}
+          placeholder={key.replace("_", " ")}
+          value={form[key]}
+          onChange={change}
+          className="border p-2 w-full mb-3"
+        />
+      ))}
 
-                <button className="bg-green-600 text-white px-4 py-2 rounded">
-                    Enviar datos
-                </button>
-            </form>
-        </div>
-    );
+      <button
+        className="bg-blue-600 text-white px-4 py-2"
+        onClick={submit}
+      >
+        Guardar y pagar
+      </button>
+    </div>
+  );
 }

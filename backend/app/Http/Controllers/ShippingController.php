@@ -3,47 +3,43 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Auction;
 use App\Models\ShippingDetail;
-use App\Mail\OrderCompletedMail;
-use Illuminate\Support\Facades\Mail;
+use App\Models\Auction;
 
 class ShippingController extends Controller
 {
     public function submit(Request $request)
     {
-        $request->validate([
-            "token" => "required",
-            "full_name" => "required",
-            "address" => "required",
-            "city" => "required",
-            "province" => "required",
-            "postal_code" => "required",
-            "phone" => "required",
+        $validated = $request->validate([
+            'auction_id' => 'required|exists:auctions,id',
+            'full_name' => 'required',
+            'address' => 'required',
+            'city' => 'required',
+            'country' => 'required',
+            'postal_code' => 'required',
+            'phone' => 'required',
         ]);
 
-        $auction = Auction::where("shipping_token", $request->token)->firstOrFail();
+        $auction = Auction::findOrFail($request->auction_id);
 
-        $shipping = ShippingDetail::create([
-            "auction_id" => $auction->id,
-            "user_id" => $auction->winner_id,
-            "full_name" => $request->full_name,
-            "address" => $request->address,
-            "city" => $request->city,
-            "province" => $request->province,
-            "postal_code" => $request->postal_code,
-            "phone" => $request->phone,
-            "notes" => $request->notes ?? null,
-        ]);
-
-        // Eliminar token para que no pueda enviarse dos veces
-        $auction->shipping_token = null;
-        $auction->save();
-
-        Mail::to($auction->winner->email)->send(
-            new OrderCompletedMail($auction, $shipping)
+        ShippingDetail::updateOrCreate(
+            [
+                'auction_id' => $auction->id,
+                'user_id' => auth()->id(),
+            ],
+            $validated
         );
 
-        return response()->json(["message" => "Datos de envío confirmados."]);
+        return response()->json([
+            "success" => true,
+            "message" => "Datos de envío guardados"
+        ]);
+    }
+
+    public function pending()
+    {
+        return Auction::where('winner_id', auth()->id())
+            ->where('is_paid', false)
+            ->get();
     }
 }

@@ -141,12 +141,16 @@ export const BidsAPI = {
 // =======================================================
 
 export const PaymentAPI = {
-  createSession: (data) =>
-    api('/payment/create-session', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    })
-}
+  startFake: (auction_id) =>
+    api(`/payment/fake-start?auction_id=${auction_id}`, { method: "GET" }),
+
+  completeFake: (auction_id) =>
+    api(`/payment/fake-complete`, {
+      method: "POST",
+      body: JSON.stringify({ auction_id }),
+    }),
+};
+
 
 export const ShippingAPI = {
   submit: (data) =>

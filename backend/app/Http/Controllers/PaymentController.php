@@ -3,58 +3,41 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Stripe\Stripe;
-use Stripe\Checkout\Session;
 use App\Models\Auction;
-use App\Models\User;
+use App\Models\ShippingDetail;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ShippingFormMail;
 
 class PaymentController extends Controller
 {
-    public function createCheckoutSession(Request $request)
+    public function fakeStart(Request $request)
     {
         $auction = Auction::findOrFail($request->auction_id);
 
-        Stripe::setApiKey(env('STRIPE_SECRET'));
-
-        $session = Session::create([
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'eur',
-                    'product_data' => [
-                        'name' => $auction->title,
-                    ],
-                    'unit_amount' => intval($auction->current_price * 100),
-                ],
-                'quantity' => 1,
-            ]],
-            'mode' => 'payment',
-            'success_url' => url('/api/payment/success?auction_id=' . $auction->id),
-            'cancel_url' => url('/api/payment/cancel'),
+        return response()->json([
+            "auction" => $auction
         ]);
-
-        return response()->json(['id' => $session->id]);
     }
 
-
-    public function paymentSuccess(Request $request)
+    public function fakeComplete(Request $request)
     {
         $auction = Auction::findOrFail($request->auction_id);
-        $auction->status = "paid";
+        $shipping = ShippingDetail::where('auction_id', $auction->id)->first();
 
-        // Generar un token para el formulario de envío
-        $auction->shipping_token = bin2hex(random_bytes(16));
+        $auction->is_paid = true;
         $auction->save();
 
-        // Enviar email al ganador
-        Mail::to($auction->winner->email)->send(
-            new ShippingFormMail($auction)
+        // Email al comprador
+        Mail::raw(
+            "Tu compra ha sido confirmada.\n\nDatos de envío:\n" .
+            print_r($shipping->toArray(), true),
+            function ($msg) use ($auction) {
+                $msg->to($auction->winner_email)
+                    ->subject("Confirmación de pago - Pawction");
+            }
         );
 
         return response()->json([
-            "message" => "Pago completado. Revisa tu email para confirmar el envío."
+            "success" => true
         ]);
     }
 }

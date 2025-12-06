@@ -10,6 +10,11 @@ import Checkout from './pages/Checkout.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import AdminAuctions from './pages/AdminAuctions.jsx'
+import FakePayment from "./pages/FakePayment.jsx";
+import PendingOrders from "./pages/PendingOrders.jsx";
+import ShippingForm from "./pages/ShippingForm.jsx";
+import PaymentSuccess from "./pages/PaymentSuccess.jsx";
+
 import { Auth } from './lib/auth.js'
 import { AuthAPI } from './lib/api.js'
 
@@ -93,7 +98,7 @@ export default function App() {
             <Link to="/auctions">Subastas</Link>
             <Link to="/favorites">Favoritos</Link>
             <Link to="/history">Historial</Link>
-
+            <Link to="/pending-orders">Pendientes</Link>
             {/* 🆕 ADMIN REACTIVO */}
             {isAdmin && <Link to="/admin/auctions">Admin</Link>}
           </nav>
@@ -114,6 +119,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin/auctions" element={<AdminAuctions />} />
+<Route path="/pending-orders" element={<PendingOrders />} />
+<Route path="/shipping-form/:id" element={<ShippingForm />} />
+<Route path="/fake-payment" element={<FakePayment />} />
+<Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </main>
 

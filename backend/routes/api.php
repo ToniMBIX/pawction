@@ -57,4 +57,12 @@ Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
 Route::post('/payment/create-session', [PaymentController::class, 'createCheckoutSession']);
 Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
 
+// Pendientes
+Route::get('/pending-orders', [ShippingController::class, 'pending']);
+
+// Guardar envío
 Route::post('/shipping/submit', [ShippingController::class, 'submit']);
+
+// Pasarela simulada
+Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
+Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
