@@ -19,25 +19,51 @@ class PaymentController extends Controller
     }
 
     public function fakeComplete(Request $request)
-    {
-        $auction = Auction::findOrFail($request->auction_id);
-        $shipping = ShippingDetail::where('auction_id', $auction->id)->first();
+{
+    $validated = $request->validate([
+        'auction_id' => 'required|exists:auctions,id',
+    ]);
 
-        $auction->is_paid = true;
-        $auction->save();
+    $auction = Auction::findOrFail($validated['auction_id']);
 
-        // Email al comprador
-        Mail::raw(
-            "Tu compra ha sido confirmada.\n\nDatos de envío:\n" .
-            print_r($shipping->toArray(), true),
-            function ($msg) use ($auction) {
-                $msg->to($auction->winner_email)
-                    ->subject("Confirmación de pago - Pawction");
-            }
-        );
+    // Obtener usuario logueado
+    $user = auth()->user();
 
+    if (!$user) {
         return response()->json([
-            "success" => true
+            "success" => false,
+            "message" => "Usuario no autenticado"
+        ], 401);
+    }
+
+    if (!$user->email) {
+        return response()->json([
+            "success" => false,
+            "message" => "El usuario no tiene email registrado"
+        ], 422);
+    }
+
+    // Marcar como pagado
+    $auction->is_paid = true;
+    $auction->winner_id = $user->id;
+    $auction->winner_email = $user->email;
+    $auction->save();
+
+    // Enviar correo
+    try {
+        Mail::to($user->email)->send(new PaymentCompleted($auction));
+    } catch (\Exception $e) {
+        return response()->json([
+            "success" => true,
+            "warning" => "Pago marcado, pero no se pudo enviar el correo",
+            "error" => $e->getMessage()
         ]);
     }
+
+    return response()->json([
+        "success" => true,
+        "message" => "Pago completado y correo enviado"
+    ]);
+}
+
 }
