@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AuctionSeeder::class,
             \Database\Seeders\AdminUserSeeder::class,
+            CloseAuction17Seeder::class
         ]);
 
     }
