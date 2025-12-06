@@ -8,7 +8,7 @@ class Auction extends Model
 {
     protected $fillable = [
         'product_id','title','description','starting_price','current_price',
-        'end_at','status','winner_user_id','payed','image_url'
+        'end_at','status','winner_user_id','payed','image_url', 'winner_email', 'is_paid'
     ];
 
     protected $casts = [

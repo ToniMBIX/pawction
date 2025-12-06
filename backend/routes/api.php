@@ -40,6 +40,7 @@ Route::get('/pending-orders', [ShippingController::class, 'pending']);
 
 // Guardar envío
 Route::post('/shipping/submit', [ShippingController::class, 'submit']);
+    Route::get("/pending-orders", [ShippingController::class, "pending"]);
 
 // Pasarela simulada
 Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
