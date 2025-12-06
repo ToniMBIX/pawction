@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Auction;
 use App\Models\ShippingDetail;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\PaymentCompleted;
+
 
 class PaymentController extends Controller
 {
@@ -51,7 +53,7 @@ class PaymentController extends Controller
 
     // Enviar correo
     try {
-        Mail::to($user->email)->send(new PaymentCompleted($auction));
+Mail::to($user->email)->send(new PaymentCompleted($auction));
     } catch (\Exception $e) {
         return response()->json([
             "success" => true,
