@@ -11,28 +11,32 @@ class ShippingController extends Controller
     public function submit(Request $request)
     {
         $validated = $request->validate([
-            'auction_id' => 'required|exists:auctions,id',
-            'full_name' => 'required',
-            'address' => 'required',
-            'city' => 'required',
-            'country' => 'required',
-            'postal_code' => 'required',
-            'phone' => 'required',
+            'auction_id'   => 'required|exists:auctions,id',
+            'full_name'    => 'required|string|max:255',
+            'address'      => 'required|string|max:255',
+            'city'         => 'required|string|max:255',
+            'province'     => 'required|string|max:255',   // 🔥 AÑADIDO
+            'country'      => 'required|string|max:255',
+            'postal_code'  => 'required|string|max:20',
+            'phone'        => 'required|string|max:50',
         ]);
 
-        $auction = Auction::findOrFail($request->auction_id);
+        $auction = Auction::findOrFail($validated['auction_id']);
 
         ShippingDetail::updateOrCreate(
             [
                 'auction_id' => $auction->id,
-                'user_id' => auth()->id(),
+                'user_id'    => auth()->id(), // 🔥 SE AGREGA CORRECTAMENTE
             ],
-            $validated
+            [
+                ...$validated,
+                'user_id' => auth()->id(),     // 🔥 IMPORTANTE: en los datos a guardar
+            ]
         );
 
         return response()->json([
             "success" => true,
-            "message" => "Datos de envío guardados"
+            "message" => "Datos de envío guardados correctamente"
         ]);
     }
 
