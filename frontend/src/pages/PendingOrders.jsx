@@ -11,7 +11,9 @@ export default function PendingOrders() {
     ShippingAPI.listPending().then(setOrders);
   }, []);
 
-  if (!Auth.loggedIn()) return <p>Inicia sesión</p>;
+  // FIX: tu Auth NO tiene loggedIn(), pero sí token()
+  if (!Auth.token()) 
+    return <p className="p-10">Debes iniciar sesión para ver tus pedidos pendientes.</p>;
 
   return (
     <div className="p-10">
@@ -20,12 +22,12 @@ export default function PendingOrders() {
       {orders.length === 0 && <p>No tienes pedidos pendientes.</p>}
 
       {orders.map(a => (
-        <div key={a.id} className="border p-4 mb-4">
+        <div key={a.id} className="border p-4 mb-4 rounded-md">
           <h2 className="text-xl">{a.title}</h2>
           <p>Precio final: {a.final_price} €</p>
 
           <button
-            className="bg-green-600 text-white px-4 py-2 mt-2"
+            className="bg-green-600 text-white px-4 py-2 mt-2 rounded"
             onClick={() => navigate(`/shipping-form/${a.id}`)}
           >
             Completar datos de envío
