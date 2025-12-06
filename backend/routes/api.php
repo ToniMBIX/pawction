@@ -83,3 +83,6 @@ Route::middleware('auth:sanctum')->get('/debug/pending', function () {
         ->where('is_paid', false)
         ->get();
 });
+Route::get('/debug-routes', function () {
+    return response()->json(\Route::getRoutes()->get());
+});
