@@ -8,8 +8,6 @@ services:
     buildCommand: |
       composer install --no-dev --prefer-dist --optimize-autoloader
       php artisan key:generate
-      php artisan config:clear
-      php artisan route:clear
       php artisan migrate --force
 
     startCommand: php artisan serve --host 0.0.0.0 --port 10000
@@ -21,12 +19,10 @@ services:
         value: https://pawction-backend.onrender.com
       - key: FRONTEND_URL
         value: https://pawction-frontend.onrender.com
-      - key: SESSION_DOMAIN
-        value: onrender.com
       - key: SANCTUM_STATEFUL_DOMAINS
         value: pawction-frontend.onrender.com
-      - key: QUEUE_CONNECTION
-        value: sync
+      - key: SESSION_DOMAIN
+        value: onrender.com
 
       - key: DB_CONNECTION
         value: pgsql
@@ -60,14 +56,15 @@ services:
     name: pawction-frontend
     env: static
     rootDir: frontend
-    plan: free
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+
     envVars:
       - key: VITE_API_URL
         value: https://pawction-backend.onrender.com/api
       - key: VITE_STRIPE_PUBLIC
         sync: false
+
     routes:
       - type: rewrite
         source: /*
