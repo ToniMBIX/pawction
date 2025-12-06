@@ -67,3 +67,16 @@ Route::get('/auctions/{auction}/qr', function(\App\Models\Auction $auction) {
 })->name('auction.qr');
 Route::options('/{any}', fn() => response()->noContent())->where('any','.*');
 
+Route::get('/debug/auctions', function () {
+    return \App\Models\Auction::all();
+});
+
+Route::middleware('auth:sanctum')->get('/debug/user', function (Request $request) {
+    return $request->user();
+});
+
+Route::middleware('auth:sanctum')->get('/debug/pending', function () {
+    return \App\Models\Auction::where('winner_id', auth()->id())
+        ->where('is_paid', false)
+        ->get();
+});
