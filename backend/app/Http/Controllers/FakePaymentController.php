@@ -36,6 +36,7 @@ class FakePaymentController extends Controller
         if ($auction->winner_user_id !== $userId) {
             $auction->winner_user_id = $userId;
         }
+Mail::to($email)->send(new Something);
 
         // Marcar como pagada
         $auction->is_paid = true;
