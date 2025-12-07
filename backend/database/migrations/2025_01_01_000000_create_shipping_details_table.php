@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 class CreateShippingDetailsTable extends Migration
-{
+{ 
     public function up()
     {
         Schema::create('shipping_details', function (Blueprint $table) {
