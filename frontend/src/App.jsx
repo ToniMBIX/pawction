@@ -120,9 +120,10 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/admin/auctions" element={<AdminAuctions />} />
 <Route path="/pending-orders" element={<PendingOrders />} />
-<Route path="/shipping-form/:id" element={<ShippingForm />} />
+<Route path="/shipping/:id" element={<ShippingForm />} />
 <Route path="/fake-payment/:id" element={<FakePayment />} />
-<Route path="/payment-success" element={<PaymentSuccess />} />
+<Route path="/payment/success" element={<PaymentSuccess />} />
+
         </Routes>
       </main>
 
