@@ -25,8 +25,6 @@ export default function ShippingForm() {
 
       await ShippingAPI.submit({ ...form, auction_id: id });
 
-      // Completar pago falso
-      await PaymentAPI.completeFake(id);
 
       // Redirige a página de éxito
       navigate("/fake-payment/${id}");
