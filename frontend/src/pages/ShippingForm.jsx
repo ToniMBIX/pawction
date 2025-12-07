@@ -21,6 +21,8 @@ export default function ShippingForm() {
 
   const submit = async () => {
     try {
+      console.log("auction_id:", id);
+
       await ShippingAPI.submit({ ...form, auction_id: id });
 
       // Completar pago falso

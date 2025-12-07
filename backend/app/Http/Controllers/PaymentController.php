@@ -20,6 +20,15 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function paymentSuccess()
+{
+    return response()->json([
+        "success" => true,
+        "message" => "Pago completado correctamente"
+    ]);
+}
+
+
     public function fakeComplete(Request $request)
 {
     $validated = $request->validate([
