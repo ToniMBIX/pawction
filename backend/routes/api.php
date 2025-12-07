@@ -19,34 +19,36 @@ Route::get('/auctions/{auction}',    [AuctionController::class, 'show']);
 Route::get('/auctions/{auction}/qr', [AuctionController::class, 'qr']);
 
 // ---------- Protegido ----------
+// ---------- Protegido ----------
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/me',  [UserController::class, 'me']);
     Route::put('/me',  [UserController::class, 'update']);
 
-    Route::post('/bids',                [BidController::class, 'store']);
+    Route::post('/bids', [BidController::class, 'store']);
     Route::post('/favorites/{auction}', [FavoriteController::class, 'toggle']);
-    Route::post('/checkout/{auction}',  [PaymentController::class, 'checkout']);
+    Route::post('/checkout/{auction}', [PaymentController::class, 'checkout']);
 
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::get('/bids/mine', [BidController::class, 'mine']);
-    
-Route::post('/payment/create-session', [PaymentController::class, 'createCheckoutSession']);
-Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
 
-// Pendientes
-Route::get('/pending-orders', [ShippingController::class, 'pending']);
+    Route::post('/payment/create-session', [PaymentController::class, 'createCheckoutSession']);
+    Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
 
-// Guardar envío
-Route::post('/shipping/submit', [ShippingController::class, 'submit']);
-    Route::get("/pending-orders", [ShippingController::class, "pending"]);
+    // Pendientes (solo una vez)
+    Route::get('/pending-orders', [ShippingController::class, 'pending']);
 
-// Pasarela simulada
-Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
-Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
+    // Guardar envío
+    Route::post('/shipping/submit', [ShippingController::class, 'submit']);
+
+    // Pasarela simulada
+    Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
+    Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
 
 });
+
 
 // ---------- ADMIN (protegido + admin) ----------
 Route::middleware(['auth:sanctum', 'admin'])
