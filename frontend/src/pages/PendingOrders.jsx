@@ -28,7 +28,7 @@ export default function PendingOrders() {
 
           <button
             className="bg-green-600 text-white px-4 py-2 mt-2 rounded"
-            onClick={() => navigate(`/shipping-form/${a.id}`)}
+            onClick={() => navigate(`/shipping/${a.id}`)}
           >
             Completar datos de envío
           </button>

@@ -58,6 +58,7 @@ class PaymentController extends Controller
     $auction->is_paid = true;
     $auction->winner_id = $user->id;
     $auction->winner_email = $user->email;
+$auction->status = 'closed';   // 🔥 CERRAR SUBASTA
     $auction->save();
 
     // Enviar correo
