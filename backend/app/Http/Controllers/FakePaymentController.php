@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Auction;
-use App\Models\Bid;
+use App\Models\Bid; 
 
 class FakePaymentController extends Controller
 {
