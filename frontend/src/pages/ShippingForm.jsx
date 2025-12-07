@@ -29,7 +29,7 @@ export default function ShippingForm() {
       await PaymentAPI.completeFake(id);
 
       // Redirige a página de éxito
-      navigate("/payment/success");
+      navigate("/fake-payment");
     } catch (err) {
       alert("Error al guardar los datos de envío:\n" + err.message);
     }
