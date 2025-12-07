@@ -22,7 +22,7 @@ export default function ShippingForm() {
   const submit = async () => {
     try {
       await ShippingAPI.submit({ ...form, auction_id: id });
-      navigate(`/fake-payment?auction_id=${id}`);
+await api.post("/payment/fake-complete", { auction_id: id });
     } catch (err) {
       alert("Error al guardar los datos de envío:\n" + err.message);
     }

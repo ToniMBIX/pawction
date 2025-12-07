@@ -45,7 +45,6 @@ Route::post('/shipping/submit', [ShippingController::class, 'submit']);
 // Pasarela simulada
 Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
 Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
-Route::post('/fake-payment', [FakePaymentController::class, 'pay']);
 
 });
 

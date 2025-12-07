@@ -9,7 +9,7 @@ use Illuminate\Queue\SerializesModels;
 
 class PaymentCompleted extends Mailable
 {
-    use Queueable, SerializesModels;
+use SerializesModels;
 
     public $auction;
 
