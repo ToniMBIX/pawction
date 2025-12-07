@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShippingAPI, PaymentAPI } from "../lib/api";
+import { ShippingAPI, PaymentAPI } from "../lib/api.js";
 
 export default function ShippingForm() {
   const { id } = useParams();

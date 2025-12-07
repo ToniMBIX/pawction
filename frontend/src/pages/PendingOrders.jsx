@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ShippingAPI } from "../lib/api";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "../lib/auth";
+import { Auth } from "../lib/auth.js";
 
 export default function PendingOrders() {
   const [orders, setOrders] = useState([]);

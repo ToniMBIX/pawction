@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { PaymentAPI } from "../lib/api";
+import { PaymentAPI } from "../lib/api.js";
 
 export default function FakePayment() {
   const [params] = useSearchParams();
