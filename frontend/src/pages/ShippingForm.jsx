@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ShippingAPI } from "../lib/api";
+import { ShippingAPI, PaymentAPI } from "../lib/api";
 
 export default function ShippingForm() {
   const { id } = useParams();
@@ -22,33 +22,16 @@ export default function ShippingForm() {
   const submit = async () => {
     try {
       await ShippingAPI.submit({ ...form, auction_id: id });
-await api.post("/payment/fake-complete", { auction_id: id });
+
+      // ✔️ CORRECTO: usar PaymentAPI
+      await PaymentAPI.completeFake(id);
+
+      // Luego rediriges donde quieras
+      navigate(`/payment/success`);
     } catch (err) {
       alert("Error al guardar los datos de envío:\n" + err.message);
     }
   };
 
-  return (
-    <div className="p-10 max-w-lg">
-      <h1 className="text-2xl mb-4">Datos de envío</h1>
-
-      {Object.keys(form).map((key) => (
-        <input
-          key={key}
-          name={key}
-          placeholder={key.replace("_", " ")}
-          value={form[key]}
-          onChange={change}
-          className="border p-2 w-full mb-3"
-        />
-      ))}
-
-      <button
-        className="bg-blue-600 text-white px-4 py-2"
-        onClick={submit}
-      >
-        Guardar y pagar
-      </button>
-    </div>
-  );
+  return (...);
 }

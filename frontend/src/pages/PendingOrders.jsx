@@ -24,7 +24,7 @@ export default function PendingOrders() {
       {orders.map(a => (
         <div key={a.id} className="border p-4 mb-4 rounded-md">
           <h2 className="text-xl">{a.title}</h2>
-          <p>Precio final: {a.final_price} €</p>
+          <p>Precio final: {a.current_price} €</p>
 
           <button
             className="bg-green-600 text-white px-4 py-2 mt-2 rounded"
