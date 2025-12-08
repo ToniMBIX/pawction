@@ -51,4 +51,9 @@ class Auction extends Model
         $this->winner_user_id = $lastBid?->user_id;
         $this->save();
     }
+    public function winner()
+{
+    return $this->belongsTo(User::class, 'winner_user_id');
+}
+
 }

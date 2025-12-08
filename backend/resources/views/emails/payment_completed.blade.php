@@ -33,7 +33,7 @@
                         <td style="padding:30px 40px; color:#333; font-size:16px; line-height:1.6;">
 
                             <p style="margin-top:0;">
-                                Hola <strong>{{ $auction->winner->name }}</strong>,
+                                Hola <strong>{{ $auction->winner->name ?? 'Usuario' }}</strong>,
                             </p>
 
                             <p>
@@ -42,7 +42,7 @@
                             </p>
 
                             <h2 style="font-size:22px; margin:25px 0 10px 0; text-align:center;">
-                                {{ $auction->product->title }}
+                               {{ $auction->product->name }}
                             </h2>
 
                             <!-- IMAGEN DEL PRODUCTO -->
