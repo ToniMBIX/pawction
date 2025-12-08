@@ -193,5 +193,7 @@ export const AdminAPI = {
       api(`/admin/auctions/${id}/close`, {
         method: "POST"
       }),
+      uploadQr: (id, data) => request("POST", `/admin/auctions/${id}/qr`, data),
+
   }
 };

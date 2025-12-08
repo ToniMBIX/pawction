@@ -58,6 +58,7 @@ Route::middleware(['auth:sanctum', 'admin'])
         Route::post('/auctions',              [AuctionAdminController::class, 'store']);
         Route::delete('/auctions/{auction}',  [AuctionAdminController::class, 'destroy']);
         Route::post('/admin/auctions/{id}/close', [AdminAuctionController::class, 'close']);
+Route::post('/auctions/{id}/qr', [AuctionAdminController::class, 'uploadQr']);
 
     });
 

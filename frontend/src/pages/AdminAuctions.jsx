@@ -163,7 +163,7 @@ export default function AdminAuctions() {
           className="input"
           placeholder="Imagen URL (opcional si no subes archivo)"
         />
-
+        Imágen
         <input
           type="file"
           accept="image/*"
@@ -242,6 +242,7 @@ export default function AdminAuctions() {
             className="input"
             placeholder="Info URL"
           />
+          PDF
           <input
   type="file"
   accept="application/pdf"
@@ -251,6 +252,7 @@ export default function AdminAuctions() {
   }}
   className="input"
 />
+QR
 <input
   type="file"
   accept="application/pdf"

@@ -109,23 +109,24 @@ class AuctionAdminController extends Controller
     //  NUEVO MÉTODO: SUBIR QR DESPUÉS
     // ----------------------------------
     public function uploadQr(Request $request, $id)
-    {
-        $request->validate([
-            'qr' => ['required','file','mimes:pdf','max:4096']
-        ]);
+{
+    $request->validate([
+        'qr' => 'required|file|mimes:pdf|max:4096',
+    ]);
 
-        $auction = Auction::findOrFail($id);
+    $auction = Auction::findOrFail($id);
 
-        $path = $request->file('qr')->store('auction_qr', 'public');
+    $path = $request->file('qr')->store('auction_qr', 'public');
 
-        $auction->qr_url = Storage::url($path);
-        $auction->save();
+    $auction->qr_url = '/storage/' . $path;
+    $auction->save();
 
-        return response()->json([
-            'success' => true,
-            'qr_url'  => $auction->qr_url
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'qr_url' => $auction->qr_url
+    ]);
+}
+
 
     public function destroy(Auction $auction)
     {
