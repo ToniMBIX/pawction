@@ -20,34 +20,29 @@ class AuctionController extends Controller
     }
 
     /**
-     * 🔄 AUTO-REABRIR SUBASTA SI HAN PASADO 5 MINUTOS SIN PAGO
+     * 🔄 AUTO-REABRIR SUBASTA SI NO SE PAGA A TIEMPO
      */
     protected function autoReopenIfExpired(Auction $auction)
-{
-    // Solo subastas finalizadas con ganador y sin pagar
-    if (
-        $auction->status === 'finished' &&
-        !$auction->is_paid &&
-        $auction->winner_user_id !== null
-    ) {
+    {
+        if (
+            $auction->status === 'finished' &&
+            !$auction->is_paid &&
+            $auction->winner_user_id !== null &&
+            $auction->paid_limit_at !== null
+        ) {
+            if (now()->greaterThanOrEqualTo($auction->paid_limit_at)) {
 
-        // ¿Se pasó el tiempo límite para pagar?
-        if ($auction->paid_limit_at && now()->greaterThanOrEqualTo($auction->paid_limit_at)) {
+                // REABRIR SUBASTA DESDE CERO
+                $auction->status = 'active';
+                $auction->winner_user_id = null;
+                $auction->current_price = 0;
+                $auction->end_at = null;
+                $auction->paid_limit_at = null;
 
-            // REABRIR SUBASTA DESDE CERO
-            $auction->status = 'active';
-            $auction->winner_user_id = null;
-            $auction->current_price = 0;
-
-            // Sin cronómetro hasta primera puja
-            $auction->end_at = null;
-            $auction->paid_limit_at = null;
-
-            $auction->save();
+                $auction->save();
+            }
         }
     }
-}
-
 
 
     /**
@@ -63,10 +58,9 @@ class AuctionController extends Controller
 
         $auctions->getCollection()->transform(function ($a) use ($user) {
 
-            // ✔ AUTO-REABRIR
+            // AUTO-REABRIR SI CORRESPONDE
             $this->autoReopenIfExpired($a);
 
-            // Recalcular contador
             $endsInSeconds = null;
             if ($a->end_at) {
                 $now = Carbon::now();
@@ -107,66 +101,51 @@ class AuctionController extends Controller
         return response()->json($auctions);
     }
 
+
     /**
-     * 📌 SUBASTA INDIVIDUAL
+     * 📌 MOSTRAR UNA SUBASTA
      */
     public function show(Request $request, Auction $auction)
     {
         $auction->load('product.animal');
-        // ⏳ CERRAR SI EL TIEMPO YA PASÓ
+
+        // CERRAR SUBASTA SI CADUCÓ
         if ($auction->status === 'active' && $auction->end_at && now()->greaterThanOrEqualTo($auction->end_at)) {
 
             $lastBid = Bid::where('auction_id', $auction->id)
-    ->orderByDesc('amount')
-    ->orderByDesc('id')
-    ->first();
+                ->orderByDesc('amount')
+                ->orderByDesc('id')
+                ->first();
 
-if ($lastBid) {
-    $auction->status = 'finished';
-    $auction->winner_user_id = $lastBid->user_id;
-    $auction->paid_limit_at = now()->addMinutes(5);
-    $auction->save();
-}// ⏳ CERRAR SI EL TIEMPO YA PASÓ Y TIENE PUJAS
-if ($a->status === 'active' && $a->end_at && now()->greaterThanOrEqualTo($a->end_at)) {
-
-    $lastBid = Bid::where('auction_id', $a->id)
-        ->orderByDesc('amount')
-        ->orderByDesc('id')
-        ->first();
-
-    if ($lastBid) {
-        $a->status = 'finished';
-        $a->winner_user_id = $lastBid->user_id;
-        $a->paid_limit_at = now()->addMinutes(5);
-        $a->save();
-    } else {
-        $a->status = 'active';
-        $a->winner_user_id = null;
-        $a->paid_limit_at = null;
-        $a->end_at = null;
-        $a->save();
-    }
-}
- else {
-    $auction->status = 'active';
-    $auction->winner_user_id = null;
+            if ($lastBid) {
+                $auction->status = 'finished';
+                $auction->winner_user_id = $lastBid->user_id;
+                $auction->paid_limit_at = now()->addMinutes(5); // ⏳ 5 MINUTOS PARA PAGAR
+                $auction->save();
+            } else {
+                // NO PUJAS → SUBASTA SIGUE ACTIVA SIN CRONO
+                $auction->status = 'active';
+                $auction->winner_user_id = null;
+                $auction->end_at = null;
+                $auction->save();
+            }
         }
 
-        // 🔄 AUTO-REABRIR DESPUÉS DE 5 MINUTOS
+        // AUTO-REABRIR SI CADUCÓ EL TIEMPO DE PAGO
         $this->autoReopenIfExpired($auction);
 
+        // USER
         $user = $this->userFromToken($request);
 
         $isFavorite = $user
             ? $user->favorites()->where('auction_id', $auction->id)->exists()
             : false;
 
-        // Contador
+        // CALCULAR CONTEO
         $endsInSeconds = null;
         if ($auction->end_at) {
-            $now = now();
             $endsInSeconds = $auction->end_at->isFuture()
-                ? $now->diffInSeconds($auction->end_at)
+                ? now()->diffInSeconds($auction->end_at)
                 : 0;
         }
 
@@ -194,6 +173,7 @@ if ($a->status === 'active' && $a->end_at && now()->greaterThanOrEqualTo($a->end
             ] : null,
         ]);
     }
+
 
     public function qr(Auction $auction)
     {
