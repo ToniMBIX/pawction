@@ -45,12 +45,7 @@
                                {{ $auction->product->name }}
                             </h2>
 
-                            <!-- IMAGEN DEL PRODUCTO -->
-                            <div style="text-align:center; margin:20px 0;">
-                                <img src="{{ asset('storage/products/' . $auction->product->image) }}"
-                                     alt="Producto"
-                                     style="width:100%; max-width:420px; border-radius:10px;">
-                            </div>
+                            
 
                             <p><strong>Total pagado:</strong> {{ $auction->current_price }} €</p>
                             <p><strong>ID de subasta:</strong> {{ $auction->id }}</p>
