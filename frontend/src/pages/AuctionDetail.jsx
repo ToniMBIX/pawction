@@ -149,6 +149,33 @@ export default function AuctionDetail() {
         <button onClick={toggleFav} className="btn">
           {fav ? "Quitar de favoritos" : "Agregar a favoritos"}
         </button>
+        {/* BOTONES PDF & QR (solo mostrar si existen) */}
+<div className="space-y-2 mt-4">
+
+  {/* Ver PDF */}
+  {a.document_url && (
+    <a
+      href={assetUrl(a.document_url)}
+      target="_blank"
+      className="btn bg-blue-600 text-white w-full text-center"
+    >
+      Ver PDF
+    </a>
+  )}
+
+  {/* Ver QR */}
+  {a.qr_url && (
+    <a
+      href={assetUrl(a.qr_url)}
+      target="_blank"
+      className="btn bg-green-600 text-white w-full text-center"
+    >
+      Ver QR
+    </a>
+  )}
+
+</div>
+
       </div>
     </div>
   )
