@@ -17,30 +17,55 @@ export default function Profile() {
   }, [])
 
   async function submit(e) {
-    e.preventDefault()
-    setMsg('')
+  e.preventDefault();
+  setMsg(""); // msg general
+  let errors = [];
 
+  // -------- VALIDACIONES --------
+  const data = {
+    name: user.name,
+    email: user.email,
+  };
+
+  // Si quieren cambiar contraseña
+  if (password.trim() || password2.trim()) {
     if (!password.trim() || !password2.trim()) {
-      return setMsg('Debes introducir la contraseña y confirmarla.')
+      errors.push("Debes escribir ambas contraseñas.");
+    } else if (password !== password2) {
+      errors.push("Las contraseñas no coinciden.");
+    } else {
+      data.password = password;
+      data.password_confirmation = password2;
     }
-    if (password !== password2) {
-      return setMsg('Las contraseñas no coinciden.')
+  }
+
+  if (errors.length > 0) {
+    setMsg(errors.join(" "));
+    return;
+  }
+
+  setSaving(true);
+
+  // -------- PETICIÓN --------
+  try {
+    await AuthAPI.update(data);
+
+    let successMsg = "Datos actualizados correctamente.";
+
+    if (data.password) {
+      successMsg += " Contraseña cambiada.";
+      setPassword("");
+      setPassword2("");
     }
 
-    setSaving(true)
-    try {
-      await AuthAPI.update({
-  name: user.name,
-  email: user.email,
-  password })
-      setMsg('Contraseña actualizada correctamente.')
-      setPassword('')
-      setPassword2('')
-    } catch (err) {
-      setMsg(err.message || 'Error al guardar.')
-    }
-    setSaving(false)
+    setMsg(successMsg);
+  } catch (err) {
+    setMsg(err.message || "Error al guardar los datos.");
   }
+
+  setSaving(false);
+}
+
 
   if (!user) {
     return (
