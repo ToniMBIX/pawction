@@ -242,6 +242,7 @@ export default function AdminAuctions() {
             className="input"
             placeholder="Info URL"
           />
+          <br />
           PDF
           <input
   type="file"
@@ -252,6 +253,7 @@ export default function AdminAuctions() {
   }}
   className="input"
 />
+<br />
 QR
 <input
   type="file"
@@ -291,7 +293,7 @@ QR
               <div className="mt-2">
                 <div className="font-semibold">{a.title}</div>
                 <div className="text-sm opacity-80">
-                  Actual: {a.current_price} €
+Actual: {a.current_price && a.current_price > 0 ? a.current_price : 20} €
                 </div>
                 <div className="text-xs opacity-60">Estado: {a.status}</div>
                 <button
