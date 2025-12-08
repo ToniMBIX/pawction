@@ -34,26 +34,30 @@ export default function Home() {
   }, [])
 
   function getStatusText(a) {
-    const price = Number(a.current_price || 0)
-    const ends = Number(a.ends_in_seconds ?? null)
+  const ends = Number(a.ends_in_seconds ?? 0);
 
-    // ❌ Sin pujas → aún no ha empezado
-    if (!a.status === "active") {
-    return "Finalizada"
-    }
-
-    // 🔄 Activa → contador
-    if (a.status === "active" && ends > 0) {
-      const h = Math.floor(ends / 3600)
-      const m = Math.floor((ends % 3600) / 60)
-      const s = ends % 60
-      return `Termina en: ${h}h ${m}m ${s}s`
-    }
-
-    // ✔️ Finalizada
-    return "Esperando primera puja"
-
+  // ✔ Subasta cerrada
+  if (a.status === "finished") {
+    return "Subasta finalizada";
   }
+
+  // ✔ Activa con tiempo restante
+  if (a.status === "active" && ends > 0) {
+    const h = Math.floor(ends / 3600);
+    const m = Math.floor((ends % 3600) / 60);
+    const s = ends % 60;
+    return `Termina en: ${h}h ${m}m ${s}s`;
+  }
+
+  // ✔ Activa pero sin tiempo (debería estar finalizada)
+  if (a.status === "active" && ends <= 0) {
+    return "Subasta finalizada";
+  }
+
+  // ✔ Por defecto
+  return "Esperando primera puja";
+}
+
 
   return (
     <div className="grid md:grid-cols-3 gap-4">
