@@ -18,16 +18,15 @@ export default function Profile() {
 
   async function submit(e) {
   e.preventDefault();
-  setMsg(""); // msg general
+  setMsg("");
   let errors = [];
 
-  // -------- VALIDACIONES --------
   const data = {
     name: user.name,
     email: user.email,
   };
 
-  // Si quieren cambiar contraseña
+  // Validación de contraseña
   if (password.trim() || password2.trim()) {
     if (!password.trim() || !password2.trim()) {
       errors.push("Debes escribir ambas contraseñas.");
@@ -46,26 +45,30 @@ export default function Profile() {
 
   setSaving(true);
 
-  // -------- PETICIÓN --------
   try {
-    await AuthAPI.update(data);
+    // ⬅️ CAPTURAR EL USUARIO ACTUALIZADO
+    const updatedUser = await AuthAPI.update(data);
+
+    // ⬅️ GUARDARLO EN Auth + disparar evento
+    Auth.updateUser(updatedUser);
+
+    // ⬅️ ACTUALIZAR EL STATE LOCAL DE Profile.jsx
+    setUser(updatedUser);
 
     let successMsg = "Datos actualizados correctamente.";
-
     if (data.password) {
       successMsg += " Contraseña cambiada.";
       setPassword("");
       setPassword2("");
     }
-
     setMsg(successMsg);
+
   } catch (err) {
     setMsg(err.message || "Error al guardar los datos.");
   }
 
   setSaving(false);
 }
-
 
   if (!user) {
     return (

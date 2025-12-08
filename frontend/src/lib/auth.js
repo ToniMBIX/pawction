@@ -17,4 +17,9 @@ export const Auth = {
     const u = Auth.user()
     return !!(u && (u.is_admin === true || u.is_admin === 1 || u.is_admin === '1'))
   },
+  updateUser(user) {
+  localStorage.setItem('user', JSON.stringify(user));
+  window.dispatchEvent(new Event("auth-updated"));
+}
+
 }

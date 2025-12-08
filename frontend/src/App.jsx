@@ -1,3 +1,4 @@
+// App.jsx
 import React from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
@@ -26,11 +27,15 @@ function UserMenu() {
   const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
 
   React.useEffect(() => {
-    const int = setInterval(() => {
+    function update() {
       setUser(Auth.user())
       setIsLogged(Auth.isLogged())
-    }, 800)
-    return () => clearInterval(int)
+    }
+
+    // 🔥 Escuchar cambios en el usuario
+    window.addEventListener("auth-updated", update)
+
+    return () => window.removeEventListener("auth-updated", update)
   }, [])
 
   return (
@@ -44,6 +49,7 @@ function UserMenu() {
             onClick={async () => {
               try { await AuthAPI.logout() } catch {}
               Auth.clear()
+              window.dispatchEvent(new Event("auth-updated"))
               nav('/')
             }}
           >
@@ -73,15 +79,17 @@ export default function App() {
   const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
   const [isAdmin, setIsAdmin] = React.useState(Auth.isAdmin())
 
-  // 🔄 Mantener usuario en tiempo real
   React.useEffect(() => {
-    const int = setInterval(() => {
+    function update() {
       setUser(Auth.user())
       setIsLogged(Auth.isLogged())
       setIsAdmin(Auth.isAdmin())
-    }, 800)
+    }
 
-    return () => clearInterval(int)
+    // 🔥 Escuchar cambios globales de auth
+    window.addEventListener("auth-updated", update)
+
+    return () => window.removeEventListener("auth-updated", update)
   }, [])
 
   return (
@@ -99,7 +107,6 @@ export default function App() {
             <Link to="/favorites">Favoritos</Link>
             <Link to="/history">Historial</Link>
             <Link to="/pending-orders">Pendientes</Link>
-            {/* 🆕 ADMIN REACTIVO */}
             {isAdmin && <Link to="/admin/auctions">Admin</Link>}
           </nav>
 
@@ -119,11 +126,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin/auctions" element={<AdminAuctions />} />
-<Route path="/pending-orders" element={<PendingOrders />} />
-<Route path="/shipping/:id" element={<ShippingForm />} />
-<Route path="/fake-payment/:id" element={<FakePayment />} />
-<Route path="/payment/success" element={<PaymentSuccess />} />
-
+          <Route path="/pending-orders" element={<PendingOrders />} />
+          <Route path="/shipping/:id" element={<ShippingForm />} />
+          <Route path="/fake-payment/:id" element={<FakePayment />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
         </Routes>
       </main>
 
