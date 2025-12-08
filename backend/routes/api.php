@@ -5,7 +5,6 @@ use App\Http\Controllers\{
   AuctionController, BidController, FavoriteController, PaymentController,
   WebhookController, UserController, AuthController, ShippingController, FakePaymentController
 };
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Http\Controllers\Admin\AuctionAdminController; // <-- IMPORTANTE
 
 // ---------- Público ----------

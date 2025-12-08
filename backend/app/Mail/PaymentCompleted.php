@@ -6,7 +6,6 @@ use App\Models\Auction;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PaymentCompleted extends Mailable
 {
@@ -33,7 +32,6 @@ class PaymentCompleted extends Mailable
                     ->view('emails.payment_completed')
                     ->with([
                         'auction' => $this->auction,
-                        'qr' => $this->qr,
                     ])
                     ->attach(storage_path('app/public/products/'.$this->auction->product->image), [
                         'as' => 'producto.jpg',

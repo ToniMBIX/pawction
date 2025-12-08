@@ -62,30 +62,18 @@
                             </h3>
 
                             <p style="text-align:center;">
-                                Escanea el siguiente código QR o usa el botón inferior:
+                                Escanea el siguiente código QR:
                             </p>
 
-                            <!-- QR -->
+                            <!-- QR SUBIDO -->
                             <div style="text-align:center; margin:20px 0;">
-                                <img src="data:image/png;base64,{{ $qr }}" 
-                                     style="width:160px; border-radius:8px;">
-                            </div>
-
-                            <!-- BOTÓN CTA -->
-                            <div style="text-align:center; margin-top:20px;">
-                                <a href="{{ url('/storage/animals/'.$auction->product->animal->pdf) }}"
-                                   style="
-                                       background:#2563eb;
-                                       color:white;
-                                       padding:12px 22px;
-                                       border-radius:8px;
-                                       text-decoration:none;
-                                       font-size:16px;
-                                       display:inline-block;
-                                   "
-                                   target="_blank">
-                                   Ver ficha en PDF
-                                </a>
+                                @if ($auction->qr_url)
+                                    <img src="{{ url($auction->qr_url) }}"
+                                         alt="QR"
+                                         style="width:160px; border-radius:8px;">
+                                @else
+                                    <p style="color:#777;">No se ha adjuntado QR.</p>
+                                @endif
                             </div>
 
                             <hr style="border:none; height:1px; background:#e5e5e5; margin:30px 0;">
