@@ -272,22 +272,20 @@ export default function AdminAuctions() {
                 >
                   Eliminar
                 </button>
-                {a.document_url && (
+                {a.document_url ? (
   <a
     href={assetUrl(a.document_url)}
     target="_blank"
-    className="text-blue-500 underline mt-2 block"
+    className="btn bg-blue-600 text-white mt-2 w-full text-center"
   >
     Ver PDF
   </a>
+) : (
+  <div className="text-xs opacity-60 mt-2 text-center">
+    Sin documento adjunto
+  </div>
 )}
 
-                <button
-  onClick={() => closeAuction(a.id)}
-  className="btn bg-yellow-500 text-white mt-2 w-full"
->
-  Cerrar subasta
-</button>
 
               </div>
             </div>
