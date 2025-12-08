@@ -45,24 +45,24 @@
 
                             <hr style="border:none; height:1px; background:#e5e5e5; margin:30px 0;">
 
+                            <!-- DATOS DE ENVÍO -->
                             <h3 style="font-size:18px; text-align:center; margin-bottom:10px;">
-                                Ficha del animal
+                                Dirección de envío
                             </h3>
 
-                            <p style="text-align:center;">
-                                Escanea el siguiente código QR:
-                            </p>
-
-                            <!-- QR -->
-                            <div style="text-align:center; margin:20px 0;">
-                                @if ($auction->qr_url)
-                                    <img src="{{ asset($auction->qr_url) }}"
-                                         alt="Código QR"
-                                         style="width:160px; border-radius:8px;">
-                                @else
-                                    <p style="color:#777;">Esta subasta no tiene QR adjunto.</p>
-                                @endif
-                            </div>
+                            @if ($shipping)
+                                <p style="text-align:center; line-height:1.5;">
+                                    <strong>{{ $shipping->full_name }}</strong><br>
+                                    {{ $shipping->address }}<br>
+                                    {{ $shipping->postal_code }} {{ $shipping->city }}<br>
+                                    {{ $shipping->province }}, {{ $shipping->country }}<br>
+                                    <strong>Tel:</strong> {{ $shipping->phone }}
+                                </p>
+                            @else
+                                <p style="text-align:center; color:#777;">
+                                    No se han registrado datos de envío.
+                                </p>
+                            @endif
 
                             <hr style="border:none; height:1px; background:#e5e5e5; margin:30px 0;">
 

@@ -41,6 +41,11 @@ class Auction extends Model
                 ->withTimestamps();
 }
 
+public function shippingDetail()
+{
+    return $this->hasOne(ShippingDetail::class, 'auction_id');
+}
+
     /** Cierra la subasta y fija ganador (última puja más alta) */
     public function closeNow(): void
     {

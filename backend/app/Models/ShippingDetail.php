@@ -17,5 +17,9 @@ class ShippingDetail extends Model
     'postal_code',
     'phone'
 ];
+public function auction()
+{
+    return $this->belongsTo(Auction::class);
+}
 
 }

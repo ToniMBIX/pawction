@@ -23,7 +23,9 @@ class PaymentCompleted extends Mailable
         return $this->subject('Pago completado - Pawction')
                     ->view('emails.payment_completed')
                     ->with([
-                        'auction' => $this->auction
+                        'auction' => $this->auction,
+                        
+            'shipping'  => $this->auction->shippingDetail
                     ]);
     }
 }
