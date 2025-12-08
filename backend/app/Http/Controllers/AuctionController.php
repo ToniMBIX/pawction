@@ -85,18 +85,28 @@ class AuctionController extends Controller
 {
     $auction->load('product.animal');
 
-    $user = $this->userFromToken($request);
-    $isFavorite = false;
+    // ⏳ Cierre automático si ya expiró
+    if ($auction->status === 'active' && $auction->end_at && now()->greaterThanOrEqualTo($auction->end_at)) {
 
-    if ($user) {
-        $isFavorite = $user->favorites()
-            ->where('auction_id', $auction->id)
-            ->exists();
+        $lastBid = Bid::where('auction_id', $auction->id)
+            ->orderByDesc('amount')
+            ->orderByDesc('id')
+            ->first();
+
+        $auction->status = 'finished';
+        $auction->winner_user_id = $lastBid?->user_id;
+        $auction->save();
     }
+
+    $user = $this->userFromToken($request);
+
+    $isFavorite = $user
+        ? $user->favorites()->where('auction_id', $auction->id)->exists()
+        : false;
 
     $endsInSeconds = null;
     if ($auction->end_at) {
-        $now = Carbon::now();
+        $now = now();
         $endsInSeconds = $auction->end_at->isFuture()
             ? $now->diffInSeconds($auction->end_at)
             : 0;
@@ -110,15 +120,11 @@ class AuctionController extends Controller
         'current_price'  => $auction->current_price,
         'status'         => $auction->status,
         'image_url'      => $auction->image_url,
-
-        // ✅ LOS CAMPOS QUE NECESITA EL FRONT
         'document_url'   => $auction->document_url,
         'qr_url'         => $auction->qr_url,
-
         'end_at'         => optional($auction->end_at)->toIso8601String(),
         'ends_in_seconds'=> $endsInSeconds,
         'is_favorite'    => $isFavorite,
-
         'product'        => $auction->product ? [
             'animal' => $auction->product->animal ? [
                 'id'        => $auction->product->animal->id,
@@ -130,6 +136,7 @@ class AuctionController extends Controller
         ] : null,
     ]);
 }
+
 
 
     public function qr(Auction $auction)
