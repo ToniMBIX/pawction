@@ -12,63 +12,69 @@ export default function Profile() {
 
   React.useEffect(() => {
     AuthAPI.me()
-      .then(data => setUser(data))
+      .then(data => {
+        setUser(data)
+        Auth.setUser(data) // asegura sincronización inicial
+      })
       .catch(() => setUser(null))
   }, [])
 
   async function submit(e) {
-  e.preventDefault();
-  setMsg("");
-  let errors = [];
+    e.preventDefault();
+    setMsg("");
+    let errors = [];
 
-  const data = {
-    name: user.name,
-    email: user.email,
-  };
+    const data = {
+      name: user.name,
+      email: user.email,
+    };
 
-  // Validación de contraseña
-  if (password.trim() || password2.trim()) {
-    if (!password.trim() || !password2.trim()) {
-      errors.push("Debes escribir ambas contraseñas.");
-    } else if (password !== password2) {
-      errors.push("Las contraseñas no coinciden.");
-    } else {
-      data.password = password;
-      data.password_confirmation = password2;
+    // Validación de contraseña
+    if (password.trim() || password2.trim()) {
+      if (!password.trim() || !password2.trim()) {
+        errors.push("Debes escribir ambas contraseñas.");
+      } else if (password !== password2) {
+        errors.push("Las contraseñas no coinciden.");
+      } else {
+        data.password = password;
+        data.password_confirmation = password2;
+      }
     }
-  }
 
-  if (errors.length > 0) {
-    setMsg(errors.join(" "));
-    return;
-  }
-
-  setSaving(true);
-
-  try {
-    // ⬅️ CAPTURAR EL USUARIO ACTUALIZADO
-    const updatedUser = await AuthAPI.update(data);
-
-    // ⬅️ GUARDARLO EN Auth + disparar evento
-    Auth.updateUser(updatedUser);
-
-    // ⬅️ ACTUALIZAR EL STATE LOCAL DE Profile.jsx
-    setUser(updatedUser);
-
-    let successMsg = "Datos actualizados correctamente.";
-    if (data.password) {
-      successMsg += " Contraseña cambiada.";
-      setPassword("");
-      setPassword2("");
+    if (errors.length > 0) {
+      setMsg(errors.join(" "));
+      return;
     }
-    setMsg(successMsg);
 
-  } catch (err) {
-    setMsg(err.message || "Error al guardar los datos.");
+    setSaving(true);
+
+    try {
+      // 1️⃣ ACTUALIZAR DATOS EN EL BACKEND
+      await AuthAPI.update(data);
+
+      // 2️⃣ PEDIR USUARIO ACTUALIZADO
+      const freshUser = await AuthAPI.me();
+
+      // 3️⃣ GUARDARLO EN Auth (esto actualiza la barra superior)
+      Auth.updateUser(freshUser);
+
+      // 4️⃣ ACTUALIZAR EN ESTE COMPONENTE
+      setUser(freshUser);
+
+      let successMsg = "Datos actualizados correctamente.";
+      if (data.password) {
+        successMsg += " Contraseña cambiada.";
+        setPassword("");
+        setPassword2("");
+      }
+      setMsg(successMsg);
+
+    } catch (err) {
+      setMsg(err.message || "Error al guardar los datos.");
+    }
+
+    setSaving(false);
   }
-
-  setSaving(false);
-}
 
   if (!user) {
     return (
@@ -91,21 +97,19 @@ export default function Profile() {
           <div>
             <label className="block text-sm opacity-70 mb-1">Nombre</label>
             <input
-  className="input bg-gray-900 text-white border border-gray-700"
-  value={user.name}
-  onChange={e => setUser({ ...user, name: e.target.value })}
-/>
-
+              className="input bg-gray-900 text-white border border-gray-700"
+              value={user.name}
+              onChange={e => setUser({ ...user, name: e.target.value })}
+            />
           </div>
 
           <div>
             <label className="block text-sm opacity-70 mb-1">Correo electrónico</label>
             <input
-  className="input bg-gray-900 text-white border border-gray-700"
-  value={user.email}
-  onChange={e => setUser({ ...user, email: e.target.value })}
-/>
-
+              className="input bg-gray-900 text-white border border-gray-700"
+              value={user.email}
+              onChange={e => setUser({ ...user, email: e.target.value })}
+            />
           </div>
         </div>
 
@@ -116,25 +120,25 @@ export default function Profile() {
           </h2>
 
           <div>
-          <input
-            type="password"
-            className="input bg-gray-900 text-white border border-gray-700"
-            placeholder="Nueva contraseña"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
+            <input
+              type="password"
+              className="input bg-gray-900 text-white border border-gray-700"
+              placeholder="Nueva contraseña"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
           </div>
 
           <div>
-          <input
-            type="password"
-            className="input bg-gray-900 text-white border border-gray-700"
-            placeholder="Confirmar contraseña"
-            value={password2}
-            onChange={e => setPassword2(e.target.value)}
-          />
+            <input
+              type="password"
+              className="input bg-gray-900 text-white border border-gray-700"
+              placeholder="Confirmar contraseña"
+              value={password2}
+              onChange={e => setPassword2(e.target.value)}
+            />
           </div>
-          
+
           {msg && (
             <div className="text-sm text-center text-purple-400 mt-2">
               {msg}
