@@ -94,10 +94,15 @@ export const AuthAPI = {
   logout: () => api('/auth/logout', { method: 'POST' }),
 
   me: () => api('/me'),
+
   update(data) {
-    return request('/me', 'PUT', data)
+    return api('/me', {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
   },
 }
+
 
 
 
