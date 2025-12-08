@@ -8,20 +8,19 @@
 
 <body style="margin:0; padding:0; background:#f4f4f7; font-family:Arial, sans-serif;">
 
-    <!-- CONTENEDOR -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7; padding:25px 0;">
         <tr>
             <td align="center">
 
-                <!-- CAJA PRINCIPAL -->
                 <table width="600" cellpadding="0" cellspacing="0" style="background:white; border-radius:12px; overflow:hidden;">
 
                     <!-- HEADER -->
                     <tr>
                         <td style="background:#1e1e2f; padding:25px; text-align:center;">
                             <img src="https://pawction-frontend.onrender.com/logo.png"
-                                alt="Pawction"
-                                style="width:70px; margin-bottom:10px;">
+                                 alt="Pawction"
+                                 style="width:70px; margin-bottom:10px;">
+                            
                             <h1 style="color:white; margin:0; font-size:26px; font-weight:700;">
                                 ¡Pago completado!
                             </h1>
@@ -42,10 +41,8 @@
                             </p>
 
                             <h2 style="font-size:22px; margin:25px 0 10px 0; text-align:center;">
-                               {{ $auction->product->name }}
+                                {{ $auction->product->name ?? 'Artículo subastado' }}
                             </h2>
-
-                            
 
                             <p><strong>Total pagado:</strong> {{ $auction->current_price }} €</p>
                             <p><strong>ID de subasta:</strong> {{ $auction->id }}</p>
@@ -60,14 +57,14 @@
                                 Escanea el siguiente código QR:
                             </p>
 
-                            <!-- QR SUBIDO -->
+                            <!-- QR -->
                             <div style="text-align:center; margin:20px 0;">
                                 @if ($auction->qr_url)
-                                    <img src="{{ url($auction->qr_url) }}"
-                                         alt="QR"
+                                    <img src="{{ asset($auction->qr_url) }}"
+                                         alt="Código QR"
                                          style="width:160px; border-radius:8px;">
                                 @else
-                                    <p style="color:#777;">No se ha adjuntado QR.</p>
+                                    <p style="color:#777;">Esta subasta no tiene QR adjunto.</p>
                                 @endif
                             </div>
 
@@ -89,6 +86,7 @@
                             </p>
                         </td>
                     </tr>
+
                 </table>
 
             </td>
