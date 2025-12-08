@@ -55,6 +55,10 @@ export default function AdminAuctions() {
       if (form.animal.age) fd.append('animal[age]', String(form.animal.age))
       if (form.animal.photo_url.trim())
         fd.append('animal[photo_url]', form.animal.photo_url.trim())
+      if (form.pdf_file) {
+  fd.append("document", form.pdf_file);
+}
+
       if (form.animal.info_url.trim())
         fd.append('animal[info_url]', form.animal.info_url.trim())
     }
@@ -222,6 +226,16 @@ export default function AdminAuctions() {
             className="input"
             placeholder="Info URL"
           />
+          <input
+  type="file"
+  accept="application/pdf"
+  onChange={e => {
+    const file = e.target.files?.[0] || null;
+    setForm(f => ({ ...f, pdf_file: file }));
+  }}
+  className="input"
+/>
+
         </div>
 
         <button className="btn w-full">Crear subasta</button>
@@ -258,6 +272,16 @@ export default function AdminAuctions() {
                 >
                   Eliminar
                 </button>
+                {a.document_url && (
+  <a
+    href={assetUrl(a.document_url)}
+    target="_blank"
+    className="text-blue-500 underline mt-2 block"
+  >
+    Ver PDF
+  </a>
+)}
+
                 <button
   onClick={() => closeAuction(a.id)}
   className="btn bg-yellow-500 text-white mt-2 w-full"

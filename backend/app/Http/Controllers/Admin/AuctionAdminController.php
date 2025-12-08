@@ -66,6 +66,12 @@ class AuctionAdminController extends Controller
             $imageUrl = $data['image_url'];
         }
 
+        if ($request->hasFile('document')) {
+    $pdf = $request->file('document');
+    $pdfPath = $pdf->store('auction_docs', 'public');
+    $auction->document_url = '/storage/' . $pdfPath;
+}
+
         // 3) Crear la subasta
         $auction = Auction::create([
             'product_id'     => $productId,
