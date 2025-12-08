@@ -23,22 +23,32 @@ class AuctionController extends Controller
      * 🔄 AUTO-REABRIR SUBASTA SI HAN PASADO 5 MINUTOS SIN PAGO
      */
     protected function autoReopenIfExpired(Auction $auction)
-    {
-        if ($auction->status === 'finished' && !$auction->is_paid) {
+{
+    // Solo subastas finalizadas con ganador y sin pagar
+    if (
+        $auction->status === 'finished' &&
+        !$auction->is_paid &&
+        $auction->winner_user_id !== null
+    ) {
 
-            if ($auction->updated_at->diffInMinutes(now()) >= 5) {
+        // ¿Se pasó el tiempo límite para pagar?
+        if ($auction->paid_limit_at && now()->greaterThanOrEqualTo($auction->paid_limit_at)) {
 
-                $auction->status = 'active';
-                $auction->winner_user_id = null;
-                $auction->current_price = 0;
+            // REABRIR SUBASTA DESDE CERO
+            $auction->status = 'active';
+            $auction->winner_user_id = null;
+            $auction->current_price = 0;
 
-                // Subasta vuelve a 1 minuto
-                $auction->end_at = now()->addMinute();
+            // Sin cronómetro hasta primera puja
+            $auction->end_at = null;
+            $auction->paid_limit_at = null;
 
-                $auction->save();
-            }
+            $auction->save();
         }
     }
+}
+
+
 
     /**
      * 📌 LISTADO DE SUBASTAS
@@ -103,18 +113,43 @@ class AuctionController extends Controller
     public function show(Request $request, Auction $auction)
     {
         $auction->load('product.animal');
-
         // ⏳ CERRAR SI EL TIEMPO YA PASÓ
         if ($auction->status === 'active' && $auction->end_at && now()->greaterThanOrEqualTo($auction->end_at)) {
 
             $lastBid = Bid::where('auction_id', $auction->id)
-                ->orderByDesc('amount')
-                ->orderByDesc('id')
-                ->first();
+    ->orderByDesc('amount')
+    ->orderByDesc('id')
+    ->first();
 
-            $auction->status = 'finished';
-            $auction->winner_user_id = $lastBid?->user_id;
-            $auction->save();
+if ($lastBid) {
+    $auction->status = 'finished';
+    $auction->winner_user_id = $lastBid->user_id;
+    $auction->paid_limit_at = now()->addMinutes(5);
+    $auction->save();
+}// ⏳ CERRAR SI EL TIEMPO YA PASÓ Y TIENE PUJAS
+if ($a->status === 'active' && $a->end_at && now()->greaterThanOrEqualTo($a->end_at)) {
+
+    $lastBid = Bid::where('auction_id', $a->id)
+        ->orderByDesc('amount')
+        ->orderByDesc('id')
+        ->first();
+
+    if ($lastBid) {
+        $a->status = 'finished';
+        $a->winner_user_id = $lastBid->user_id;
+        $a->paid_limit_at = now()->addMinutes(5);
+        $a->save();
+    } else {
+        $a->status = 'active';
+        $a->winner_user_id = null;
+        $a->paid_limit_at = null;
+        $a->end_at = null;
+        $a->save();
+    }
+}
+ else {
+    $auction->status = 'active';
+    $auction->winner_user_id = null;
         }
 
         // 🔄 AUTO-REABRIR DESPUÉS DE 5 MINUTOS

@@ -242,8 +242,9 @@ export default function AdminAuctions() {
             className="input"
             placeholder="Info URL"
           />
-          <br />
+          <div>
           PDF
+          </div>
           <input
   type="file"
   accept="application/pdf"
@@ -253,8 +254,9 @@ export default function AdminAuctions() {
   }}
   className="input"
 />
-<br />
-QR
+ <div>
+          QR
+          </div>
 <input
   type="file"
   accept="application/pdf"
