@@ -18,6 +18,8 @@ Route::get('/auctions/{auction}',    [AuctionController::class, 'show']);
 Route::get('/auctions/{auction}/qr', [AuctionController::class, 'qr']);
 
 // ---------- Protegido ----------
+Route::middleware('auth:sanctum')->put('/me', [AuthController::class, 'update']);
+
 // ---------- Protegido ----------
 Route::middleware('auth:sanctum')->group(function () {
 

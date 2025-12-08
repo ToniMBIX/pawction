@@ -29,7 +29,10 @@ export default function Profile() {
 
     setSaving(true)
     try {
-      await AuthAPI.update({ password })
+      await AuthAPI.update({
+  name: user.name,
+  email: user.email,
+  password })
       setMsg('Contraseña actualizada correctamente.')
       setPassword('')
       setPassword2('')
@@ -59,16 +62,22 @@ export default function Profile() {
         <div className="space-y-4 mb-8">
           <div>
             <label className="block text-sm opacity-70 mb-1">Nombre</label>
-            <div className="input bg-gray-800 text-white border border-gray-700">
-              {user.name}
-            </div>
+            <input
+  className="input bg-gray-900 text-white border border-gray-700"
+  value={user.name}
+  onChange={e => setUser({ ...user, name: e.target.value })}
+/>
+
           </div>
 
           <div>
             <label className="block text-sm opacity-70 mb-1">Correo electrónico</label>
-            <div className="input bg-gray-800 text-white border border-gray-700">
-              {user.email}
-            </div>
+            <input
+  className="input bg-gray-900 text-white border border-gray-700"
+  value={user.email}
+  onChange={e => setUser({ ...user, email: e.target.value })}
+/>
+
           </div>
         </div>
 

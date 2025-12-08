@@ -66,4 +66,23 @@ class AuthController extends Controller
         $request->user()?->currentAccessToken()?->delete();
         return response()->json([], 204);
     }
+
+public function update(Request $request)
+{
+    $user = $request->user();
+
+    $data = $request->validate([
+        'name'     => ['nullable', 'string', 'max:255'],
+        'email'    => ['nullable', 'email', 'max:255'],
+        'password' => ['nullable', 'string', 'min:4'],
+    ]);
+
+    if (isset($data['password'])) {
+        $data['password'] = bcrypt($data['password']);
+    }
+
+    $user->update(array_filter($data)); // Filtra valores null
+    return response()->json(['message' => 'Perfil actualizado']);
+}
+
 }
