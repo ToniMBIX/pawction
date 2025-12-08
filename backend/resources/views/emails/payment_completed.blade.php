@@ -17,10 +17,6 @@
                     <!-- HEADER -->
                     <tr>
                         <td style="background:#1e1e2f; padding:25px; text-align:center;">
-                            <img src="https://pawction-frontend.onrender.com/logo.png"
-                                 alt="Pawction"
-                                 style="width:70px; margin-bottom:10px;">
-                            
                             <h1 style="color:white; margin:0; font-size:26px; font-weight:700;">
                                 ¡Pago completado!
                             </h1>
