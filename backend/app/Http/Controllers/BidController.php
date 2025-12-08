@@ -9,76 +9,76 @@ use Illuminate\Support\Facades\DB;
 class BidController extends Controller
 {
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'auction_id' => ['required', 'exists:auctions,id'],
-        'amount'     => ['required', 'integer', 'min:1'],
-    ]);
-
-    $userId  = $request->user()->id;
-    $auction = null;
-
-    DB::transaction(function () use ($data, $userId, &$auction) {
-
-        // Bloqueo para evitar condiciones de carrera
-        $auction = Auction::lockForUpdate()->findOrFail($data['auction_id']);
-
-        // Si no está activa → no permitir pujar
-        if ($auction->status !== 'active') {
-            abort(422, 'La subasta ya finalizó.');
-        }
-
-        // ⏳ Cierre automático si ya pasó el tiempo
-        if ($auction->end_at && now()->greaterThanOrEqualTo($auction->end_at)) {
-
-            $last = Bid::where('auction_id', $auction->id)
-                ->orderByDesc('amount')
-                ->orderByDesc('id')
-                ->first();
-
-            $auction->status = 'finished';
-            $auction->winner_user_id = $last?->user_id;
-            $auction->save();
-
-            abort(422, 'La subasta ya finalizó.');
-        }
-
-        $amount  = (int) $data['amount'];
-        $current = (int) $auction->current_price;
-
-        // ✔ Reglas de puja
-        if ($current === 0) {
-            if ($amount < 20) {
-                abort(422, 'La primera puja debe ser al menos de 20 €.');
-            }
-        } else {
-            $minNext = $current + 1;
-            if ($amount < $minNext) {
-                abort(422, "La puja mínima ahora es de {$minNext} €.");
-            }
-        }
-
-        // Registrar puja
-        Bid::create([
-            'auction_id' => $auction->id,
-            'user_id'    => $userId,
-            'amount'     => $amount,
+    {
+        $data = $request->validate([
+            'auction_id' => ['required', 'exists:auctions,id'],
+            'amount'     => ['required', 'integer', 'min:1'],
         ]);
 
-        // ✔ Reiniciar cronómetro a 1 minuto
-        $auction->current_price = $amount;
-        $auction->end_at        = now()->addMinute();
-        $auction->save();
-    });
+        $userId  = $request->user()->id;
+        $auction = null;
 
-    $auction->refresh()->load('product.animal');
+        DB::transaction(function () use ($data, $userId, &$auction) {
 
-    return response()->json([
-        'message' => 'Puja registrada',
-        'auction' => $auction,
-    ], 201);
-}
+            // 🔐 Bloqueo para evitar condiciones de carrera
+            $auction = Auction::lockForUpdate()->findOrFail($data['auction_id']);
 
+            // 🚫 No permitir pujar si no está activa
+            if ($auction->status !== 'active') {
+                abort(422, 'La subasta ya finalizó.');
+            }
+
+            // ⏳ SI EL TIEMPO YA EXPIRÓ → cerrar subasta
+            if ($auction->end_at && now()->greaterThanOrEqualTo($auction->end_at)) {
+
+                $lastBid = Bid::where('auction_id', $auction->id)
+                    ->orderByDesc('amount')
+                    ->orderByDesc('id')
+                    ->first();
+
+                $auction->status = 'finished';
+                $auction->winner_user_id = $lastBid?->user_id;
+                $auction->save();
+
+                abort(422, 'La subasta ya finalizó.');
+            }
+
+            $amount  = (int) $data['amount'];
+            $current = (int) $auction->current_price;
+
+            // 🧮 Reglas de puja
+            if ($current === 0) {
+                if ($amount < 20) {
+                    abort(422, 'La primera puja debe ser al menos de 20 €.');
+                }
+            } else {
+                $minNext = $current + 1;
+                if ($amount < $minNext) {
+                    abort(422, "La puja mínima ahora es de {$minNext} €.");
+                }
+            }
+
+            // 💾 Guardar la puja
+            Bid::create([
+                'auction_id' => $auction->id,
+                'user_id'    => $userId,
+                'amount'     => $amount,
+            ]);
+
+            // ⏱ Reiniciar cuenta atrás a 1 minuto
+            $auction->current_price = $amount;
+            $auction->end_at        = now()->addMinute();
+            $auction->save();
+        });
+
+        // 🔄 Devolver la subasta actualizada
+        $auction->refresh()->load('product.animal');
+
+        return response()->json([
+            'message' => 'Puja registrada',
+            'auction' => $auction,
+        ], 201);
+    }
 
     public function mine(Request $request)
     {
