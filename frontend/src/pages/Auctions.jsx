@@ -34,14 +34,19 @@ export default function Home() {
   }, [])
 
   function getStatusText(a) {
-  const ends = Number(a.ends_in_seconds ?? 0);
+  const ends = Number(a.ends_in_seconds ?? null);
 
-  // ✔ Subasta cerrada
+  // ⭕ Subasta terminada
   if (a.status === "finished") {
     return "Subasta finalizada";
   }
 
-  // ✔ Activa con tiempo restante
+  // ⭕ Subasta activa pero SIN cronómetro → NO ha recibido pujas
+  if (a.status === "active" && a.end_at === null) {
+    return "Esperando primera puja";
+  }
+
+  // ⏳ Subasta activa con cronómetro en marcha
   if (a.status === "active" && ends > 0) {
     const h = Math.floor(ends / 3600);
     const m = Math.floor((ends % 3600) / 60);
@@ -49,14 +54,15 @@ export default function Home() {
     return `Termina en: ${h}h ${m}m ${s}s`;
   }
 
-  // ✔ Activa pero sin tiempo (debería estar finalizada)
+  // ❗ Subasta activa pero cronómetro acabado → backend la actualizará al entrar
   if (a.status === "active" && ends <= 0) {
-    return "Subasta finalizada";
+    return "Esperando primera puja";
   }
 
-  // ✔ Por defecto
+  // Por defecto
   return "Esperando primera puja";
 }
+
 
 
   return (
