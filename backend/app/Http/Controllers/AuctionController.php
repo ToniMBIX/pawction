@@ -82,49 +82,55 @@ class AuctionController extends Controller
     }
 
     public function show(Request $request, Auction $auction)
-    {
-        $auction->load('product.animal');
+{
+    $auction->load('product.animal');
 
-        // También aquí usamos el helper
-        $user = $this->userFromToken($request);
-        $isFavorite = false;
+    $user = $this->userFromToken($request);
+    $isFavorite = false;
 
-        if ($user) {
-            $isFavorite = $user->favorites()
-                ->where('auction_id', $auction->id)
-                ->exists();
-        }
-
-        $endsInSeconds = null;
-        if ($auction->end_at) {
-            $now = Carbon::now();
-            $endsInSeconds = $auction->end_at->isFuture()
-                ? $now->diffInSeconds($auction->end_at)
-                : 0;
-        }
-
-        return response()->json([
-            'id'             => $auction->id,
-            'title'          => $auction->title,
-            'description'    => $auction->description,
-            'starting_price' => $auction->starting_price,
-            'current_price'  => $auction->current_price,
-            'status'         => $auction->status,
-            'image_url'      => $auction->image_url,
-            'end_at'         => optional($auction->end_at)->toIso8601String(),
-            'ends_in_seconds'=> $endsInSeconds,
-            'is_favorite'    => $isFavorite,
-            'product'        => $auction->product ? [
-                'animal' => $auction->product->animal ? [
-                    'id'        => $auction->product->animal->id,
-                    'name'      => $auction->product->animal->name,
-                    'species'   => $auction->product->animal->species,
-                    'photo_url' => $auction->product->animal->photo_url,
-                    'info_url'  => $auction->product->animal->info_url,
-                ] : null,
-            ] : null,
-        ]);
+    if ($user) {
+        $isFavorite = $user->favorites()
+            ->where('auction_id', $auction->id)
+            ->exists();
     }
+
+    $endsInSeconds = null;
+    if ($auction->end_at) {
+        $now = Carbon::now();
+        $endsInSeconds = $auction->end_at->isFuture()
+            ? $now->diffInSeconds($auction->end_at)
+            : 0;
+    }
+
+    return response()->json([
+        'id'             => $auction->id,
+        'title'          => $auction->title,
+        'description'    => $auction->description,
+        'starting_price' => $auction->starting_price,
+        'current_price'  => $auction->current_price,
+        'status'         => $auction->status,
+        'image_url'      => $auction->image_url,
+
+        // ✅ LOS CAMPOS QUE NECESITA EL FRONT
+        'document_url'   => $auction->document_url,
+        'qr_url'         => $auction->qr_url,
+
+        'end_at'         => optional($auction->end_at)->toIso8601String(),
+        'ends_in_seconds'=> $endsInSeconds,
+        'is_favorite'    => $isFavorite,
+
+        'product'        => $auction->product ? [
+            'animal' => $auction->product->animal ? [
+                'id'        => $auction->product->animal->id,
+                'name'      => $auction->product->animal->name,
+                'species'   => $auction->product->animal->species,
+                'photo_url' => $auction->product->animal->photo_url,
+                'info_url'  => $auction->product->animal->info_url,
+            ] : null,
+        ] : null,
+    ]);
+}
+
 
     public function qr(Auction $auction)
     {
