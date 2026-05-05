@@ -28,7 +28,7 @@
                         <td style="padding:30px 40px; color:#333; font-size:16px; line-height:1.6;">
 
                             <p style="margin-top:0;">
-                                Hola <strong>{{ $auction->winner->name ?? 'Usuario' }}</strong>,
+                                Hola <strong>{{ $shipping->full_name }}</strong>,
                             </p>
 
                             <p>
