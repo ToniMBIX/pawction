@@ -13,7 +13,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-COPY . /app
+COPY . .
 
 RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
 RUN composer dump-autoload -o --no-scripts
