@@ -24,4 +24,5 @@ RUN chmod +x /entrypoint.sh
 ENV PORT=10000
 EXPOSE 10000
 
-CMD ["/entrypoint.sh"]
+WORKDIR /app
+CMD ["bash", "/entrypoint.sh"]
