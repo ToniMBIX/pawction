@@ -7,8 +7,6 @@ services:
 
     buildCommand: |
       composer install --no-dev --prefer-dist --optimize-autoloader
-      php artisan key:generate
-      php artisan migrate --force
       php artisan route:clear
       php artisan optimize:clear
 
@@ -32,6 +30,22 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
+      - key: APP_KEY
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: aws-0-eu-west-1.pooler.supabase.com
+      - key: DB_PORT
+        value: 6543
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        value: postgres.kmidewazwlmleklpykfc
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: require
 
   - type: web
     name: pawction-frontend
