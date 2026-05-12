@@ -78,12 +78,33 @@ export default function App() {
   const [user, setUser] = React.useState(Auth.user())
   const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
   const [isAdmin, setIsAdmin] = React.useState(Auth.isAdmin())
+const [summary, setSummary] = React.useState({
+  active_participating_count: 0,
+  pending_won_count: 0,
+})
+  const [summary, setSummary] = React.useState({
+  active_participating_count: 0,
+  pending_won_count: 0,
+})
 
   React.useEffect(() => {
     function update() {
       setUser(Auth.user())
       setIsLogged(Auth.isLogged())
       setIsAdmin(Auth.isAdmin())
+      if (Auth.isLogged()) {
+  AuthAPI.summary()
+    .then(setSummary)
+    .catch(() => setSummary({
+      active_participating_count: 0,
+      pending_won_count: 0,
+    }))
+} else {
+  setSummary({
+    active_participating_count: 0,
+    pending_won_count: 0,
+  })
+}
     }
 
     // 🔥 Escuchar cambios globales de auth
@@ -102,13 +123,33 @@ export default function App() {
             Pawction
           </Link>
 
-          <nav className="flex gap-4 text-sm">
-            <Link to="/auctions">Subastas</Link>
-            <Link to="/favorites">Favoritos</Link>
-            <Link to="/history">Historial</Link>
-            <Link to="/pending-orders">Pendientes</Link>
-            {isAdmin && <Link to="/admin/auctions">Admin</Link>}
-          </nav>
+<nav className="flex gap-4 text-sm">
+  <Link to="/auctions" className="relative">
+    Subastas
+
+    {isLogged && summary.active_participating_count > 0 && (
+      <span className="ml-1 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">
+        {summary.active_participating_count}
+      </span>
+    )}
+  </Link>
+
+  <Link to="/favorites">Favoritos</Link>
+
+  <Link to="/history">Historial</Link>
+
+  <Link to="/pending-orders" className="relative">
+    Pendientes
+
+    {isLogged && summary.pending_won_count > 0 && (
+      <span className="ml-1 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">
+        {summary.pending_won_count}
+      </span>
+    )}
+  </Link>
+
+  {isAdmin && <Link to="/admin/auctions">Admin</Link>}
+</nav>
 
           <UserMenu />
         </div>

@@ -95,6 +95,8 @@ export const AuthAPI = {
 
   me: () => api('/me'),
 
+  summary: () => api('/me/summary'),
+
   update(data) {
     return api('/me', {
       method: 'PUT',
