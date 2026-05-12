@@ -12,6 +12,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserSummaryController;
 use App\Http\Controllers\Admin\AuctionAdminController;
+use App\Http\Controllers\MyParticipatingAuctionsController;
 
 // ---------- Público ----------
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -30,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [UserController::class, 'me']);
     Route::get('/me/summary', UserSummaryController::class);
     Route::put('/me', [UserController::class, 'update']);
+    Route::get('/me/participating-auctions', MyParticipatingAuctionsController::class);
 
     Route::post('/bids', [BidController::class, 'store']);
     Route::get('/bids/mine', [BidController::class, 'mine']);

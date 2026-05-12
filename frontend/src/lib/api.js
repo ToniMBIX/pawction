@@ -97,6 +97,8 @@ export const AuthAPI = {
 
   summary: () => api('/me/summary'),
 
+  participatingAuctions: () => api('/me/participating-auctions'),
+
   update(data) {
     return api('/me', {
       method: 'PUT',
