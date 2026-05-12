@@ -152,7 +152,7 @@ class AuctionAdminController extends Controller
         $auction->winner_user_id = $lastBid->user_id;
         $auction->winner_email = $lastBid->user->email;
 
-        $auction->status = "completed";
+        $auction->status = "finished";
         $auction->is_paid = false;
         $auction->end_at = now()->subMinute();
 
