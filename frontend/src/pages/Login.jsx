@@ -15,7 +15,8 @@ export default function Login(){
       const r = await AuthAPI.login(form)
       Auth.setToken(r.token)
       if (r.user) Auth.setUser(r.user)
-      nav('/')
+      window.dispatchEvent(new Event('auth-updated'))
+      nav('/auctions')
     } catch (e) {
       alert(e.message || 'Error al iniciar sesión')
     } finally {
