@@ -66,22 +66,19 @@ private function generateQrForAuction(Auction $auction): ?string
             'product_name' => ['required', 'string', 'max:255'],
             'product_description' => ['nullable', 'string'],
 
-            'image_url' => ['nullable', 'url'],
             'image' => ['nullable', 'image', 'max:5120'],
 
             'document' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
 
             'animal.name' => ['required', 'string', 'max:255'],
             'animal.species' => ['required', 'string', 'max:255'],
-            'animal.photo_url' => ['nullable', 'url'],
-            'animal.info_url' => ['nullable', 'url'],
         ]);
 
         // =========================================
         //  Imagen subasta
         // =========================================
 
-        $imageUrl = $data['image_url'] ?? null;
+$imageUrl = null;
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')
@@ -110,8 +107,6 @@ private function generateQrForAuction(Auction $auction): ?string
         $animal = Animal::create([
             'name' => $data['animal']['name'],
             'species' => $data['animal']['species'],
-            'photo_url' => $data['animal']['photo_url'] ?? null,
-            'info_url' => $data['animal']['info_url'] ?? null,
         ]);
 
         // =========================================

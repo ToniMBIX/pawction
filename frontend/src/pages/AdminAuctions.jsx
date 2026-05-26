@@ -12,7 +12,6 @@ export default function AdminAuctions() {
     title: '',
     description: '',
     starting_price: 20,
-    image_url: '',
     image_file: null,
     pdf_file: null,
     product_name: '',
@@ -20,8 +19,6 @@ export default function AdminAuctions() {
     animal: {
       name: '',
       species: '',
-      photo_url: '',
-      info_url: '',
     },
   })
 
@@ -56,16 +53,11 @@ export default function AdminAuctions() {
 
     fd.append('animal[name]', form.animal.name)
     fd.append('animal[species]', form.animal.species)
-    fd.append('animal[photo_url]', form.animal.photo_url)
-    fd.append('animal[info_url]', form.animal.info_url)
 
     if (form.image_file) {
       fd.append('image', form.image_file)
     }
 
-    if (form.image_url) {
-      fd.append('image_url', form.image_url)
-    }
 
     if (form.pdf_file) {
       fd.append('document', form.pdf_file)
@@ -241,50 +233,7 @@ export default function AdminAuctions() {
             {fieldError('animal.species') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.species')}</p>}
           </div>
 
-          <div>
-            <input
-              value={form.animal.photo_url}
-              onChange={e =>
-                setForm({
-                  ...form,
-                  animal: { ...form.animal, photo_url: e.target.value },
-                })
-              }
-              className="input"
-              placeholder="URL foto animal"
-              type="text"
-            />
-            {fieldError('animal.photo_url') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.photo_url')}</p>}
-          </div>
 
-          <div>
-            <input
-              value={form.animal.info_url}
-              onChange={e =>
-                setForm({
-                  ...form,
-                  animal: { ...form.animal, info_url: e.target.value },
-                })
-              }
-              className="input"
-              placeholder="URL información animal"
-              type="text"
-            />
-            {fieldError('animal.info_url') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.info_url')}</p>}
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-3">
-          <div>
-            <input
-              value={form.image_url}
-              onChange={e => setForm({ ...form, image_url: e.target.value })}
-              className="input"
-              placeholder="URL imagen subasta"
-              type="text"
-            />
-            {fieldError('image_url') && <p className="mt-1 text-sm text-red-600">{fieldError('image_url')}</p>}
-          </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium">O subir imagen</label>
