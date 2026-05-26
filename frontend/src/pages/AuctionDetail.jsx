@@ -1,6 +1,11 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import { AuctionsAPI, FavoritesAPI, assetUrl } from '../lib/api.js'
+import {
+  AuctionsAPI,
+  FavoritesAPI,
+  assetUrl,
+  PLACEHOLDER_IMG,
+} from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
 
 export default function AuctionDetail() {
@@ -45,6 +50,7 @@ export default function AuctionDetail() {
 
     try {
       const r = await AuctionsAPI.get(id)
+
       const data = r.data || r
 
       setA(data)
@@ -157,8 +163,17 @@ export default function AuctionDetail() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 opacity-70">
-        Cargando subasta...
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="card animate-pulse">
+          <div className="h-[420px] rounded-3xl bg-slate-200" />
+        </div>
+
+        <div className="card animate-pulse space-y-4">
+          <div className="h-10 w-2/3 rounded bg-slate-200" />
+          <div className="h-4 w-full rounded bg-slate-200" />
+          <div className="h-4 w-5/6 rounded bg-slate-200" />
+          <div className="h-28 rounded-3xl bg-slate-200" />
+        </div>
       </div>
     )
   }
@@ -166,7 +181,7 @@ export default function AuctionDetail() {
   if (pageError) {
     return (
       <div className="card max-w-xl mx-auto">
-        <div className="rounded-xl border border-red-500 bg-red-50 px-4 py-3 text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-700">
           {pageError}
         </div>
       </div>
@@ -175,7 +190,7 @@ export default function AuctionDetail() {
 
   if (!a) {
     return (
-      <div className="text-center py-10">
+      <div className="card text-center">
         Subasta no encontrada
       </div>
     )
@@ -186,7 +201,7 @@ export default function AuctionDetail() {
     a?.image_url ||
     a?.photo_url
 
-  const img = assetUrl(rawImg) || '/placeholder.jpg'
+  const img = assetUrl(rawImg) || PLACEHOLDER_IMG
 
   const current = Number(a.current_price)
 
@@ -199,112 +214,56 @@ export default function AuctionDetail() {
 
   return (
     <>
-      {/* TOAST */}
       {toast.show && (
         <div
-          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded shadow text-white
-            ${
-              toast.type === 'success'
-                ? 'bg-green-600'
-                : toast.type === 'warning'
-                ? 'bg-yellow-600'
-                : toast.type === 'error'
-                ? 'bg-red-600'
-                : 'bg-gray-700'
-            }
-          `}
+          className={`fixed right-4 top-4 z-50 rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-2xl ${
+            toast.type === 'success'
+              ? 'bg-emerald-600'
+              : toast.type === 'warning'
+              ? 'bg-orange-500'
+              : toast.type === 'error'
+              ? 'bg-red-600'
+              : 'bg-slate-900'
+          }`}
         >
           {toast.msg}
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <img
-            src={img}
-            className="w-full max-h-[420px] object-cover rounded-xl"
-            alt={a.title || 'Subasta'}
-            onError={(ev) => {
-              ev.currentTarget.src = '/placeholder.jpg'
-            }}
-          />
-        </div>
-
-        <div className="space-y-3">
-          <h1 className="text-2xl font-bold">
-            {a.title}
-          </h1>
-
-          {a.description && (
-            <p className="opacity-80">
-              {a.description}
-            </p>
-          )}
-
-          <div>
-            Precio actual:{' '}
-            <b>
-              {current > 0
-                ? current
-                : a.starting_price || 20}{' '}
-              €
-            </b>
+      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-5">
+          <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200">
+            <img
+              src={img}
+              className="h-[520px] w-full object-cover"
+              alt={a.title || 'Subasta Pawction'}
+              onError={ev => {
+                ev.currentTarget.src = PLACEHOLDER_IMG
+              }}
+            />
           </div>
 
-          <div className="text-sm opacity-70">
-            Termina en: <b>{timeLeft}</b>
-          </div>
-
-          {!finished ? (
-            <form
-              onSubmit={submitBid}
-              className="flex gap-2"
-              noValidate
-            >
-              <input
-                className="input"
-                type="text"
-                inputMode="numeric"
-                placeholder={`Mínimo ${minNext}€`}
-                value={amount}
-                onChange={(e) =>
-                  setAmount(e.target.value)
-                }
-              />
-
-              <button
-                className="btn"
-                disabled={bidLoading}
-              >
-                {bidLoading
-                  ? 'Pujando...'
-                  : 'Pujar'}
-              </button>
-            </form>
-          ) : (
-            <div className="text-red-600 font-semibold">
-              Esta subasta ya ha terminado.
-            </div>
-          )}
-
-          <button
-            onClick={toggleFav}
-            className="btn"
-          >
-            {fav
-              ? 'Quitar de favoritos'
-              : 'Agregar a favoritos'}
-          </button>
-
-          <div className="space-y-2 mt-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             {a.document_url && (
               <a
                 href={assetUrl(a.document_url)}
                 target="_blank"
                 rel="noreferrer"
-                className="btn bg-blue-600 text-white w-full text-center"
+                className="card card-hover flex items-center justify-between"
               >
-                Ver PDF
+                <div>
+                  <div className="text-lg font-bold text-slate-900">
+                    PDF del animal
+                  </div>
+
+                  <div className="mt-1 text-sm text-slate-500">
+                    Información completa del pack
+                  </div>
+                </div>
+
+                <div className="text-3xl">
+                  📄
+                </div>
               </a>
             )}
 
@@ -313,11 +272,141 @@ export default function AuctionDetail() {
                 href={assetUrl(a.qr_url)}
                 target="_blank"
                 rel="noreferrer"
-                className="btn bg-green-600 text-white w-full text-center"
+                className="card card-hover flex items-center justify-between"
               >
-                Ver QR
+                <div>
+                  <div className="text-lg font-bold text-slate-900">
+                    Código QR
+                  </div>
+
+                  <div className="mt-1 text-sm text-slate-500">
+                    Escanea para abrir el PDF
+                  </div>
+                </div>
+
+                <div className="text-3xl">
+                  🔳
+                </div>
               </a>
             )}
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div className="card">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`badge ${
+                  finished
+                    ? 'badge-red'
+                    : 'badge-green'
+                }`}
+              >
+                {finished
+                  ? 'Subasta finalizada'
+                  : 'Subasta activa'}
+              </span>
+
+              {!finished && (
+                <span className="badge badge-orange">
+                  ⏳ {timeLeft}
+                </span>
+              )}
+            </div>
+
+            <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-900">
+              {a.title}
+            </h1>
+
+            {a.description && (
+              <p className="mt-5 text-base leading-7 text-slate-600">
+                {a.description}
+              </p>
+            )}
+
+            <div className="mt-8 rounded-[2rem] bg-slate-50 p-6">
+              <div className="text-sm font-medium text-slate-500">
+                Precio actual
+              </div>
+
+              <div className="mt-2 text-5xl font-black tracking-tight text-slate-950">
+                {current > 0
+                  ? current
+                  : a.starting_price || 20}
+                €
+              </div>
+
+              <div className="mt-3 text-sm text-slate-500">
+                Puja mínima:{' '}
+                <b className="text-slate-700">
+                  {minNext} €
+                </b>
+              </div>
+            </div>
+
+            {!finished ? (
+              <form
+                onSubmit={submitBid}
+                className="mt-6 space-y-4"
+                noValidate
+              >
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Introduce tu puja
+                  </label>
+
+                  <input
+                    className="input text-lg"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder={`Mínimo ${minNext} €`}
+                    value={amount}
+                    onChange={e =>
+                      setAmount(e.target.value)
+                    }
+                  />
+                </div>
+
+                <button
+                  className="btn w-full py-3 text-base"
+                  disabled={bidLoading}
+                >
+                  {bidLoading
+                    ? 'Procesando puja...'
+                    : 'Realizar puja'}
+                </button>
+              </form>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
+                Esta subasta ya ha terminado.
+              </div>
+            )}
+
+            <button
+              onClick={toggleFav}
+              className={`mt-4 w-full rounded-2xl px-5 py-3 text-sm font-semibold transition ${
+                fav
+                  ? 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {fav
+                ? '❤️ Quitar de favoritos'
+                : '🤍 Añadir a favoritos'}
+            </button>
+          </div>
+
+          <div className="card">
+            <h2 className="text-lg font-bold text-slate-900">
+              Impacto solidario
+            </h2>
+
+            <p className="mt-3 text-sm leading-7 text-slate-500">
+              El 50% del importe recaudado se destina a
+              iniciativas medioambientales y el otro 50%
+              ayuda al mantenimiento y crecimiento de
+              Pawction.
+            </p>
           </div>
         </div>
       </div>

@@ -1,6 +1,11 @@
-// App.jsx
 import React from 'react'
-import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import {
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom'
 
 import Home from './pages/Home.jsx'
 import Auctions from './pages/Auctions.jsx'
@@ -22,6 +27,33 @@ import { AuthAPI } from './lib/api.js'
 
 import logo from '/logo.png'
 
+function NavItem({ to, children, badge }) {
+  const location = useLocation()
+
+  const active =
+    location.pathname === to ||
+    location.pathname.startsWith(to + '/')
+
+  return (
+    <Link
+      to={to}
+      className={`relative flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+        active
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+      }`}
+    >
+      {children}
+
+      {badge > 0 && (
+        <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+          {badge}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 function UserMenu() {
   const nav = useNavigate()
 
@@ -36,42 +68,69 @@ function UserMenu() {
 
     window.addEventListener('auth-updated', update)
 
-    return () => window.removeEventListener('auth-updated', update)
+    return () =>
+      window.removeEventListener('auth-updated', update)
   }, [])
+
+  if (!isLogged) {
+    return (
+      <div className="ml-auto flex items-center gap-3">
+        <Link
+          to="/login"
+          className="btn-secondary"
+        >
+          Entrar
+        </Link>
+
+        <Link
+          to="/register"
+          className="btn"
+        >
+          Crear cuenta
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="ml-auto flex items-center gap-3">
-      {isLogged ? (
-        <>
-          <span className="text-sm opacity-70">
-            Hola, {user?.name || 'Usuario'}
-          </span>
+      <Link
+        to="/profile"
+        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2 shadow-sm transition hover:shadow-md"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+          {(user?.name || 'U')[0]}
+        </div>
 
-          <Link to="/profile">Perfil</Link>
+        <div className="hidden sm:block">
+          <div className="text-sm font-semibold text-slate-800">
+            {user?.name || 'Usuario'}
+          </div>
 
-          <button
-            className="text-sm underline"
-            onClick={async () => {
-              try {
-                await AuthAPI.logout()
-              } catch {}
+          <div className="text-xs text-slate-500">
+            {user?.email}
+          </div>
+        </div>
+      </Link>
 
-              Auth.clear()
+      <button
+        className="btn-secondary"
+        onClick={async () => {
+          try {
+            await AuthAPI.logout()
+          } catch {}
 
-              window.dispatchEvent(new Event('auth-updated'))
+          Auth.clear()
 
-              nav('/')
-            }}
-          >
-            Salir
-          </button>
-        </>
-      ) : (
-        <>
-          <Link to="/login">Entrar</Link>
-          <Link to="/register">Registro</Link>
-        </>
-      )}
+          window.dispatchEvent(
+            new Event('auth-updated')
+          )
+
+          nav('/')
+        }}
+      >
+        Salir
+      </button>
     </div>
   )
 }
@@ -86,9 +145,13 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
-  const [user, setUser] = React.useState(Auth.user())
-  const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
-  const [isAdmin, setIsAdmin] = React.useState(Auth.isAdmin())
+  const [isLogged, setIsLogged] = React.useState(
+    Auth.isLogged()
+  )
+
+  const [isAdmin, setIsAdmin] = React.useState(
+    Auth.isAdmin()
+  )
 
   const [summary, setSummary] = React.useState({
     active_participating_count: 0,
@@ -97,13 +160,14 @@ export default function App() {
 
   React.useEffect(() => {
     function update() {
-      setUser(Auth.user())
       setIsLogged(Auth.isLogged())
       setIsAdmin(Auth.isAdmin())
 
       if (Auth.isLogged()) {
         AuthAPI.summary()
-          .then((r) => setSummary(r.data || r))
+          .then(r =>
+            setSummary(r.data || r)
+          )
           .catch(() =>
             setSummary({
               active_participating_count: 0,
@@ -120,59 +184,71 @@ export default function App() {
 
     update()
 
-    window.addEventListener('auth-updated', update)
+    window.addEventListener(
+      'auth-updated',
+      update
+    )
 
-    return () => window.removeEventListener('auth-updated', update)
+    return () =>
+      window.removeEventListener(
+        'auth-updated',
+        update
+      )
   }, [])
 
   return (
-    <div>
-      <header className="border-b">
-        <div className="container flex items-center gap-6 py-4">
+<div className="flex min-h-screen flex-col bg-slate-50">
+        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="container flex flex-wrap items-center gap-4 py-4">
           <Link
             to="/"
-            className="flex items-center gap-2 text-2xl font-extrabold"
+            className="flex items-center gap-3"
           >
             <img
               src={logo}
               alt="Pawction"
-              className="w-8 h-8 rounded"
+              className="h-11 w-11 rounded-2xl shadow-sm"
             />
 
-            Pawction
+            <div>
+              <div className="text-2xl font-black tracking-tight text-slate-900">
+                Pawction
+              </div>
+
+              <div className="text-xs text-slate-500">
+                Subastas solidarias
+              </div>
+            </div>
           </Link>
 
-          <nav className="flex gap-4 text-sm">
-            <Link to="/auctions" className="relative">
+          <nav className="flex flex-wrap items-center gap-2">
+            <NavItem to="/auctions">
               Subastas
+            </NavItem>
 
-              {isLogged &&
-                summary.active_participating_count > 0 && (
-                  <span className="ml-1 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">
-                    {summary.active_participating_count}
-                  </span>
-                )}
-            </Link>
+            <NavItem to="/favorites">
+              Favoritos
+            </NavItem>
 
-            <Link to="/favorites">Favoritos</Link>
+            <NavItem to="/history">
+              Historial
+            </NavItem>
 
-            <Link to="/history">Historial</Link>
-
-            <Link to="/pending-orders" className="relative">
+            <NavItem
+              to="/pending-orders"
+              badge={
+                isLogged
+                  ? summary.pending_won_count
+                  : 0
+              }
+            >
               Pendientes
-
-              {isLogged &&
-                summary.pending_won_count > 0 && (
-                  <span className="ml-1 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">
-                    {summary.pending_won_count}
-                  </span>
-                )}
-            </Link>
+            </NavItem>
 
             {isAdmin && (
-              <Link to="/admin/auctions">
+              <NavItem to="/admin/auctions">
                 Admin
-              </Link>
+              </NavItem>
             )}
           </nav>
 
@@ -180,11 +256,17 @@ export default function App() {
         </div>
       </header>
 
-      <main className="container py-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
+<main className="container flex-1 py-8">
+          <Routes>
+          <Route
+            path="/"
+            element={<Home />}
+          />
 
-          <Route path="/auctions" element={<Auctions />} />
+          <Route
+            path="/auctions"
+            element={<Auctions />}
+          />
 
           <Route
             path="/auctions/:id"
@@ -227,9 +309,15 @@ export default function App() {
             }
           />
 
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={<Login />}
+          />
 
-          <Route path="/register" element={<Register />} />
+          <Route
+            path="/register"
+            element={<Register />}
+          />
 
           <Route
             path="/admin/auctions"
@@ -258,9 +346,29 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="border-t">
-        <div className="container py-6 text-sm opacity-70">
-          © {new Date().getFullYear()} Pawction — 50/50 Pawction / Greenpeace
+      <footer className="mt-16 border-t border-slate-200 bg-white">
+        <div className="container flex flex-col gap-6 py-10 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-xl font-black text-slate-900">
+              Pawction
+            </div>
+
+            <p className="mt-2 max-w-md text-sm text-slate-500">
+              Plataforma solidaria de subastas para apoyar
+              la adopción responsable y causas
+              medioambientales.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start gap-2 text-sm text-slate-500">
+            <div>
+              © {new Date().getFullYear()} Pawction
+            </div>
+
+            <div>
+              50% Pawction · 50% Greenpeace
+            </div>
+          </div>
         </div>
       </footer>
     </div>
