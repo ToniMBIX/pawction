@@ -11,15 +11,15 @@ export default function AdminAuctions() {
   const [form, setForm] = React.useState({
     title: '',
     description: '',
+    starting_price: 20,
     image_url: '',
     image_file: null,
     pdf_file: null,
-    qr_file: null,
-    product_id: '',
+    product_name: '',
+    product_description: '',
     animal: {
       name: '',
-      species: 'Perro',
-      age: '',
+      species: '',
       photo_url: '',
       info_url: '',
     },
@@ -31,7 +31,7 @@ export default function AdminAuctions() {
     try {
       const r = await AdminAPI.auctions.list()
       const payload = r.data || r
-      const list = Array.isArray(payload) ? payload : payload.data || []       
+      const list = Array.isArray(payload) ? payload : payload.data || []
       setItems(list)
     } catch (e) {
       console.error('Error cargando subastas admin', e)
@@ -49,6 +49,15 @@ export default function AdminAuctions() {
 
     fd.append('title', form.title)
     fd.append('description', form.description)
+    fd.append('starting_price', form.starting_price)
+
+    fd.append('product_name', form.product_name)
+    fd.append('product_description', form.product_description)
+
+    fd.append('animal[name]', form.animal.name)
+    fd.append('animal[species]', form.animal.species)
+    fd.append('animal[photo_url]', form.animal.photo_url)
+    fd.append('animal[info_url]', form.animal.info_url)
 
     if (form.image_file) {
       fd.append('image', form.image_file)
@@ -58,24 +67,8 @@ export default function AdminAuctions() {
       fd.append('image_url', form.image_url)
     }
 
-    if (form.product_id) {
-      fd.append('product_id', form.product_id)
-    }
-
-    if (form.animal.name) {
-      fd.append('animal[name]', form.animal.name)
-      fd.append('animal[species]', form.animal.species)
-      fd.append('animal[age]', form.animal.age)
-      fd.append('animal[photo_url]', form.animal.photo_url)
-      fd.append('animal[info_url]', form.animal.info_url)
-    }
-
     if (form.pdf_file) {
       fd.append('document', form.pdf_file)
-    }
-
-    if (form.qr_file) {
-      fd.append('qr', form.qr_file)
     }
 
     setLoading(true)
@@ -88,15 +81,15 @@ export default function AdminAuctions() {
       setForm({
         title: '',
         description: '',
+        starting_price: 20,
         image_url: '',
         image_file: null,
         pdf_file: null,
-        qr_file: null,
-        product_id: '',
+        product_name: '',
+        product_description: '',
         animal: {
           name: '',
-          species: 'Perro',
-          age: '',
+          species: '',
           photo_url: '',
           info_url: '',
         },
@@ -109,21 +102,6 @@ export default function AdminAuctions() {
       console.error(err)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const uploadQR = async (id, file) => {
-    if (!file) return
-
-    const fd = new FormData()
-    fd.append('qr', file)
-
-    try {
-      await AdminAPI.auctions.uploadQr(id, fd)
-      await load()
-    } catch (err) {
-      alert(err.message || 'Error al subir QR')
-      console.error(err)
     }
   }
 
@@ -162,7 +140,7 @@ export default function AdminAuctions() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Gestión de subastas</h1>
 
-      <form onSubmit={create} className="card grid gap-3" noValidate>
+      <form onSubmit={create} className="card grid gap-4" noValidate>
         <h2 className="font-semibold">Crear subasta</h2>
 
         {generalError && (
@@ -171,20 +149,29 @@ export default function AdminAuctions() {
           </div>
         )}
 
-        <div>
-          <input
-            value={form.title}
-            onChange={e => setForm({ ...form, title: e.target.value })}
-            className="input"
-            placeholder="Título"
-            type="text"
-          />
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <input
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              className="input"
+              placeholder="Título de la subasta"
+              type="text"
+            />
+            {fieldError('title') && <p className="mt-1 text-sm text-red-600">{fieldError('title')}</p>}
+          </div>
 
-          {fieldError('title') && (
-            <p className="mt-1 text-sm text-red-600">
-              {fieldError('title')}
-            </p>
-          )}
+          <div>
+            <input
+              value={form.starting_price}
+              onChange={e => setForm({ ...form, starting_price: e.target.value })}
+              className="input"
+              placeholder="Precio inicial"
+              type="number"
+              min="1"
+            />
+            {fieldError('starting_price') && <p className="mt-1 text-sm text-red-600">{fieldError('starting_price')}</p>}
+          </div>
         </div>
 
         <div>
@@ -192,73 +179,32 @@ export default function AdminAuctions() {
             value={form.description}
             onChange={e => setForm({ ...form, description: e.target.value })}
             className="input"
-            placeholder="Descripción"
+            placeholder="Descripción de la subasta"
           />
-
-          {fieldError('description') && (
-            <p className="mt-1 text-sm text-red-600">
-              {fieldError('description')}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <input
-            value={form.image_url}
-            onChange={e => setForm({ ...form, image_url: e.target.value })}
-            className="input"
-            placeholder="Imagen URL"
-            type="text"
-          />
-
-          {fieldError('image_url') && (
-            <p className="mt-1 text-sm text-red-600">
-              {fieldError('image_url')}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            Imagen
-          </label>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={e => {
-              const file = e.target.files?.[0] || null
-              setForm(f => ({ ...f, image_file: file }))
-            }}
-            className="input"
-          />
-
-          {fieldError('image') && (
-            <p className="mt-1 text-sm text-red-600">
-              {fieldError('image')}
-            </p>
-          )}
+          {fieldError('description') && <p className="mt-1 text-sm text-red-600">{fieldError('description')}</p>}
         </div>
 
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <input
-              value={form.product_id}
-              onChange={e => setForm({ ...form, product_id: e.target.value })}
+              value={form.product_name}
+              onChange={e => setForm({ ...form, product_name: e.target.value })}
               className="input"
-              placeholder="product_id"
+              placeholder="Nombre del producto / pack"
               type="text"
             />
-
-            {fieldError('product_id') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('product_id')}
-              </p>
-            )}
+            {fieldError('product_name') && <p className="mt-1 text-sm text-red-600">{fieldError('product_name')}</p>}
           </div>
 
-          <div className="text-sm opacity-70 self-center">
-            O rellena datos del animal para crear el pack automáticamente
+          <div>
+            <input
+              value={form.product_description}
+              onChange={e => setForm({ ...form, product_description: e.target.value })}
+              className="input"
+              placeholder="Descripción del producto / pack"
+              type="text"
+            />
+            {fieldError('product_description') && <p className="mt-1 text-sm text-red-600">{fieldError('product_description')}</p>}
           </div>
         </div>
 
@@ -273,36 +219,10 @@ export default function AdminAuctions() {
                 })
               }
               className="input"
-              placeholder="Animal nombre"
+              placeholder="Nombre del animal"
               type="text"
             />
-
-            {fieldError('animal.name') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('animal.name')}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <input
-              value={form.animal.photo_url}
-              onChange={e =>
-                setForm({
-                  ...form,
-                  animal: { ...form.animal, photo_url: e.target.value },
-                })
-              }
-              className="input"
-              placeholder="Animal photo_url"
-              type="text"
-            />
-
-            {fieldError('animal.photo_url') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('animal.photo_url')}
-              </p>
-            )}
+            {fieldError('animal.name') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.name')}</p>}
           </div>
 
           <div>
@@ -318,33 +238,23 @@ export default function AdminAuctions() {
               placeholder="Especie"
               type="text"
             />
-
-            {fieldError('animal.species') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('animal.species')}
-              </p>
-            )}
+            {fieldError('animal.species') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.species')}</p>}
           </div>
 
           <div>
             <input
-              value={form.animal.age}
+              value={form.animal.photo_url}
               onChange={e =>
                 setForm({
                   ...form,
-                  animal: { ...form.animal, age: e.target.value },
+                  animal: { ...form.animal, photo_url: e.target.value },
                 })
               }
               className="input"
-              placeholder="Edad"
+              placeholder="URL foto animal"
               type="text"
             />
-
-            {fieldError('animal.age') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('animal.age')}
-              </p>
-            )}
+            {fieldError('animal.photo_url') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.photo_url')}</p>}
           </div>
 
           <div>
@@ -357,60 +267,56 @@ export default function AdminAuctions() {
                 })
               }
               className="input"
-              placeholder="Info URL"
+              placeholder="URL información animal"
               type="text"
             />
+            {fieldError('animal.info_url') && <p className="mt-1 text-sm text-red-600">{fieldError('animal.info_url')}</p>}
+          </div>
+        </div>
 
-            {fieldError('animal.info_url') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('animal.info_url')}
-              </p>
-            )}
+        <div className="grid md:grid-cols-2 gap-3">
+          <div>
+            <input
+              value={form.image_url}
+              onChange={e => setForm({ ...form, image_url: e.target.value })}
+              className="input"
+              placeholder="URL imagen subasta"
+              type="text"
+            />
+            {fieldError('image_url') && <p className="mt-1 text-sm text-red-600">{fieldError('image_url')}</p>}
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">
-              PDF
-            </label>
-
+            <label className="mb-1 block text-sm font-medium">O subir imagen</label>
             <input
               type="file"
-              accept="application/pdf"
+              accept="image/*"
               onChange={e => {
                 const file = e.target.files?.[0] || null
-                setForm(f => ({ ...f, pdf_file: file }))
+                setForm(f => ({ ...f, image_file: file }))
               }}
               className="input"
             />
-
-            {fieldError('document') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('document')}
-              </p>
-            )}
+            {fieldError('image') && <p className="mt-1 text-sm text-red-600">{fieldError('image')}</p>}
           </div>
+        </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              QR
-            </label>
+        <div>
+          <label className="mb-1 block text-sm font-medium">Documento PDF del pack</label>
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={e => {
+              const file = e.target.files?.[0] || null
+              setForm(f => ({ ...f, pdf_file: file }))
+            }}
+            className="input"
+          />
+          {fieldError('document') && <p className="mt-1 text-sm text-red-600">{fieldError('document')}</p>}
+        </div>
 
-            <input
-              type="file"
-              accept="application/pdf"
-              onChange={e => {
-                const file = e.target.files?.[0] || null
-                setForm(f => ({ ...f, qr_file: file }))
-              }}
-              className="input"
-            />
-
-            {fieldError('qr') && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldError('qr')}
-              </p>
-            )}
-          </div>
+        <div className="rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-700">
+          El QR se generará automáticamente usando la URL de información del animal.
         </div>
 
         <button className="btn w-full" disabled={loading}>
@@ -442,7 +348,7 @@ export default function AdminAuctions() {
                 <div className="font-semibold">{a.title}</div>
 
                 <div className="text-sm opacity-80">
-                  Actual: {a.current_price && a.current_price > 0 ? a.current_price : 20} €
+                  Actual: {a.current_price && a.current_price > 0 ? a.current_price : a.starting_price || 20} €
                 </div>
 
                 <div className="text-xs opacity-60">
@@ -474,15 +380,9 @@ export default function AdminAuctions() {
                     Ver QR
                   </a>
                 ) : (
-                  <label className="btn bg-purple-600 text-white mt-2 w-full cursor-pointer block text-center">
-                    Agregar QR
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      hidden
-                      onChange={e => uploadQR(a.id, e.target.files?.[0])}
-                    />
-                  </label>
+                  <div className="text-xs opacity-60 mt-2 text-center">
+                    QR pendiente de generar
+                  </div>
                 )}
 
                 {a.document_url ? (

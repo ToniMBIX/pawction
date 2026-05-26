@@ -51,6 +51,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
     Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
     Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
+
+    Route::post('/payment/stripe-checkout', [PaymentController::class, 'createStripeCheckout']);
+Route::post('/payment/stripe-confirm', [PaymentController::class, 'confirmStripePayment']);
 });
 
 // ---------- ADMIN ----------

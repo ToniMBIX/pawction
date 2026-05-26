@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\AuctionFinishedMail;
 use App\Models\Animal;
-use App\Models\Auction;
 use App\Models\Product;
+use App\Models\Auction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 
 class AuctionAdminController extends Controller
 {
     public function index()
     {
-        $auctions = Auction::with('product.animal')
-            ->orderByDesc('id')
+        $auctions = Auction::with([
+            'product.animal',
+            'winner',
+        ])
+            ->latest()
             ->paginate(20);
 
         return response()->json([
@@ -26,97 +28,113 @@ class AuctionAdminController extends Controller
         ]);
     }
 
+private function generateQrForAuction(Auction $auction): ?string
+{
+    if (!$auction->document_url) {
+        return null;
+    }
+
+    $backendUrl = rtrim(env('APP_URL', 'http://127.0.0.1:8000'), '/');
+
+    $pdfUrl = str_starts_with($auction->document_url, 'http')
+        ? $auction->document_url
+        : $backendUrl . $auction->document_url;
+
+    $builder = new Builder(
+        writer: new PngWriter(),
+        data: $pdfUrl,
+        size: 400,
+        margin: 20
+    );
+
+    $result = $builder->build();
+
+    $path = 'auction_qr/auction_' . $auction->id . '.png';
+
+    Storage::disk('public')->put($path, $result->getString());
+
+    return Storage::url($path);
+}
     public function store(Request $request)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
 
-            'image' => ['nullable', 'image', 'max:4096'],
+            'starting_price' => ['required', 'integer', 'min:1'],
+
+            'product_name' => ['required', 'string', 'max:255'],
+            'product_description' => ['nullable', 'string'],
+
             'image_url' => ['nullable', 'url'],
+            'image' => ['nullable', 'image', 'max:5120'],
 
             'document' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'qr' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
 
-            'product_id' => ['nullable', 'integer', 'exists:products,id'],
-
-            'animal.name' => ['nullable', 'string', 'max:255'],
-            'animal.species' => ['nullable', 'string', 'max:255'],
-            'animal.age' => ['nullable', 'integer', 'min:0'],
-            'animal.photo_url' => ['nullable', 'string', 'max:1024'],
-            'animal.info_url' => ['nullable', 'string', 'max:1024'],
+            'animal.name' => ['required', 'string', 'max:255'],
+            'animal.species' => ['required', 'string', 'max:255'],
+            'animal.photo_url' => ['nullable', 'url'],
+            'animal.info_url' => ['nullable', 'url'],
         ]);
 
-        // PRODUCTO
-        $productId = null;
+        // =========================================
+        //  Imagen subasta
+        // =========================================
 
-        if (!empty($data['product_id'])) {
-            $productId = $data['product_id'];
-        } elseif (!empty($data['animal']['name'])) {
-
-            $animal = Animal::create([
-                'name' => $data['animal']['name'],
-                'species' => $data['animal']['species'] ?? 'Perro',
-                'age' => $data['animal']['age'] ?? null,
-                'photo_url' => $data['animal']['photo_url'] ?? null,
-                'info_url' => $data['animal']['info_url'] ?? null,
-            ]);
-
-            $product = Product::create([
-                'name' => 'Pack solidario ' . $animal->name,
-                'animal_id' => $animal->id,
-            ]);
-
-            $productId = $product->id;
-        }
-
-        if (!$productId) {
-            throw ValidationException::withMessages([
-                'product_id' => [
-                    'Debes seleccionar un producto o crear un animal.',
-                ],
-            ]);
-        }
-
-        // IMAGEN
-        $imageUrl = null;
+        $imageUrl = $data['image_url'] ?? null;
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')
-                ->store('auctions', 'public');
+            $imagePath = $request->file('image')
+                ->store('auction_images', 'public');
 
-            $imageUrl = Storage::url($path);
-        } elseif (!empty($data['image_url'])) {
-            $imageUrl = $data['image_url'];
+            $imageUrl = Storage::url($imagePath);
         }
 
-        // PDF
+        // =========================================
+        //  Documento PDF
+        // =========================================
+
         $documentUrl = null;
 
         if ($request->hasFile('document')) {
-            $pdfPath = $request->file('document')
-                ->store('auction_docs', 'public');
+            $documentPath = $request->file('document')
+                ->store('auction_documents', 'public');
 
-            $documentUrl = Storage::url($pdfPath);
+            $documentUrl = Storage::url($documentPath);
         }
 
-        // QR
-        $qrUrl = null;
+        // =========================================
+        //  Animal
+        // =========================================
 
-        if ($request->hasFile('qr')) {
-            $qrPath = $request->file('qr')
-                ->store('auction_qr', 'public');
+        $animal = Animal::create([
+            'name' => $data['animal']['name'],
+            'species' => $data['animal']['species'],
+            'photo_url' => $data['animal']['photo_url'] ?? null,
+            'info_url' => $data['animal']['info_url'] ?? null,
+        ]);
 
-            $qrUrl = Storage::url($qrPath);
-        }
+        // =========================================
+        //  Producto
+        // =========================================
 
-        // CREAR
+        $product = Product::create([
+            'animal_id' => $animal->id,
+            'name' => $data['product_name'],
+            'description' => $data['product_description'] ?? null,
+        ]);
+
+        // =========================================
+        //  Subasta
+        // =========================================
+
         $auction = Auction::create([
-            'product_id' => $productId,
+            'product_id' => $product->id,
+
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
 
-            'starting_price' => 20,
+            'starting_price' => (int) $data['starting_price'],
             'current_price' => 0,
 
             'status' => 'active',
@@ -124,41 +142,25 @@ class AuctionAdminController extends Controller
 
             'image_url' => $imageUrl,
             'document_url' => $documentUrl,
-            'qr_url' => $qrUrl,
+
+            'qr_url' => null,
         ]);
 
-        $auction->load('product.animal');
+        // =========================================
+        //  QR automático
+        // =========================================
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Subasta creada correctamente',
-            'auction' => $auction,
-        ], 201);
-    }
-
-    /**
-     * SUBIR QR DESPUÉS
-     */
-    public function uploadQr(Request $request, $id)
-    {
-        $request->validate([
-            'qr' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-        ]);
-
-        $auction = Auction::findOrFail($id);
-
-        $path = $request->file('qr')
-            ->store('auction_qr', 'public');
-
-        $auction->qr_url = Storage::url($path);
+        $auction->qr_url = $this->generateQrForAuction($auction);
 
         $auction->save();
 
         return response()->json([
             'success' => true,
-            'message' => 'QR subido correctamente',
-            'qr_url' => $auction->qr_url,
-        ]);
+            'message' => 'Subasta creada correctamente',
+            'data' => $auction->fresh([
+                'product.animal',
+            ]),
+        ], 201);
     }
 
     public function destroy(Auction $auction)
@@ -167,63 +169,22 @@ class AuctionAdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Subasta eliminada correctamente',
+            'message' => 'Subasta eliminada',
         ]);
     }
 
-    /**
-     * CIERRE MANUAL
-     */
     public function close($id)
     {
-        $auction = Auction::with('bids.user')
-            ->findOrFail($id);
+        $auction = Auction::with('bids.user')->findOrFail($id);
 
-        if ($auction->status !== 'active') {
-            throw ValidationException::withMessages([
-                'auction' => [
-                    'La subasta ya está finalizada.',
-                ],
-            ]);
-        }
+        $auction->closeNow();
 
-        $lastBid = $auction->bids()
-            ->orderByDesc('amount')
-            ->orderByDesc('id')
-            ->first();
-
-        if (!$lastBid) {
-            throw ValidationException::withMessages([
-                'auction' => [
-                    'No hay pujas en esta subasta.',
-                ],
-            ]);
-        }
-
-        $auction->winner_user_id = $lastBid->user_id;
-
-        $auction->status = 'finished';
-        $auction->is_paid = false;
-
-        $auction->end_at = now()->subMinute();
-        $auction->paid_limit_at = now()->addMinutes(5);
-
-        $auction->save();
-
-        try {
-            Mail::to($lastBid->user->email)
-                ->send(new AuctionFinishedMail($auction));
-        } catch (\Throwable $e) {
-            \Log::warning('Error enviando email ganador', [
-                'auction_id' => $auction->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $winner = $auction->winner;
 
         return response()->json([
             'success' => true,
             'message' => 'Subasta cerrada correctamente',
-            'winner' => $lastBid->user->email,
+            'winner' => $winner?->email,
         ]);
     }
 }

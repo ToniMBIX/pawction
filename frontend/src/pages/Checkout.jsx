@@ -1,10 +1,10 @@
 import React from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { PaymentAPI } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
 
 export default function Checkout() {
   const { id } = useParams()
-  const navigate = useNavigate()
 
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState('')
@@ -19,13 +19,15 @@ export default function Checkout() {
     setError('')
 
     try {
-      navigate(`/fake-payment/${id}`)
-    } catch (err) {
-      console.error(err)
+      const r = await PaymentAPI.createStripeCheckout(Number(id))
 
-      setError(
-        err.message || 'No se pudo iniciar el pago'
-      )
+      if (!r.checkout_url) {
+        throw new Error('Stripe no devolvió URL de pago')
+      }
+
+      window.location.href = r.checkout_url
+    } catch (err) {
+      setError(err.message || 'No se pudo iniciar el pago')
     } finally {
       setLoading(false)
     }
@@ -33,12 +35,10 @@ export default function Checkout() {
 
   return (
     <div className="card max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">
-        Finalizar pago
-      </h1>
+      <h1 className="text-3xl font-bold mb-4">Finalizar pago</h1>
 
       <p className="opacity-70 mb-6">
-        Vas a acceder a la pasarela de pago de Pawction.
+        Vas a pagar el importe final de la subasta mediante Stripe.
       </p>
 
       {error && (
@@ -47,12 +47,8 @@ export default function Checkout() {
         </div>
       )}
 
-      <button
-        onClick={pay}
-        className="btn w-full"
-        disabled={loading}
-      >
-        {loading ? 'Redirigiendo...' : 'Pagar ahora'}
+      <button onClick={pay} className="btn w-full" disabled={loading}>
+        {loading ? 'Redirigiendo a Stripe...' : 'Pagar con Stripe'}
       </button>
     </div>
   )

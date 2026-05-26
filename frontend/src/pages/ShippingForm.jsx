@@ -36,7 +36,7 @@ export default function ShippingForm() {
         auction_id: Number(id),
       })
 
-      nav(`/fake-payment/${id}`)
+nav(`/checkout/${id}`)
     } catch (e) {
       setErrors(e.errors || {})
       setGeneralError(e.message || 'Error al guardar los datos de envío')

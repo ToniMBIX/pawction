@@ -212,6 +212,18 @@ export const PaymentAPI = {
       method: 'POST',
       body: JSON.stringify({ auction_id }),
     }),
+
+    createStripeCheckout: auction_id =>
+  api('/payment/stripe-checkout', {
+    method: 'POST',
+    body: JSON.stringify({ auction_id }),
+  }),
+
+confirmStripe: session_id =>
+  api('/payment/stripe-confirm', {
+    method: 'POST',
+    body: JSON.stringify({ session_id }),
+  }),
 }
 
 // =======================================================
