@@ -3,36 +3,44 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
-    public function me(Request $request)
+    private function userPayload($user): array
     {
-        $user = $request->user();
+        $user->loadMissing('favorites.product.animal');
 
-        // Evita nulls y carga favoritos con lo necesario para el front
-        $user->load([
-            'favorites.product.animal'
-        ]);
-
-        return response()->json([
-            'id'       => $user->id,
-            'name'     => $user->name ?? '',
-            'email'    => $user->email ?? '',
-            'is_admin' => (int)($user->is_admin ?? 0),
-            'favorites'=> $user->favorites->map(function ($a) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name ?? '',
+            'email' => $user->email ?? '',
+            'is_admin' => (int) ($user->is_admin ?? 0),
+            'favorites' => $user->favorites->map(function ($auction) {
                 return [
-                    'id'            => $a->id,
-                    'title'         => $a->title,
-                    'current_price' => $a->current_price,
-                    'image_url'     => $a->image_url,
-                    'product'       => $a->product ? [
-                        'animal' => $a->product->animal ? [
-                            'photo_url' => $a->product->animal->photo_url,
-                        ] : null
+                    'id' => $auction->id,
+                    'title' => $auction->title,
+                    'current_price' => $auction->current_price,
+                    'starting_price' => $auction->starting_price,
+                    'status' => $auction->status,
+                    'image_url' => $auction->image_url,
+                    'product' => $auction->product ? [
+                        'animal' => $auction->product->animal ? [
+                            'photo_url' => $auction->product->animal->photo_url,
+                        ] : null,
                     ] : null,
                 ];
             })->values(),
+        ];
+    }
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'user' => $this->userPayload($request->user()),
         ]);
     }
 
@@ -41,22 +49,31 @@ class UserController extends Controller
         $user = $request->user();
 
         $data = $request->validate([
-            'name'     => ['sometimes','string','max:255'],
-            'email'    => ['sometimes','email','max:255','unique:users,email,'.$user->id],
-            'password' => ['sometimes','confirmed','min:8'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'password' => ['nullable', 'confirmed', Password::min(8)],
         ]);
 
-        if(isset($data['password'])){
-            $data['password'] = \Hash::make($data['password']);
+        $payload = [
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ];
+
+        if (!empty($data['password'])) {
+            $payload['password'] = Hash::make($data['password']);
         }
 
-        $user->update($data);
+        $user->update($payload);
 
         return response()->json([
-            'id'       => $user->id,
-            'name'     => $user->name ?? '',
-            'email'    => $user->email ?? '',
-            'is_admin' => (bool)($user->is_admin),
+            'success' => true,
+            'message' => 'Perfil actualizado correctamente',
+            'user' => $this->userPayload($user->fresh()),
         ]);
     }
 }

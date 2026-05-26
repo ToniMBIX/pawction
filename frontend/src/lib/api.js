@@ -60,14 +60,20 @@ export async function api(path, opts = {}) {
   })
 
   if (!res.ok) {
-    let msg = await res.text()
-    try {
-      const parsed = JSON.parse(msg)
-      msg = parsed.message || JSON.stringify(parsed)
-    } catch {}
-    throw new Error(msg || `HTTP ${res.status}`)
-  }
+  let payload = null
+  let msg = await res.text()
 
+  try {
+    payload = JSON.parse(msg)
+    msg = payload.message || JSON.stringify(payload)
+  } catch {}
+
+  const error = new Error(msg || `HTTP ${res.status}`)
+  error.status = res.status
+  error.errors = payload?.errors || {}
+
+  throw error
+}
   if (res.status === 204) return {}
   return res.json()
 }

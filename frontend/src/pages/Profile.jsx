@@ -1,158 +1,151 @@
-// frontend/src/pages/Profile.jsx
 import React from 'react'
 import { AuthAPI } from '../lib/api.js'
 import { Auth } from '../lib/auth.js'
 
 export default function Profile() {
-  const [user, setUser] = React.useState(null)
-  const [password, setPassword] = React.useState('')
-  const [password2, setPassword2] = React.useState('')
-  const [saving, setSaving] = React.useState(false)
-  const [msg, setMsg] = React.useState('')
+  const [form, setForm] = React.useState({
+    name: Auth.user()?.name || '',
+    email: Auth.user()?.email || '',
+    password: '',
+    password_confirmation: '',
+  })
 
-  React.useEffect(() => {
-    AuthAPI.me()
-      .then(data => {
-        setUser(data)
-        Auth.setUser(data) // asegura sincronización inicial
-      })
-      .catch(() => setUser(null))
-  }, [])
+  const [loading, setLoading] = React.useState(false)
+  const [errors, setErrors] = React.useState({})
+  const [generalError, setGeneralError] = React.useState('')
+  const [success, setSuccess] = React.useState('')
 
-  async function submit(e) {
-    e.preventDefault();
-    setMsg("");
-    let errors = [];
+  const fieldError = (field) => errors?.[field]?.[0]
 
-    const data = {
-      name: user.name,
-      email: user.email,
-    };
+  const onSubmit = async (e) => {
+    e.preventDefault()
 
-    // Validación de contraseña
-    if (password.trim() || password2.trim()) {
-      if (!password.trim() || !password2.trim()) {
-        errors.push("Debes escribir ambas contraseñas.");
-      } else if (password !== password2) {
-        errors.push("Las contraseñas no coinciden.");
-      } else {
-        data.password = password;
-        data.password_confirmation = password2;
-      }
-    }
-
-    if (errors.length > 0) {
-      setMsg(errors.join(" "));
-      return;
-    }
-
-    setSaving(true);
+    setLoading(true)
+    setErrors({})
+    setGeneralError('')
+    setSuccess('')
 
     try {
-      // 1️⃣ ACTUALIZAR DATOS EN EL BACKEND
-      await AuthAPI.update(data);
-
-      // 2️⃣ PEDIR USUARIO ACTUALIZADO
-      const freshUser = await AuthAPI.me();
-
-      // 3️⃣ GUARDARLO EN Auth (esto actualiza la barra superior)
-      Auth.updateUser(freshUser);
-
-      // 4️⃣ ACTUALIZAR EN ESTE COMPONENTE
-      setUser(freshUser);
-
-      let successMsg = "Datos actualizados correctamente.";
-      if (data.password) {
-        successMsg += " Contraseña cambiada.";
-        setPassword("");
-        setPassword2("");
+      const payload = {
+        name: form.name,
+        email: form.email,
       }
-      setMsg(successMsg);
 
-    } catch (err) {
-      setMsg(err.message || "Error al guardar los datos.");
+      if (form.password) {
+        payload.password = form.password
+        payload.password_confirmation = form.password_confirmation
+      }
+
+      const r = await AuthAPI.update(payload)
+
+      if (r.user) {
+        Auth.setUser(r.user)
+      }
+
+      window.dispatchEvent(new Event('auth-updated'))
+
+      setSuccess('Perfil actualizado correctamente')
+      setForm({
+        name: r.user?.name || form.name,
+        email: r.user?.email || form.email,
+        password: '',
+        password_confirmation: '',
+      })
+    } catch (e) {
+      setErrors(e.errors || {})
+      setGeneralError(e.message || 'No se pudo actualizar el perfil')
+    } finally {
+      setLoading(false)
     }
-
-    setSaving(false);
-  }
-
-  if (!user) {
-    return (
-      <div className="text-center text-sm opacity-80 py-10">
-        Cargando perfil…
-      </div>
-    )
   }
 
   return (
-    <div className="flex justify-center mt-10 px-4">
-      <div className="bg-[#111827] border border-gray-700 shadow-xl rounded-2xl p-8 w-full max-w-xl">
-        
-        <h1 className="text-3xl font-bold text-white mb-6">
-          Mi perfil
-        </h1>
+    <form onSubmit={onSubmit} className="card max-w-xl mx-auto" noValidate>
+      <h2 className="text-xl font-bold mb-3">Mi perfil</h2>
 
-        {/* Datos del usuario */}
-        <div className="space-y-4 mb-8">
-          <div>
-            <label className="block text-sm opacity-70 mb-1">Nombre</label>
-            <input
-              className="input bg-gray-900 text-white border border-gray-700"
-              value={user.name}
-              onChange={e => setUser({ ...user, name: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm opacity-70 mb-1">Correo electrónico</label>
-            <input
-              className="input bg-gray-900 text-white border border-gray-700"
-              value={user.email}
-              onChange={e => setUser({ ...user, email: e.target.value })}
-            />
-          </div>
+      {generalError && (
+        <div className="mb-3 rounded-xl border border-red-500 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {generalError}
         </div>
+      )}
 
-        {/* Form contraseña */}
-        <form onSubmit={submit} className="space-y-4">
-          <h2 className="text-xl font-semibold text-white mb-3">
-            Cambiar contraseña
-          </h2>
+      {success && (
+        <div className="mb-3 rounded-xl border border-green-500 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {success}
+        </div>
+      )}
 
-          <div>
-            <input
-              type="password"
-              className="input bg-gray-900 text-white border border-gray-700"
-              placeholder="Nueva contraseña"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
-          </div>
+      <div className="mb-3">
+        <label className="mb-1 block text-sm font-medium">Nombre</label>
+        <input
+          className="border rounded-xl px-3 py-2 w-full"
+          type="text"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
 
-          <div>
-            <input
-              type="password"
-              className="input bg-gray-900 text-white border border-gray-700"
-              placeholder="Confirmar contraseña"
-              value={password2}
-              onChange={e => setPassword2(e.target.value)}
-            />
-          </div>
-
-          {msg && (
-            <div className="text-sm text-center text-purple-400 mt-2">
-              {msg}
-            </div>
-          )}
-
-          <button
-            className="btn w-full mt-3"
-            disabled={saving}
-          >
-            {saving ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-        </form>
+        {fieldError('name') && (
+          <p className="mt-1 text-sm text-red-600">{fieldError('name')}</p>
+        )}
       </div>
-    </div>
+
+      <div className="mb-3">
+        <label className="mb-1 block text-sm font-medium">Email</label>
+        <input
+          className="border rounded-xl px-3 py-2 w-full"
+          type="text"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+
+        {fieldError('email') && (
+          <p className="mt-1 text-sm text-red-600">{fieldError('email')}</p>
+        )}
+      </div>
+
+      <hr className="my-4" />
+
+      <p className="mb-3 text-sm opacity-70">
+        Deja la contraseña vacía si no quieres cambiarla.
+      </p>
+
+      <div className="mb-3">
+        <label className="mb-1 block text-sm font-medium">Nueva contraseña</label>
+        <input
+          className="border rounded-xl px-3 py-2 w-full"
+          type="password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+        />
+
+        {fieldError('password') && (
+          <p className="mt-1 text-sm text-red-600">{fieldError('password')}</p>
+        )}
+      </div>
+
+      <div className="mb-3">
+        <label className="mb-1 block text-sm font-medium">
+          Confirmar nueva contraseña
+        </label>
+        <input
+          className="border rounded-xl px-3 py-2 w-full"
+          type="password"
+          value={form.password_confirmation}
+          onChange={(e) =>
+            setForm({ ...form, password_confirmation: e.target.value })
+          }
+        />
+
+        {fieldError('password_confirmation') && (
+          <p className="mt-1 text-sm text-red-600">
+            {fieldError('password_confirmation')}
+          </p>
+        )}
+      </div>
+
+      <button className="btn w-full" disabled={loading}>
+        {loading ? 'Guardando...' : 'Guardar cambios'}
+      </button>
+    </form>
   )
 }

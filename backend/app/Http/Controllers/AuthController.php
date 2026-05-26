@@ -5,84 +5,114 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
+    private function userPayload(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_admin' => (int) ($user->is_admin ?? 0),
+        ];
+    }
+
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name'     => ['required','string','max:255'],
-            'email'    => ['required','email','max:255','unique:users,email'],
-            'password' => ['required','confirmed', Password::min(8)],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
         $user = User::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => Hash::make($data['password']),
         ]);
 
         $token = $user->createToken('web')->plainTextToken;
 
         return response()->json([
+            'success' => true,
+            'message' => 'Usuario registrado correctamente',
             'token' => $token,
-            'user'  => [
-                'id'       => $user->id,
-                'name'     => $user->name,
-                'email'    => $user->email,
-                'is_admin' => (int)($user->is_admin ?? 0),
-            ],
+            'user' => $this->userPayload($user),
         ], 201);
     }
 
     public function login(Request $request)
     {
-        $cred = $request->validate([
-            'email'    => ['required','email'],
-            'password' => ['required'],
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $cred['email'])->first();
-        if (!$user || !Hash::check($cred['password'], $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        $user = User::where('email', $credentials['email'])->first();
+
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email o contraseña incorrectos',
+                'errors' => [
+                    'email' => ['Las credenciales no son válidas.'],
+                ],
+            ], 401);
         }
 
-        $token = $user->createToken('api')->plainTextToken;
+        $token = $user->createToken('web')->plainTextToken;
 
         return response()->json([
+            'success' => true,
+            'message' => 'Sesión iniciada correctamente',
             'token' => $token,
-            'user'  => [
-                'id'       => $user->id,
-                'name'     => $user->name,
-                'email'    => $user->email,
-                'is_admin' => (int)($user->is_admin ?? 0),
-            ],
+            'user' => $this->userPayload($user),
         ]);
     }
 
     public function logout(Request $request)
     {
         $request->user()?->currentAccessToken()?->delete();
-        return response()->json([], 204);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sesión cerrada correctamente',
+        ]);
     }
 
-public function update(Request $request)
-{
-    $user = $request->user();
+    public function update(Request $request)
+    {
+        $user = $request->user();
 
-    $data = $request->validate([
-        'name'     => ['nullable', 'string', 'max:255'],
-        'email'    => ['nullable', 'email', 'max:255'],
-        'password' => ['nullable', 'string', 'min:4'],
-    ]);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'password' => ['nullable', 'confirmed', Password::min(8)],
+        ]);
 
-    if (isset($data['password'])) {
-        $data['password'] = bcrypt($data['password']);
+        $payload = [
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ];
+
+        if (!empty($data['password'])) {
+            $payload['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($payload);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Perfil actualizado correctamente',
+            'user' => $this->userPayload($user->fresh()),
+        ]);
     }
-
-    $user->update(array_filter($data)); // Filtra valores null
-    return response()->json(['message' => 'Perfil actualizado']);
-}
-
 }
