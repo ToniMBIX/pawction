@@ -35,46 +35,46 @@ class PaymentController extends Controller
         'auction_id' => 'required|exists:auctions,id',
     ]);
 
-    $auction = Auction::findOrFail($validated['auction_id']);
-
-    // Obtener usuario logueado
     $user = auth()->user();
 
     if (!$user) {
         return response()->json([
-            "success" => false,
-            "message" => "Usuario no autenticado"
+            'success' => false,
+            'message' => 'Usuario no autenticado',
         ], 401);
     }
 
-    if (!$user->email) {
+    $auction = Auction::findOrFail($validated['auction_id']);
+
+    if ((int) $auction->winner_user_id !== (int) $user->id) {
         return response()->json([
-            "success" => false,
-            "message" => "El usuario no tiene email registrado"
-        ], 422);
+            'success' => false,
+            'message' => 'No puedes pagar una subasta que no has ganado',
+        ], 403);
     }
 
-    // Marcar como pagado
-    $auction->is_paid = true;
-    $auction->winner_id = $user->id;
-    $auction->winner_email = $user->email;
-$auction->status = 'finished';   // 🔥 CERRAR SUBASTA
-    $auction->save();
-
-    // Enviar correo
-    try {
-Mail::to($user->email)->send(new PaymentCompleted($auction));
-    } catch (\Exception $e) {
+    if ($auction->is_paid) {
         return response()->json([
-            "success" => true,
-            "warning" => "Pago marcado, pero no se pudo enviar el correo",
-            "error" => $e->getMessage()
+            'success' => true,
+            'message' => 'Esta subasta ya estaba pagada',
         ]);
     }
 
+    $auction->is_paid = true;
+    $auction->payed = true;
+    $auction->status = 'finished';
+    $auction->save();
+
+    try {
+        Mail::to($user->email)->send(new PaymentCompleted($auction));
+    } catch (\Exception $e) {
+    \Log::warning('No se pudo enviar el correo de pago completado', [
+        'error' => $e->getMessage(),
+    ]);
+}
     return response()->json([
-        "success" => true,
-        "message" => "Pago completado y correo enviado"
+        'success' => true,
+        'message' => 'Pago completado y correo enviado',
     ]);
 }
 
