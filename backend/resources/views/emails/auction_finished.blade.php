@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pawction - Has ganado una subasta</title>
+    <title>Pawction - Subasta finalizada</title>
 </head>
 
 <body style="margin:0; padding:0; background:#f4f4f7; font-family:Arial, sans-serif;">
@@ -14,7 +14,7 @@
                     <tr>
                         <td style="background:#1e1e2f; padding:25px; text-align:center;">
                             <h1 style="color:white; margin:0; font-size:26px; font-weight:700;">
-                                ¡Has ganado la subasta!
+                                ¡Subasta finalizada!
                             </h1>
                         </td>
                     </tr>
@@ -26,8 +26,7 @@
                             </p>
 
                             <p>
-                                Enhorabuena. Has ganado una subasta en <strong>Pawction</strong>.
-                                Ahora puedes completar tus datos de envío y finalizar el pago.
+                                Una subasta en la que participabas ha finalizado en <strong>Pawction</strong>.
                             </p>
 
                             <h2 style="font-size:22px; margin:25px 0 10px 0; text-align:center;">
@@ -36,19 +35,13 @@
 
                             <p><strong>Precio final:</strong> {{ $auction->current_price }} €</p>
                             <p><strong>ID de subasta:</strong> {{ $auction->id }}</p>
-
-                            <div style="text-align:center; margin:30px 0;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:5173') }}/pending-orders"
-                                   style="background:#16a34a; color:white; text-decoration:none; padding:14px 24px; border-radius:8px; display:inline-block; font-weight:700;">
-                                    Ir a pendientes
-                                </a>
-                            </div>
+                            <p><strong>Estado:</strong> {{ $auction->status }}</p>
 
                             <hr style="border:none; height:1px; background:#e5e5e5; margin:30px 0;">
 
                             <p style="text-align:center; font-size:15px;">
-                                🐾 Gracias por apoyar a <strong>Pawction</strong>.  
-                                Tu compra ayuda a proteger animales que lo necesitan. 💙
+                                🐾 Gracias por participar en <strong>Pawction</strong>.  
+                                Cada puja ayuda a apoyar causas solidarias. 💙
                             </p>
                         </td>
                     </tr>

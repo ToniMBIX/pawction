@@ -31,14 +31,15 @@
                             </p>
 
                             <h2 style="font-size:22px; margin:25px 0 10px 0; text-align:center;">
-                                {{ $auction->product->name ?? $auction->title ?? 'Artículo subastado' }}
+                                <?php echo e($auction->product->name ?? $auction->title ?? 'Artículo subastado'); ?>
+
                             </h2>
 
-                            <p><strong>Precio final:</strong> {{ $auction->current_price }} €</p>
-                            <p><strong>ID de subasta:</strong> {{ $auction->id }}</p>
+                            <p><strong>Precio final:</strong> <?php echo e($auction->current_price); ?> €</p>
+                            <p><strong>ID de subasta:</strong> <?php echo e($auction->id); ?></p>
 
                             <div style="text-align:center; margin:30px 0;">
-                                <a href="{{ env('FRONTEND_URL', 'http://localhost:5173') }}/pending-orders"
+                                <a href="<?php echo e(env('FRONTEND_URL', 'http://localhost:5173')); ?>/pending-orders"
                                    style="background:#16a34a; color:white; text-decoration:none; padding:14px 24px; border-radius:8px; display:inline-block; font-weight:700;">
                                     Ir a pendientes
                                 </a>
@@ -56,7 +57,7 @@
                     <tr>
                         <td style="background:#1e1e2f; color:white; text-align:center; padding:20px;">
                             <p style="margin:0; font-size:13px; opacity:0.8;">
-                                © {{ date('Y') }} Pawction — 50/50 Pawction / Greenpeace
+                                © <?php echo e(date('Y')); ?> Pawction — 50/50 Pawction / Greenpeace
                             </p>
                         </td>
                     </tr>
@@ -65,4 +66,4 @@
         </tr>
     </table>
 </body>
-</html>
+</html><?php /**PATH C:\Users\toni-\pawction\pawction\backend\resources\views/emails/winner.blade.php ENDPATH**/ ?>

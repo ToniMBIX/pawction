@@ -15,6 +15,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('auctions:close-expired')->everyMinute();
+        $schedule->command('auctions:reopen-expired')->everyMinute();
+        $schedule->command('auctions:daily-active-report')->dailyAt('09:00');
     }
 
     protected function commands(): void

@@ -61,21 +61,16 @@ class PaymentController extends Controller
     }
 
     $auction->is_paid = true;
-    $auction->payed = true;
-    $auction->status = 'finished';
-    $auction->save();
+$auction->payed = true;
+$auction->status = 'finished';
+$auction->save();
 
-    try {
-        Mail::to($user->email)->send(new PaymentCompleted($auction));
-    } catch (\Exception $e) {
-    \Log::warning('No se pudo enviar el correo de pago completado', [
-        'error' => $e->getMessage(),
-    ]);
-}
-    return response()->json([
-        'success' => true,
-        'message' => 'Pago completado y correo enviado',
-    ]);
+Mail::to($user->email)->send(new PaymentCompleted($auction));
+
+return response()->json([
+    'success' => true,
+    'message' => 'Pago completado y correo enviado',
+]);
 }
 
 }
