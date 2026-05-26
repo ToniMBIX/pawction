@@ -21,8 +21,8 @@ export default function PendingOrders() {
 
     try {
       const r = await ShippingAPI.listPending()
-const list = Array.isArray(r) ? r : r.data || []
-setOrders(list)
+      const list = Array.isArray(r) ? r : r.data || []
+      setOrders(list)
     } catch (err) {
       console.error(err)
       setError(err.message || 'No se pudieron cargar los pedidos pendientes')

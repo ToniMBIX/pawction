@@ -10,14 +10,18 @@ export default function Home() {
   React.useEffect(() => {
     AuctionsAPI.list()
       .then((r) => {
-        const list = Array.isArray(r) ? r : r.data || []
-        setItems(list)
+      const payload = r.data || r
+      const list = Array.isArray(payload) ? payload : payload.data || []        
+      setItems(list)
       })
       .catch(() => setItems([]))
 
     if (Auth.isLogged()) {
       AuthAPI.participatingAuctions()
-        .then((r) => setParticipating(Array.isArray(r) ? r : []))
+        .then((r) => {
+          const list = Array.isArray(r) ? r : r.data || []
+          setParticipating(list)
+        })
         .catch(() => setParticipating([]))
     }
   }, [])

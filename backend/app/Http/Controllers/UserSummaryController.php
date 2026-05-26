@@ -20,13 +20,20 @@ class UserSummaryController extends Controller
             ->where('status', 'finished')
             ->where(function ($q) {
                 $q->where('is_paid', false)
-                  ->orWhereNull('is_paid');
+                    ->orWhereNull('is_paid');
+            })
+            ->where(function ($q) {
+                $q->whereNull('paid_limit_at')
+                    ->orWhere('paid_limit_at', '>', now());
             })
             ->count();
 
         return response()->json([
-            'active_participating_count' => $activeParticipatingCount,
-            'pending_won_count' => $pendingWonCount,
+            'success' => true,
+            'data' => [
+                'active_participating_count' => $activeParticipatingCount,
+                'pending_won_count' => $pendingWonCount,
+            ],
         ]);
     }
 }

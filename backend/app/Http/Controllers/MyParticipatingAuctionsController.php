@@ -18,6 +18,9 @@ class MyParticipatingAuctionsController extends Controller
             ->take(10)
             ->get();
 
-        return response()->json($auctions);
+        return response()->json([
+            'success' => true,
+            'data' => $auctions,
+        ]);
     }
 }

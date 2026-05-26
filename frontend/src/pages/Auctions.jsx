@@ -14,7 +14,8 @@ export default function Auctions() {
 
       try {
         const r = await AuctionsAPI.list()
-        const list = Array.isArray(r) ? r : r.data || []
+        const payload = r.data || r
+        const list = Array.isArray(payload) ? payload : payload.data || []        
         setItems(list)
       } catch (err) {
         console.error(err)

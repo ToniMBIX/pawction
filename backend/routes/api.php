@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\AuctionController;
 use App\Http\Controllers\BidController;
 use App\Http\Controllers\FavoriteController;
@@ -11,15 +12,19 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\UserSummaryController;
-use App\Http\Controllers\Admin\AuctionAdminController;
 use App\Http\Controllers\MyParticipatingAuctionsController;
+use App\Http\Controllers\Admin\AuctionAdminController;
 
 // ---------- Público ----------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
-Route::get('/ping', fn () => response()->json(['ok' => true], 200));
+Route::get('/ping', fn () => response()->json([
+    'success' => true,
+    'message' => 'API funcionando',
+]));
 
+// Subastas públicas
 Route::get('/auctions', [AuctionController::class, 'index']);
 Route::get('/auctions/{auction}', [AuctionController::class, 'show']);
 Route::get('/auctions/{auction}/qr', [AuctionController::class, 'qr']);
@@ -29,8 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/me', [UserController::class, 'me']);
-    Route::get('/me/summary', UserSummaryController::class);
     Route::put('/me', [UserController::class, 'update']);
+
+    Route::get('/me/summary', UserSummaryController::class);
     Route::get('/me/participating-auctions', MyParticipatingAuctionsController::class);
 
     Route::post('/bids', [BidController::class, 'store']);
@@ -39,15 +45,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/favorites', [FavoriteController::class, 'index']);
     Route::post('/favorites/{auction}', [FavoriteController::class, 'toggle']);
 
-    Route::post('/checkout/{auction}', [PaymentController::class, 'checkout']);
-    Route::post('/payment/create-session', [PaymentController::class, 'createCheckoutSession']);
-    Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
-
     Route::get('/pending-orders', [ShippingController::class, 'pending']);
     Route::post('/shipping/submit', [ShippingController::class, 'submit']);
 
     Route::get('/payment/fake-start', [PaymentController::class, 'fakeStart']);
     Route::post('/payment/fake-complete', [PaymentController::class, 'fakeComplete']);
+    Route::get('/payment/success', [PaymentController::class, 'paymentSuccess']);
 });
 
 // ---------- ADMIN ----------
@@ -65,18 +68,29 @@ Route::middleware(['auth:sanctum', 'admin'])
 Route::post('/webhooks/stripe', [WebhookController::class, 'stripe']);
 Route::post('/webhooks/paypal', [WebhookController::class, 'paypal']);
 
-// ---------- Debug ----------
-Route::get('/debug/auctions', fn () => \App\Models\Auction::all());
+// ---------- Debug local ----------
+if (app()->environment('local')) {
+    Route::get('/debug/auctions', fn () => response()->json([
+        'success' => true,
+        'data' => \App\Models\Auction::all(),
+    ]));
 
-Route::middleware('auth:sanctum')->get('/debug/user', function (Request $request) {
-    return $request->user();
-});
+    Route::middleware('auth:sanctum')->get('/debug/user', function (Request $request) {
+        return response()->json([
+            'success' => true,
+            'user' => $request->user(),
+        ]);
+    });
 
-Route::middleware('auth:sanctum')->get('/debug/pending', function () {
-    return \App\Models\Auction::where('winner_user_id', auth()->id())
-        ->where('is_paid', false)
-        ->get();
-});
+    Route::middleware('auth:sanctum')->get('/debug/pending', function () {
+        return response()->json([
+            'success' => true,
+            'data' => \App\Models\Auction::where('winner_user_id', auth()->id())
+                ->where('is_paid', false)
+                ->get(),
+        ]);
+    });
+}
 
 // ---------- Preflight ----------
 Route::options('/{any}', fn () => response()->noContent())->where('any', '.*');

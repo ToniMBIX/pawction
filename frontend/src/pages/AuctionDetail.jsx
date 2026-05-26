@@ -44,7 +44,8 @@ export default function AuctionDetail() {
     setPageError('')
 
     try {
-      const data = await AuctionsAPI.get(id)
+      const r = await AuctionsAPI.get(id)
+      const data = r.data || r
 
       setA(data)
       setFav(!!data.is_favorite)

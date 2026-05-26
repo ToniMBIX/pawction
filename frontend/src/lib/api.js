@@ -1,40 +1,50 @@
-// frontend/src/lib/api.js
 import { Auth } from './auth.js'
 
 // =======================================================
 //   CONFIGURACIÓN DE URLS
 // =======================================================
 
-// URL base del backend incluyendo /api
 const RAW_API =
   import.meta.env.VITE_API_URL ||
   'https://pawction-backend.onrender.com/api'
 
 export const API = RAW_API
 
-// URL del backend SIN /api → sirve para /storage/...
 export const BACKEND_URL = RAW_API.replace(/\/api\/?$/, '')
 
-
 // =======================================================
-//   HELPER assetUrl()
-//   Normaliza URLs de imágenes del backend
+//   HELPERS
 // =======================================================
 
 export function assetUrl(path) {
   if (!path) return null
-  // ya es absoluta
   if (path.startsWith('http://') || path.startsWith('https://')) return path
-  // empieza por / -> lo colgamos del backend
   if (path.startsWith('/')) return `${BACKEND_URL}${path}`
-  // cualquier otra cosa -> backend + /
   return `${BACKEND_URL}/${path}`
 }
 
 export const PLACEHOLDER_IMG = 'https://placehold.co/600x400?text=Pawction'
 
+export function firstError(err, fallback = 'Ha ocurrido un error') {
+  if (!err) return fallback
+
+  if (err.errors) {
+    const firstField = Object.keys(err.errors)[0]
+
+    if (
+      firstField &&
+      Array.isArray(err.errors[firstField]) &&
+      err.errors[firstField][0]
+    ) {
+      return err.errors[firstField][0]
+    }
+  }
+
+  return err.message || fallback
+}
+
 // =======================================================
-//   FETCH helper (API genérica JSON + FormData)
+//   FETCH helper
 // =======================================================
 
 export async function api(path, opts = {}) {
@@ -42,59 +52,97 @@ export async function api(path, opts = {}) {
 
   const headers = {
     Accept: 'application/json',
-    ...(opts.headers || {})
+    ...(opts.headers || {}),
   }
 
-  // ⚠️ SOLO poner Content-Type JSON si NO es FormData
   if (!isFormData) {
     headers['Content-Type'] = 'application/json'
   }
 
   const token = Auth.token()
-  if (token) headers['Authorization'] = 'Bearer ' + token
 
-  const res = await fetch(API + path, {
-    ...opts,
-    headers,
-    mode: 'cors'
-  })
+  if (token) {
+    headers.Authorization = 'Bearer ' + token
+  }
 
-  if (!res.ok) {
-  let payload = null
-  let msg = await res.text()
+  let res
 
   try {
-    payload = JSON.parse(msg)
-    msg = payload.message || JSON.stringify(payload)
-  } catch {}
+    res = await fetch(API + path, {
+      ...opts,
+      headers,
+      mode: 'cors',
+    })
+  } catch {
+    const error = new Error('No se pudo conectar con el servidor')
+    error.status = 0
+    throw error
+  }
 
-  const error = new Error(msg || `HTTP ${res.status}`)
-  error.status = res.status
-  error.errors = payload?.errors || {}
+  if (res.status === 401) {
+    try {
+      Auth.clear()
+    } catch {}
 
-  throw error
-}
+    if (
+      window.location.pathname !== '/login' &&
+      window.location.pathname !== '/register'
+    ) {
+      window.location.href = '/login'
+    }
+
+    const error = new Error('Tu sesión ha expirado')
+    error.status = 401
+    throw error
+  }
+
+  if (!res.ok) {
+    let payload = null
+    let raw = ''
+
+    try {
+      raw = await res.text()
+    } catch {}
+
+    try {
+      payload = JSON.parse(raw)
+    } catch {}
+
+    const error = new Error(
+      payload?.message || payload?.error || `HTTP ${res.status}`
+    )
+
+    error.status = res.status
+    error.errors = payload?.errors || {}
+    error.payload = payload
+
+    throw error
+  }
+
   if (res.status === 204) return {}
-  return res.json()
+
+  try {
+    return await res.json()
+  } catch {
+    return {}
+  }
 }
-
-
 
 // =======================================================
 //   AUTH API
 // =======================================================
 
 export const AuthAPI = {
-  register: (data) =>
+  register: data =>
     api('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     }),
 
-  login: (data) =>
+  login: data =>
     api('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     }),
 
   logout: () => api('/auth/logout', { method: 'POST' }),
@@ -105,16 +153,12 @@ export const AuthAPI = {
 
   participatingAuctions: () => api('/me/participating-auctions'),
 
-  update(data) {
-    return api('/me', {
+  update: data =>
+    api('/me', {
       method: 'PUT',
-      body: JSON.stringify(data)
-    });
-  },
+      body: JSON.stringify(data),
+    }),
 }
-
-
-
 
 // =======================================================
 //   AUCTIONS API
@@ -122,15 +166,15 @@ export const AuthAPI = {
 
 export const AuctionsAPI = {
   list: () => api('/auctions'),
-  get: (id) => api(`/auctions/${id}`),
+
+  get: id => api(`/auctions/${id}`),
+
   bid: (auction_id, amount) =>
     api('/bids', {
       method: 'POST',
-      body: JSON.stringify({ auction_id, amount })
+      body: JSON.stringify({ auction_id, amount }),
     }),
 }
-
-
 
 // =======================================================
 //   FAVORITES API
@@ -138,11 +182,12 @@ export const AuctionsAPI = {
 
 export const FavoritesAPI = {
   list: () => api('/favorites'),
-  toggle: (auctionId) =>
-    api(`/favorites/${auctionId}`, { method: 'POST' }),
+
+  toggle: auctionId =>
+    api(`/favorites/${auctionId}`, {
+      method: 'POST',
+    }),
 }
-
-
 
 // =======================================================
 //   HISTORIAL DE PUJAS
@@ -152,40 +197,36 @@ export const BidsAPI = {
   mine: () => api('/bids/mine'),
 }
 
-
-
 // =======================================================
 //   PAGOS
 // =======================================================
 
 export const PaymentAPI = {
-  startFake: (auction_id) =>
-    api(`/payment/fake-start?auction_id=${auction_id}`, { method: "GET" }),
+  startFake: auction_id =>
+    api(`/payment/fake-start?auction_id=${auction_id}`, {
+      method: 'GET',
+    }),
 
-  completeFake: (auction_id) =>
-    api(`/payment/fake-complete`, {
-      method: "POST",
+  completeFake: auction_id =>
+    api('/payment/fake-complete', {
+      method: 'POST',
       body: JSON.stringify({ auction_id }),
     }),
-};
+}
 
+// =======================================================
+//   ENVÍOS
+// =======================================================
 
 export const ShippingAPI = {
-  // Guarda los datos de envío
-  submit: (data) =>
-    api("/shipping/submit", {
-      method: "POST",
+  submit: data =>
+    api('/shipping/submit', {
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  // Obtiene subastas pendientes del usuario
-  listPending: () => api("/pending-orders"),
-};
-
-
-
-
-
+  listPending: () => api('/pending-orders'),
+}
 
 // =======================================================
 //   ADMIN API
@@ -195,27 +236,26 @@ export const AdminAPI = {
   auctions: {
     list: () => api('/admin/auctions'),
 
-    create: (formData) =>
+    create: formData =>
       api('/admin/auctions', {
         method: 'POST',
-        body: formData
+        body: formData,
       }),
 
-    remove: (id) =>
+    remove: id =>
       api(`/admin/auctions/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       }),
 
-    // 👉 NUEVO ENDPOINT PARA CERRAR SUBASTA
-    close: (id) =>
+    close: id =>
       api(`/admin/auctions/${id}/close`, {
-        method: "POST"
+        method: 'POST',
       }),
-uploadQr: (id, formData) =>
-  api(`/admin/auctions/${id}/qr`, {
-    method: "POST",
-    body: formData
-  }),
 
-  }
-};
+    uploadQr: (id, formData) =>
+      api(`/admin/auctions/${id}/qr`, {
+        method: 'POST',
+        body: formData,
+      }),
+  },
+}

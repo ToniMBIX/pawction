@@ -30,7 +30,8 @@ export default function AdminAuctions() {
   const load = async () => {
     try {
       const r = await AdminAPI.auctions.list()
-      const list = Array.isArray(r) ? r : r.data || []
+      const payload = r.data || r
+      const list = Array.isArray(payload) ? payload : payload.data || []       
       setItems(list)
     } catch (e) {
       console.error('Error cargando subastas admin', e)

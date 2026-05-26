@@ -103,7 +103,7 @@ export default function App() {
 
       if (Auth.isLogged()) {
         AuthAPI.summary()
-          .then(setSummary)
+          .then((r) => setSummary(r.data || r))
           .catch(() =>
             setSummary({
               active_participating_count: 0,
