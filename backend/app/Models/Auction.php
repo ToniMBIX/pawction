@@ -2,7 +2,11 @@
 
 namespace App\Models;
 
+use App\Mail\AuctionFinishedMail;
+use App\Mail\AuctionReopenedMail;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class Auction extends Model
 {
@@ -90,16 +94,20 @@ class Auction extends Model
             ->orderByDesc('id')
             ->first();
 
+        if (!$lastBid) {
+            $this->winner_user_id = null;
+            $this->end_at = null;
+            $this->save();
+
+            return;
+        }
+
         $this->status = 'finished';
-        $this->winner_user_id = $lastBid?->user_id;
+        $this->winner_user_id = $lastBid->user_id;
         $this->paid_limit_at = now()->addDays(2);
         $this->is_paid = false;
         $this->payed = false;
         $this->save();
-
-        if (!$this->winner_user_id) {
-            return;
-        }
 
         $winner = User::find($this->winner_user_id);
 
@@ -108,15 +116,57 @@ class Auction extends Model
         }
 
         try {
-    \Mail::to($winner->email)->send(
-        new \App\Mail\AuctionFinishedMail($this->loadMissing('product.animal'))
-    );
-} catch (\Throwable $e) {
-    \Log::warning('No se pudo enviar email de subasta ganada', [
-        'auction_id' => $this->id,
-        'winner_user_id' => $winner->id,
-        'error' => $e->getMessage(),
-    ]);
-}
+            Mail::to($winner->email)->send(
+                new AuctionFinishedMail($this->fresh('product.animal'))
+            );
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo enviar email de subasta ganada', [
+                'auction_id' => $this->id,
+                'winner_user_id' => $winner->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function reopenForNonPayment(): void
+    {
+        if ($this->status !== 'finished') {
+            return;
+        }
+
+        if ($this->is_paid) {
+            return;
+        }
+
+        if (!$this->winner_user_id) {
+            return;
+        }
+
+        $oldWinner = $this->winner;
+
+        $this->status = 'active';
+        $this->winner_user_id = null;
+        $this->paid_limit_at = null;
+        $this->is_paid = false;
+        $this->payed = false;
+        $this->end_at = null;
+        $this->current_price = 0;
+        $this->save();
+
+        if (!$oldWinner) {
+            return;
+        }
+
+        try {
+            Mail::to($oldWinner->email)->send(
+                new AuctionReopenedMail($this->fresh('product.animal'))
+            );
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo enviar email de subasta reabierta', [
+                'auction_id' => $this->id,
+                'old_winner_id' => $oldWinner->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

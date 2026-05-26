@@ -29,23 +29,17 @@ class AuctionController extends Controller
      * 🔄 REABRIR SI EL GANADOR NO PAGA
      */
     protected function autoReopenIfExpired(Auction $auction): void
-    {
-        if (
-            $auction->status === 'finished' &&
-            !$auction->is_paid &&
-            $auction->winner_user_id !== null &&
-            $auction->paid_limit_at !== null &&
-            now()->greaterThanOrEqualTo($auction->paid_limit_at)
-        ) {
-            $auction->status = 'active';
-            $auction->winner_user_id = null;
-            $auction->current_price = 0;
-            $auction->end_at = null;
-            $auction->paid_limit_at = null;
-
-            $auction->save();
-        }
+{
+    if (
+        $auction->status === 'finished' &&
+        !$auction->is_paid &&
+        $auction->winner_user_id !== null &&
+        $auction->paid_limit_at !== null &&
+        now()->greaterThanOrEqualTo($auction->paid_limit_at)
+    ) {
+        $auction->reopenForNonPayment();
     }
+}
 
     /**
      * ⏳ CERRAR SI TERMINÓ EL TIEMPO
@@ -66,13 +60,9 @@ class AuctionController extends Controller
             ->first();
 
         if ($lastBid) {
-            $auction->status = 'finished';
-            $auction->winner_user_id = $lastBid->user_id;
-            $auction->paid_limit_at = now()->addMinutes(5);
+            $auction->closeNow();
 
-            $auction->save();
-
-            return;
+return;
         }
 
         // NO HUBO PUJAS → RESET
