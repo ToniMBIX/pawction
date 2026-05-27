@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\Product;
 use App\Models\Auction;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Services\SupabaseStorageService;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Http\Request;
 
 class AuctionAdminController extends Controller
 {
@@ -28,44 +28,33 @@ class AuctionAdminController extends Controller
         ]);
     }
 
-    private function publicStorageUrl(string $path): string
-{
-    $baseUrl = rtrim(
-        env('ASSET_URL', config('app.url')),
-        '/'
-    );
+    private function generateQrForAuction(
+        Auction $auction,
+        SupabaseStorageService $storage
+    ): ?string {
+        if (!$auction->document_url) {
+            return null;
+        }
 
-    return $baseUrl . '/storage/' . ltrim($path, '/');
-}
-    private function generateQrForAuction(Auction $auction): ?string
-{
-    if (!$auction->document_url) {
-        return null;
-    }
-
-    $pdfUrl = str_starts_with($auction->document_url, 'http')
-        ? $auction->document_url
-        : $this->publicStorageUrl(
-            str_replace('/storage/', '', $auction->document_url)
+        $builder = new Builder(
+            writer: new PngWriter(),
+            data: $auction->document_url,
+            size: 400,
+            margin: 20
         );
 
-    $builder = new Builder(
-        writer: new PngWriter(),
-        data: $pdfUrl,
-        size: 400,
-        margin: 20
-    );
+        $result = $builder->build();
 
-    $result = $builder->build();
+        $path = 'auction_qr/auction_' . $auction->id . '.png';
 
-    $path = 'auction_qr/auction_' . $auction->id . '.png';
+        return $storage->uploadContent(
+            $result->getString(),
+            $path,
+            'image/png'
+        );
+    }
 
-    Storage::disk('public')->put($path, $result->getString());
-
-    return $this->publicStorageUrl($path);
-}
-
-    public function store(Request $request)
+    public function store(Request $request, SupabaseStorageService $storage)
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -83,15 +72,15 @@ class AuctionAdminController extends Controller
             'animal.species' => ['required', 'string', 'max:255'],
         ]);
 
-        $imagePath = $request->file('image')
-            ->store('auction_images', 'public');
+        $imageUrl = $storage->uploadUploadedFile(
+            $request->file('image'),
+            'auction_images'
+        );
 
-        $imageUrl = $this->publicStorageUrl($imagePath);
-
-        $documentPath = $request->file('document')
-            ->store('auction_documents', 'public');
-
-        $documentUrl = $this->publicStorageUrl($documentPath);
+        $documentUrl = $storage->uploadUploadedFile(
+            $request->file('document'),
+            'auction_documents'
+        );
 
         $animal = Animal::create([
             'name' => $data['animal']['name'],
@@ -122,7 +111,7 @@ class AuctionAdminController extends Controller
             'qr_url' => null,
         ]);
 
-        $auction->qr_url = $this->generateQrForAuction($auction);
+        $auction->qr_url = $this->generateQrForAuction($auction, $storage);
         $auction->save();
 
         return response()->json([
