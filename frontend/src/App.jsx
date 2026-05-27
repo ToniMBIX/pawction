@@ -75,17 +75,11 @@ function UserMenu() {
   if (!isLogged) {
     return (
       <div className="ml-auto flex items-center gap-3">
-        <Link
-          to="/login"
-          className="btn-secondary"
-        >
+        <Link to="/login" className="btn-secondary">
           Entrar
         </Link>
 
-        <Link
-          to="/register"
-          className="btn"
-        >
+        <Link to="/register" className="btn">
           Crear cuenta
         </Link>
       </div>
@@ -122,9 +116,7 @@ function UserMenu() {
 
           Auth.clear()
 
-          window.dispatchEvent(
-            new Event('auth-updated')
-          )
+          window.dispatchEvent(new Event('auth-updated'))
 
           nav('/')
         }}
@@ -145,13 +137,8 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
-  const [isLogged, setIsLogged] = React.useState(
-    Auth.isLogged()
-  )
-
-  const [isAdmin, setIsAdmin] = React.useState(
-    Auth.isAdmin()
-  )
+  const [isLogged, setIsLogged] = React.useState(Auth.isLogged())
+  const [isAdmin, setIsAdmin] = React.useState(Auth.isAdmin())
 
   const [summary, setSummary] = React.useState({
     active_participating_count: 0,
@@ -165,9 +152,7 @@ export default function App() {
 
       if (Auth.isLogged()) {
         AuthAPI.summary()
-          .then(r =>
-            setSummary(r.data || r)
-          )
+          .then(r => setSummary(r.data || r))
           .catch(() =>
             setSummary({
               active_participating_count: 0,
@@ -184,26 +169,17 @@ export default function App() {
 
     update()
 
-    window.addEventListener(
-      'auth-updated',
-      update
-    )
+    window.addEventListener('auth-updated', update)
 
     return () =>
-      window.removeEventListener(
-        'auth-updated',
-        update
-      )
+      window.removeEventListener('auth-updated', update)
   }, [])
 
   return (
-<div className="flex min-h-screen flex-col bg-slate-50">
-        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="container flex flex-wrap items-center gap-4 py-4">
-          <Link
-            to="/"
-            className="flex items-center gap-3"
-          >
+          <Link to="/" className="flex items-center gap-3">
             <img
               src={logo}
               alt="Pawction"
@@ -236,11 +212,7 @@ export default function App() {
 
             <NavItem
               to="/pending-orders"
-              badge={
-                isLogged
-                  ? summary.pending_won_count
-                  : 0
-              }
+              badge={isLogged ? summary.pending_won_count : 0}
             >
               Pendientes
             </NavItem>
@@ -256,22 +228,13 @@ export default function App() {
         </div>
       </header>
 
-<main className="container flex-1 py-8">
-          <Routes>
-          <Route
-            path="/"
-            element={<Home />}
-          />
+      <main className="container flex-1 py-8">
+        <Routes>
+          <Route path="/" element={<Home />} />
 
-          <Route
-            path="/auctions"
-            element={<Auctions />}
-          />
+          <Route path="/auctions" element={<Auctions />} />
 
-          <Route
-            path="/auctions/:id"
-            element={<AuctionDetail />}
-          />
+          <Route path="/auctions/:id" element={<AuctionDetail />} />
 
           <Route
             path="/favorites"
@@ -309,39 +272,46 @@ export default function App() {
             }
           />
 
-          <Route
-            path="/login"
-            element={<Login />}
-          />
+          <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/register"
-            element={<Register />}
-          />
+          <Route path="/register" element={<Register />} />
 
-          <Route
-            path="/admin/auctions"
-            element={<AdminAuctions />}
-          />
+          <Route path="/admin/auctions" element={<AdminAuctions />} />
 
           <Route
             path="/pending-orders"
-            element={<PendingOrders />}
+            element={
+              <PrivateRoute>
+                <PendingOrders />
+              </PrivateRoute>
+            }
           />
 
           <Route
             path="/shipping/:id"
-            element={<ShippingForm />}
+            element={
+              <PrivateRoute>
+                <ShippingForm />
+              </PrivateRoute>
+            }
           />
 
           <Route
             path="/fake-payment/:id"
-            element={<FakePayment />}
+            element={
+              <PrivateRoute>
+                <FakePayment />
+              </PrivateRoute>
+            }
           />
 
           <Route
             path="/payment/success"
-            element={<PaymentSuccess />}
+            element={
+              <PrivateRoute>
+                <PaymentSuccess />
+              </PrivateRoute>
+            }
           />
         </Routes>
       </main>
@@ -354,9 +324,8 @@ export default function App() {
             </div>
 
             <p className="mt-2 max-w-md text-sm text-slate-500">
-              Plataforma solidaria de subastas para apoyar
-              la adopción responsable y causas
-              medioambientales.
+              Plataforma solidaria de subastas para apoyar la adopción
+              responsable y causas medioambientales.
             </p>
           </div>
 
