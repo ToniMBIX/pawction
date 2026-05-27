@@ -74,11 +74,11 @@ Route::post('/webhooks/paypal', [WebhookController::class, 'paypal']);
 // ---------- Debug local ----------
 Route::get('/debug/supabase-env', function () {
     return response()->json([
-        'PAWCTION_STORAGE_URL' => env('PAWCTION_STORAGE_URL') ? 'OK' : 'MISSING',
-        'PAWCTION_STORAGE_KEY' => env('PAWCTION_STORAGE_KEY') ? 'OK' : 'MISSING',
-        'PAWCTION_STORAGE_BUCKET' => env('PAWCTION_STORAGE_BUCKET') ? 'OK' : 'MISSING',
-        'key_length' => strlen((string) env('PAWCTION_STORAGE_KEY')),
-        'bucket' => env('PAWCTION_STORAGE_BUCKET'),
+        'SUPABASE_URL' => env('SUPABASE_URL') ? 'OK' : 'MISSING',
+        'SUPABASE_SERVICE_ROLE_KEY' => env('SUPABASE_SERVICE_ROLE_KEY') ? 'OK' : 'MISSING',
+        'SUPABASE_STORAGE_BUCKET' => env('SUPABASE_STORAGE_BUCKET') ? 'OK' : 'MISSING',
+        'service_role_length' => strlen((string) env('SUPABASE_SERVICE_ROLE_KEY')),
+        'bucket' => env('SUPABASE_STORAGE_BUCKET'),
     ]);
 });
 if (app()->environment('local')) {
