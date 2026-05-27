@@ -29,10 +29,15 @@ class AuctionAdminController extends Controller
     }
 
     private function publicStorageUrl(string $path): string
-    {
-        return rtrim(config('app.url'), '/') . Storage::url($path);
+{
+    $url = Storage::disk('public')->url($path);
+
+    if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+        return $url;
     }
 
+    return rtrim(config('app.url'), '/') . '/' . ltrim($url, '/');
+}
     private function generateQrForAuction(Auction $auction): ?string
     {
         if (!$auction->document_url) {
@@ -40,9 +45,8 @@ class AuctionAdminController extends Controller
         }
 
         $pdfUrl = str_starts_with($auction->document_url, 'http')
-            ? $auction->document_url
-            : rtrim(config('app.url'), '/') . $auction->document_url;
-
+    ? $auction->document_url
+    : rtrim(config('app.url'), '/') . '/' . ltrim($auction->document_url, '/');
         $builder = new Builder(
             writer: new PngWriter(),
             data: $pdfUrl,
