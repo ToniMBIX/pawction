@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\PaymentCompleted;
 use App\Models\Auction;
 use App\Models\ShippingDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
@@ -187,8 +185,7 @@ class PaymentController extends Controller
         ], 422);
     }
 
-    $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
-
+$frontendUrl = rtrim(env('FRONTEND_URL', 'https://pawction.vercel.app'), '/'); 
     $session = Session::create([
         'mode' => 'payment',
         'payment_method_types' => ['card'],
