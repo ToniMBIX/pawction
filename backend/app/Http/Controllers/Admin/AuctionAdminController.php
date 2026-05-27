@@ -28,33 +28,37 @@ class AuctionAdminController extends Controller
         ]);
     }
 
-private function generateQrForAuction(Auction $auction): ?string
-{
-    if (!$auction->document_url) {
-        return null;
+    private function publicStorageUrl(string $path): string
+    {
+        return rtrim(config('app.url'), '/') . Storage::url($path);
     }
 
-    $backendUrl = rtrim(env('APP_URL', 'http://127.0.0.1:8000'), '/');
+    private function generateQrForAuction(Auction $auction): ?string
+    {
+        if (!$auction->document_url) {
+            return null;
+        }
 
-    $pdfUrl = str_starts_with($auction->document_url, 'http')
-        ? $auction->document_url
-        : $backendUrl . $auction->document_url;
+        $pdfUrl = str_starts_with($auction->document_url, 'http')
+            ? $auction->document_url
+            : rtrim(config('app.url'), '/') . $auction->document_url;
 
-    $builder = new Builder(
-        writer: new PngWriter(),
-        data: $pdfUrl,
-        size: 400,
-        margin: 20
-    );
+        $builder = new Builder(
+            writer: new PngWriter(),
+            data: $pdfUrl,
+            size: 400,
+            margin: 20
+        );
 
-    $result = $builder->build();
+        $result = $builder->build();
 
-    $path = 'auction_qr/auction_' . $auction->id . '.png';
+        $path = 'auction_qr/auction_' . $auction->id . '.png';
 
-    Storage::disk('public')->put($path, $result->getString());
+        Storage::disk('public')->put($path, $result->getString());
 
-    return Storage::url($path);
-}
+        return $this->publicStorageUrl($path);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -66,62 +70,33 @@ private function generateQrForAuction(Auction $auction): ?string
             'product_name' => ['required', 'string', 'max:255'],
             'product_description' => ['nullable', 'string'],
 
-            'image' => ['nullable', 'image', 'max:5120'],
-
-            'document' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'image' => ['required', 'image', 'max:5120'],
+            'document' => ['required', 'file', 'mimes:pdf', 'max:10240'],
 
             'animal.name' => ['required', 'string', 'max:255'],
             'animal.species' => ['required', 'string', 'max:255'],
         ]);
 
-        // =========================================
-        //  Imagen subasta
-        // =========================================
+        $imagePath = $request->file('image')
+            ->store('auction_images', 'public');
 
-$imageUrl = null;
+        $imageUrl = $this->publicStorageUrl($imagePath);
 
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')
-                ->store('auction_images', 'public');
+        $documentPath = $request->file('document')
+            ->store('auction_documents', 'public');
 
-            $imageUrl = Storage::url($imagePath);
-        }
-
-        // =========================================
-        //  Documento PDF
-        // =========================================
-
-        $documentUrl = null;
-
-        if ($request->hasFile('document')) {
-            $documentPath = $request->file('document')
-                ->store('auction_documents', 'public');
-
-            $documentUrl = Storage::url($documentPath);
-        }
-
-        // =========================================
-        //  Animal
-        // =========================================
+        $documentUrl = $this->publicStorageUrl($documentPath);
 
         $animal = Animal::create([
             'name' => $data['animal']['name'],
             'species' => $data['animal']['species'],
         ]);
 
-        // =========================================
-        //  Producto
-        // =========================================
-
         $product = Product::create([
             'animal_id' => $animal->id,
             'name' => $data['product_name'],
             'description' => $data['product_description'] ?? null,
         ]);
-
-        // =========================================
-        //  Subasta
-        // =========================================
 
         $auction = Auction::create([
             'product_id' => $product->id,
@@ -141,12 +116,7 @@ $imageUrl = null;
             'qr_url' => null,
         ]);
 
-        // =========================================
-        //  QR automático
-        // =========================================
-
         $auction->qr_url = $this->generateQrForAuction($auction);
-
         $auction->save();
 
         return response()->json([
