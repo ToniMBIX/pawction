@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Mail\AuctionFinishedMail;
-use App\Mail\AuctionReopenedMail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+use App\Services\PawctionMailer;
 
 class Auction extends Model
 {
@@ -115,17 +113,17 @@ class Auction extends Model
             return;
         }
 
-        try {
-            Mail::to($winner->email)->send(
-                new AuctionFinishedMail($this->fresh('product.animal'))
-            );
-        } catch (\Throwable $e) {
-            Log::warning('No se pudo enviar email de subasta ganada', [
-                'auction_id' => $this->id,
-                'winner_user_id' => $winner->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $sent = app(PawctionMailer::class)->auctionFinished(
+    $this->fresh('product.animal'),
+    $winner->email
+);
+
+if (!$sent) {
+    Log::warning('No se pudo enviar email de subasta ganada', [
+        'auction_id' => $this->id,
+        'winner_user_id' => $winner->id,
+    ]);
+}
     }
 
     public function reopenForNonPayment(): void
@@ -157,16 +155,16 @@ class Auction extends Model
             return;
         }
 
-        try {
-            Mail::to($oldWinner->email)->send(
-                new AuctionReopenedMail($this->fresh('product.animal'))
-            );
-        } catch (\Throwable $e) {
-            Log::warning('No se pudo enviar email de subasta reabierta', [
-                'auction_id' => $this->id,
-                'old_winner_id' => $oldWinner->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $sent = app(PawctionMailer::class)->auctionReopened(
+    $this->fresh('product.animal'),
+    $oldWinner->email
+);
+
+if (!$sent) {
+    Log::warning('No se pudo enviar email de subasta reabierta', [
+        'auction_id' => $this->id,
+        'old_winner_id' => $oldWinner->id,
+    ]);
+}
     }
 }

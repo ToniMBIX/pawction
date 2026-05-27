@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
+use App\Services\PawctionMailer;
 
 class PaymentController extends Controller
 {
@@ -114,15 +115,10 @@ class PaymentController extends Controller
         $auction->status = 'finished';
         $auction->save();
 
-        try {
-            Mail::to($user->email)->send(new PaymentCompleted($auction));
-        } catch (\Throwable $e) {
-            \Log::warning('No se pudo enviar email de pago completado', [
-                'auction_id' => $auction->id,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        app(PawctionMailer::class)->paymentCompleted(
+    $auction->fresh(['product.animal', 'shippingDetail']),
+    $user->email
+);
 
         return response()->json([
             'success' => true,
@@ -276,8 +272,10 @@ public function confirmStripePayment(Request $request)
         $auction->save();
 
         try {
-            Mail::to($user->email)->send(new PaymentCompleted($auction));
-        } catch (\Throwable $e) {
+app(PawctionMailer::class)->paymentCompleted(
+    $auction->fresh(['product.animal', 'shippingDetail']),
+    $user->email
+);        } catch (\Throwable $e) {
             \Log::warning('No se pudo enviar email de pago Stripe', [
                 'auction_id' => $auction->id,
                 'user_id' => $user->id,
