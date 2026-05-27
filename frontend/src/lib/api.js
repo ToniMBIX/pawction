@@ -108,9 +108,16 @@ export async function api(path, opts = {}) {
       payload = JSON.parse(raw)
     } catch {}
 
-    const error = new Error(
-      payload?.message || payload?.error || `HTTP ${res.status}`
-    )
+    const msg =
+  typeof payload?.message === 'string'
+    ? payload.message
+    : typeof payload?.error === 'string'
+    ? payload.error
+    : payload?.message
+    ? JSON.stringify(payload.message)
+    : `HTTP ${res.status}`
+
+const error = new Error(msg)
 
     error.status = res.status
     error.errors = payload?.errors || {}
