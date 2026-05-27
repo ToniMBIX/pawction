@@ -13,17 +13,17 @@ class SupabaseStorageService
     private string $bucket;
 
     public function __construct()
-    {
-        $this->url = rtrim((string) env('SUPABASE_URL', ''), '/');
-        $this->key = (string) env('SUPABASE_SERVICE_ROLE_KEY', '');
-        $this->bucket = (string) env('SUPABASE_STORAGE_BUCKET', 'pawction');
+{
+    $this->url = rtrim((string) config('services.supabase.url', env('SUPABASE_URL', '')), '/');
+    $this->key = (string) config('services.supabase.service_role_key', env('SUPABASE_SERVICE_ROLE_KEY', ''));
+    $this->bucket = (string) config('services.supabase.storage_bucket', env('SUPABASE_STORAGE_BUCKET', 'pawction'));
 
-        if (!$this->url || !$this->key || !$this->bucket) {
-            throw new \RuntimeException(
-                'Supabase Storage no está configurado. Revisa SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y SUPABASE_STORAGE_BUCKET.'
-            );
-        }
+    if (!$this->url || !$this->key || !$this->bucket) {
+        throw new \RuntimeException(
+            'Supabase Storage no está configurado. Revisa SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y SUPABASE_STORAGE_BUCKET.'
+        );
     }
+}
 
     public function uploadUploadedFile(UploadedFile $file, string $folder): string
     {
