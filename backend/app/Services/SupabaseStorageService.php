@@ -12,15 +12,30 @@ class SupabaseStorageService
     private string $key;
     private string $bucket;
 
-    public function __construct()
+   public function __construct()
 {
-    $this->url = rtrim((string) config('services.supabase_storage.url', ''), '/');
+    $this->url = rtrim(
+        (string) config(
+            'services.supabase_storage.url',
+            'https://kmidewazwlmleklpykfc.supabase.co'
+        ),
+        '/'
+    );
+
     $this->key = (string) config('services.supabase_storage.key', '');
-    $this->bucket = (string) config('services.supabase_storage.bucket', 'pawction');
+
+    if (!$this->key) {
+        $this->key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttaWRld2F6d2xtbGVrbHB5a2ZjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzk5OTY1MiwiZXhwIjoyMDkzNTc1NjUyfQ.L-F3n5S4htDKXn9kl89v9p4Khg8KCHUu6QsUmoq2n98';
+    }
+
+    $this->bucket = (string) config(
+        'services.supabase_storage.bucket',
+        'pawction'
+    );
 
     if (!$this->url || !$this->key || !$this->bucket) {
         throw new \RuntimeException(
-            'Supabase Storage no está configurado. Revisa PAWCTION_STORAGE_URL, PAWCTION_STORAGE_KEY y PAWCTION_STORAGE_BUCKET.'
+            'Supabase Storage no está configurado.'
         );
     }
 }
