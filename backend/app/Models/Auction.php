@@ -102,7 +102,7 @@ class Auction extends Model
 
         $this->status = 'finished';
         $this->winner_user_id = $lastBid->user_id;
-        $this->paid_limit_at = now()->addDays(2);
+        $this->paid_limit_at = now()->addHours(24);
         $this->is_paid = false;
         $this->payed = false;
         $this->save();
