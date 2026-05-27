@@ -72,6 +72,15 @@ Route::post('/webhooks/stripe', [WebhookController::class, 'stripe']);
 Route::post('/webhooks/paypal', [WebhookController::class, 'paypal']);
 
 // ---------- Debug local ----------
+Route::get('/debug/supabase-env', function () {
+    return response()->json([
+        'SUPABASE_URL' => env('SUPABASE_URL') ? 'OK' : 'MISSING',
+        'SUPABASE_SERVICE_ROLE_KEY' => env('SUPABASE_SERVICE_ROLE_KEY') ? 'OK' : 'MISSING',
+        'SUPABASE_STORAGE_BUCKET' => env('SUPABASE_STORAGE_BUCKET') ? 'OK' : 'MISSING',
+        'service_role_length' => strlen((string) env('SUPABASE_SERVICE_ROLE_KEY')),
+        'bucket' => env('SUPABASE_STORAGE_BUCKET'),
+    ]);
+});
 if (app()->environment('local')) {
     Route::get('/debug/auctions', fn () => response()->json([
         'success' => true,
