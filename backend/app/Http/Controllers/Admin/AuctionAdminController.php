@@ -38,25 +38,32 @@ class AuctionAdminController extends Controller
     return $baseUrl . '/storage/' . ltrim($path, '/');
 }
     private function generateQrForAuction(Auction $auction): ?string
-    {
-        if (!$auction->document_url) {
-            return null;
-        }
+{
+    if (!$auction->document_url) {
+        return null;
+    }
 
-        $pdfUrl = str_starts_with($auction->document_url, 'http')
-    ? $auction->document_url
-    : $this->publicStorageUrl(
-        str_replace('/storage/', '', $auction->document_url)
+    $pdfUrl = str_starts_with($auction->document_url, 'http')
+        ? $auction->document_url
+        : $this->publicStorageUrl(
+            str_replace('/storage/', '', $auction->document_url)
+        );
+
+    $builder = new Builder(
+        writer: new PngWriter(),
+        data: $pdfUrl,
+        size: 400,
+        margin: 20
     );
 
-        $result = $builder->build();
+    $result = $builder->build();
 
-        $path = 'auction_qr/auction_' . $auction->id . '.png';
+    $path = 'auction_qr/auction_' . $auction->id . '.png';
 
-        Storage::disk('public')->put($path, $result->getString());
+    Storage::disk('public')->put($path, $result->getString());
 
-        return $this->publicStorageUrl($path);
-    }
+    return $this->publicStorageUrl($path);
+}
 
     public function store(Request $request)
     {
