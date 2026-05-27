@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\{AdminAuthController, AdminController};
 
 Route::get('/admin/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
@@ -30,4 +31,16 @@ Route::middleware(['web','auth','admin'])->group(function(){
     Route::get('/admin/auctions/{auction}/edit', [AdminController::class, 'auctionEdit'])->name('admin.auctions.edit');
     Route::post('/admin/auctions/{auction}', [AdminController::class, 'auctionUpdate'])->name('admin.auctions.update');
     Route::delete('/admin/auctions/{auction}', [AdminController::class, 'auctionDelete'])->name('admin.auctions.delete');
+    Route::get('/storage/{path}', function ($path) {
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+
+    $file = Storage::disk('public')->get($path);
+    $mime = Storage::disk('public')->mimeType($path);
+
+    return response($file, 200)
+        ->header('Content-Type', $mime)
+        ->header('Access-Control-Allow-Origin', '*');
+})->where('path', '.*');
 });
