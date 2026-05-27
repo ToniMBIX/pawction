@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ["php82", "php82Packages.composer", "nodejs_18", "npm-9_x"]
+
+[phases.install]
+cmds = [
+  "cd backend && composer install --no-dev --prefer-dist --optimize-autoloader"
+]
+
+[start]
+cmd = "cd backend && php artisan config:clear && php artisan route:clear && php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=$PORT"

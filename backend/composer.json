@@ -3,7 +3,7 @@
   "description": "Backend API for Pawction",
   "type": "project",
   "require": {
-    "php": "^8.1",
+    "php": "^8.2",
     "laravel/framework": "^10.0",
     "laravel/sanctum": "^3.3",
     "barryvdh/laravel-dompdf": "^2.0",
