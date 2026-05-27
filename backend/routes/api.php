@@ -72,20 +72,6 @@ Route::post('/webhooks/stripe', [WebhookController::class, 'stripe']);
 Route::post('/webhooks/paypal', [WebhookController::class, 'paypal']);
 
 // ---------- Debug local ----------
-Route::get('/debug/supabase-env', function () {
-    return response()->json([
-        'PAWCTION_STORAGE_URL_ENV' => env('PAWCTION_STORAGE_URL') ? 'OK' : 'MISSING',
-        'PAWCTION_STORAGE_KEY_ENV' => env('PAWCTION_STORAGE_KEY') ? 'OK' : 'MISSING',
-        'PAWCTION_STORAGE_BUCKET_ENV' => env('PAWCTION_STORAGE_BUCKET') ? 'OK' : 'MISSING',
-
-        'CONFIG_URL' => config('services.supabase_storage.url') ? 'OK' : 'MISSING',
-        'CONFIG_KEY' => config('services.supabase_storage.key') ? 'OK' : 'MISSING',
-        'CONFIG_BUCKET' => config('services.supabase_storage.bucket') ? 'OK' : 'MISSING',
-
-        'key_length' => strlen((string) config('services.supabase_storage.key')),
-        'bucket' => config('services.supabase_storage.bucket'),
-    ]);
-});
 if (app()->environment('local')) {
     Route::get('/debug/auctions', fn () => response()->json([
         'success' => true,

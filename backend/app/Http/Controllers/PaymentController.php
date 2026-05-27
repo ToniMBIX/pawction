@@ -185,7 +185,7 @@ class PaymentController extends Controller
         ], 422);
     }
 
-$frontendUrl = rtrim(env('FRONTEND_URL', 'https://pawction.vercel.app'), '/'); 
+$frontendUrl = 'https://pawction.vercel.app';
     $session = Session::create([
         'mode' => 'payment',
         'payment_method_types' => ['card'],
