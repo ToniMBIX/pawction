@@ -14,24 +14,11 @@ class SupabaseStorageService
 
    public function __construct()
 {
-    $this->url = rtrim(
-        (string) config(
-            'services.supabase_storage.url',
-            'https://kmidewazwlmleklpykfc.supabase.co'
-        ),
-        '/'
-    );
+    $this->url = 'https://kmidewazwlmleklpykfc.supabase.co';
 
-    $this->key = (string) config('services.supabase_storage.key', '');
+    $this->key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttaWRld2F6d2xtbGVrbHB5a2ZjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzk5OTY1MiwiZXhwIjoyMDkzNTc1NjUyfQ.L-F3n5S4htDKXn9kl89v9p4Khg8KCHUu6QsUmoq2n98';
 
-    if (!$this->key) {
-        $this->key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImttaWRld2F6d2xtbGVrbHB5a2ZjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzk5OTY1MiwiZXhwIjoyMDkzNTc1NjUyfQ.L-F3n5S4htDKXn9kl89v9p4Khg8KCHUu6QsUmoq2n98';
-    }
-
-    $this->bucket = (string) config(
-        'services.supabase_storage.bucket',
-        'pawction'
-    );
+    $this->bucket = 'pawction';
 
     if (!$this->url || !$this->key || !$this->bucket) {
         throw new \RuntimeException(
