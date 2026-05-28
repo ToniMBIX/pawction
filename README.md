@@ -275,4 +275,4 @@ php artisan optimize:clear && php artisan config:clear && php artisan cache:clea
 
 ## Autor
 
-Proyecto desarrollado por Toni Bou como proyecto final de desarrollo web.
+Proyecto desarrollado por Toni Marin Bou como proyecto final de desarrollo web.
