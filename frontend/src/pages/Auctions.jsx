@@ -130,30 +130,45 @@ export default function Auctions() {
   const [error, setError] = React.useState('')
   const [filter, setFilter] = React.useState('all')
 
-  React.useEffect(() => {
-    async function load() {
+  const load = React.useCallback(async (silent = false) => {
+    if (!silent) {
       setLoading(true)
       setError('')
+    }
 
-      try {
-        const r = await AuctionsAPI.list()
-        const payload = r.data || r
-        const list = Array.isArray(payload)
-          ? payload
-          : payload.data || []
+    try {
+      const r = await AuctionsAPI.list()
+      const payload = r.data || r
+      const list = Array.isArray(payload)
+        ? payload
+        : payload.data || []
 
-        setItems(list)
-      } catch (err) {
-        console.error(err)
+      setItems(list)
+    } catch (err) {
+      console.error(err)
+
+      if (!silent) {
         setError(err.message || 'No se pudieron cargar las subastas')
         setItems([])
-      } finally {
+      }
+    } finally {
+      if (!silent) {
         setLoading(false)
       }
     }
-
-    load()
   }, [])
+
+  React.useEffect(() => {
+    load()
+  }, [load])
+
+  React.useEffect(() => {
+    const t = setInterval(() => {
+      load(true)
+    }, 4000)
+
+    return () => clearInterval(t)
+  }, [load])
 
   React.useEffect(() => {
     const t = setInterval(() => {

@@ -24,13 +24,23 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'max:255',
+                'unique:users,email',
+            ],
+
             'password' => ['required', 'confirmed', Password::min(8)],
+        ], [
+            'email.email' => 'Introduce un correo electrónico válido.',
+            'email.unique' => 'Este correo ya está registrado.',
         ]);
 
         $user = User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'email' => strtolower(trim($data['email'])),
             'password' => Hash::make($data['password']),
         ]);
 
@@ -51,7 +61,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', strtolower(trim($credentials['email'])))->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             return response()->json([
@@ -89,18 +99,23 @@ class AuthController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+
             'email' => [
                 'required',
-                'email',
+                'email:rfc,dns',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
+
             'password' => ['nullable', 'confirmed', Password::min(8)],
+        ], [
+            'email.email' => 'Introduce un correo electrónico válido.',
+            'email.unique' => 'Este correo ya está registrado.',
         ]);
 
         $payload = [
             'name' => $data['name'],
-            'email' => $data['email'],
+            'email' => strtolower(trim($data['email'])),
         ];
 
         if (!empty($data['password'])) {

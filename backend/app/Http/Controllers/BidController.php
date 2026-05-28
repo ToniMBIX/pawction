@@ -64,7 +64,7 @@ class BidController extends Controller
             ]);
 
             $auction->current_price = $amount;
-            $auction->end_at = now()->addMinute();
+$auction->end_at = now()->addHours(24);
             $auction->save();
         });
 

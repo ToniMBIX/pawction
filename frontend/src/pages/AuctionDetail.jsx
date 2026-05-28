@@ -44,31 +44,45 @@ export default function AuctionDetail() {
     }, 2500)
   }
 
-  const load = React.useCallback(async () => {
+  const load = React.useCallback(async (silent = false) => {
+  if (!silent) {
     setLoading(true)
     setPageError('')
+  }
 
-    try {
-      const r = await AuctionsAPI.get(id)
+  try {
+    const r = await AuctionsAPI.get(id)
+    const data = r.data || r
 
-      const data = r.data || r
+    setA(data)
+    setFav(!!data.is_favorite)
+  } catch (err) {
+    console.error(err)
 
-      setA(data)
-      setFav(!!data.is_favorite)
-    } catch (err) {
-      console.error(err)
-
+    if (!silent) {
       setPageError(
         err.message || 'No se pudo cargar la subasta'
       )
-    } finally {
+    }
+  } finally {
+    if (!silent) {
       setLoading(false)
     }
-  }, [id])
+  }
+}, [id])
 
   React.useEffect(() => {
     load()
   }, [load])
+  React.useEffect(() => {
+  if (a?.status === 'finished') return
+
+  const interval = setInterval(() => {
+    load(true)
+  }, 3000)
+
+  return () => clearInterval(interval)
+}, [load, a?.status])
 
   React.useEffect(() => {
     if (!a) return
@@ -148,7 +162,7 @@ export default function AuctionDetail() {
         'success'
       )
 
-      await load()
+      await load(true)
     } catch (err) {
       console.error(err)
 
@@ -212,6 +226,14 @@ export default function AuctionDetail() {
 
   const finished = a.status === 'finished'
 
+  const documentUrl = a.document_url
+    ? assetUrl(a.document_url)
+    : null
+
+  const qrUrl = a.qr_url
+    ? assetUrl(a.qr_url)
+    : null
+
   return (
     <>
       {toast.show && (
@@ -243,53 +265,47 @@ export default function AuctionDetail() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {a.document_url && (
-              <a
-                href={assetUrl(a.document_url)}
-                target="_blank"
-                rel="noreferrer"
-                className="card card-hover flex items-center justify-between"
-              >
+          {(documentUrl || qrUrl) && (
+            <div className="card">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <div className="text-lg font-bold text-slate-900">
-                    PDF del animal
-                  </div>
+                  <h2 className="text-xl font-black text-slate-900">
+                    Información del animal
+                  </h2>
 
-                  <div className="mt-1 text-sm text-slate-500">
-                    Información completa del pack
-                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Escanea el QR para abrir la ficha informativa del animal
+                    o consulta el PDF directamente desde el botón.
+                  </p>
+
+                  {documentUrl && (
+                    <a
+                      href={documentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-secondary mt-4 inline-flex"
+                    >
+                      📄 Abrir PDF informativo
+                    </a>
+                  )}
                 </div>
 
-                <div className="text-3xl">
-                  📄
-                </div>
-              </a>
-            )}
+                {qrUrl && (
+                  <div className="flex shrink-0 flex-col items-center rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <img
+                      src={qrUrl}
+                      alt={`QR de ${a.title}`}
+                      className="h-44 w-44 rounded-2xl bg-white object-contain p-2 shadow-sm"
+                    />
 
-            {a.qr_url && (
-              <a
-                href={assetUrl(a.qr_url)}
-                target="_blank"
-                rel="noreferrer"
-                className="card card-hover flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-lg font-bold text-slate-900">
-                    Código QR
+                    <div className="mt-3 text-center text-xs font-semibold text-slate-500">
+                      QR del PDF
+                    </div>
                   </div>
-
-                  <div className="mt-1 text-sm text-slate-500">
-                    Escanea para abrir el PDF
-                  </div>
-                </div>
-
-                <div className="text-3xl">
-                  🔳
-                </div>
-              </a>
-            )}
-          </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-5">
